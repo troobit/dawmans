@@ -34,7 +34,7 @@ references:
 
 ## Phase 2: The corpus view
 
-- [ ] 4. Write tests for CorpusView load, refusal and the revision watch <!-- id:f3kp004 -->
+- [x] 4. Write tests for CorpusView load, refusal and the revision watch <!-- id:f3kp004 -->
   - Load order of design 'What the engine reads': manifest first, refuse to serve when index_version differs; an unreadable new manifest keeps the live view in place and records the mismatch for GET /sources - never mapped to corpus-empty, which would be a lie.
   - Row slices come from manifest.sources row_start/row_count, so source scoping is a slice, not a scan.
   - The sidecar name is derived by the slug rule from the constant `authored/triage`, never spelled: a view whose authored sidecar is written `authored-triage.json` fails loudly at load rather than serving with no device declarations - the silent failure 5.13 exists to prevent.
@@ -44,7 +44,7 @@ references:
   - Stream: 1
   - Requirements: [5.10](requirements.md#5.10), [5.13](requirements.md#5.13)
 
-- [ ] 5. Implement view.py <!-- id:f3kp005 -->
+- [x] 5. Implement view.py <!-- id:f3kp005 -->
   - mmap vectors.npy, read passages.jsonl, load lexical/, sources.json, gaps.json and the triage sidecar; the stat-based revision watch and the wholesale swap.
   - Blocked-by: f3kp004 (Write tests for CorpusView load, refusal and the revision watch)
   - Stream: 1

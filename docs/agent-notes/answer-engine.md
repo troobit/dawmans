@@ -1,6 +1,7 @@
 # Answer engine (`src/dawmans/answer/`)
 
-Implements `specs/api/answer-engine/`. Phase 1 (package scaffold + envelope records) is done.
+Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records) and 2 (the
+corpus view) are done.
 
 ## Package setup
 
@@ -34,3 +35,29 @@ Implements `specs/api/answer-engine/`. Phase 1 (package scaffold + envelope reco
   (`suggested_sources[]`/`scope_dropped[]` members), `Narrowing`/`NarrowingCandidate`,
   `RequiredDevice`, `Timings` (durations only; `corpus_reload_ms` is run-level).
 - `body` is an untyped tuple for now; §4d block types arrive with `parse.py`.
+
+## Corpus view (`view.py`)
+
+- Two classes: `CorpusView` is one immutable revision of the merged view (frozen dataclass,
+  `eq=False` because it holds a memmap and a bm25s object); `ViewWatcher` owns the mutable
+  `view` reference, the stat cache, `manifest_fault` and `corpus_reload_ms`. A turn holds the
+  `CorpusView` object it started with — the swap only replaces `watcher.view`, which is what makes
+  "an in-flight turn keeps its files" true with no extra machinery.
+- `dawmans.records` / `dawmans.index.*` don't exist yet (manual-corpus has landed no code), so the
+  view holds `sources`/`passages` as plain dicts parsed from JSON. When those modules land, typing
+  can be introduced here without changing the load order.
+- Sidecar loading keys off `kind == "authored-triage"` in `sources.json`, derives the filename with
+  `sidecar_name()` (slug rule: `/`→`_`), and raises `ViewLoadError` when the file is absent — the
+  hyphenated-spelling silent failure from `data/symptom-triage` §The sidecar.
+- `ViewWatcher.check()` semantics worth knowing:
+  - stat key is `(st_mtime_ns, st_size)`; tests force distinct stats with an explicit `os.utime`
+    bump rather than trusting filesystem timestamp granularity.
+  - an unreadable/wrong-version *new* manifest keeps the live view and sets `manifest_fault`
+    (consumed by GET /sources in phase 8); the stat cache is still advanced so the bad manifest is
+    not re-parsed every turn. Same policy for a manifest that parses but whose view fails to load.
+  - a *missing* manifest is not a fault: `view` becomes `None`, which the outcome gate maps to
+    `corpus-empty`.
+  - startup with a present-but-unreadable manifest raises (refuse to serve); startup with no
+    manifest starts with `view = None`.
+- `from_manifest` cross-checks `sum(row_count) == len(passages) == vectors.shape[0]` and fails
+  loudly on mismatch — cheap guard for the no-mixed-revisions invariant.

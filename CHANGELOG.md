@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The corpus view** (`api/answer-engine` phase 2, `dawmans/answer/view.py`). `CorpusView` loads
+  one immutable revision of the merged index view in the design's load order — manifest first,
+  refusing to serve on an `index_version` the engine cannot interpret — then mmaps `vectors.npy`
+  and reads `passages.jsonl`, `lexical/`, `sources.json`, `gaps.json` and the triage sidecar.
+  Source scoping is a row slice from `manifest.sources`, not a scan. The sidecar filename is
+  derived by the slug rule from the `authored/triage` constant, never spelled; a view whose
+  sidecar is missing (e.g. hyphenated) fails loudly rather than serving with no device
+  declarations. `ViewWatcher` stats the manifest before each turn: a `corpus_revision` change
+  discards the view wholesale so no answer can mix revisions, an in-flight turn keeps the view
+  object it holds, an unreadable new manifest keeps the live view and records the fault for
+  `GET /sources` (never `corpus-empty`), and the reload cost lands on the run-level
+  `corpus_reload_ms`, never on a turn. 21 tests cover load, refusal, slices, the sidecar rule and
+  the revision watch.
 - **The `dawmans` Python package** (`api/answer-engine` phase 1). `src/` layout on uv + hatchling,
   with the `dawmans.answer` module tree from the design's module placement, a `dawmans` CLI whose
   only registered subcommand is the `serve` stub, and `make build`/`test`/`lint` wired to uv,
