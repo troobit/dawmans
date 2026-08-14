@@ -91,6 +91,14 @@ module-level `$state` is not reactive across the module boundary). Persistence k
   the Phase 8 history panel groups on it so a narrowing exchange is never a standalone unanswered
   question.
 
+- `perf.svelte.ts` — per-turn marks (8.7–8.9) and the per-provider-class "taking longer" thresholds
+  (`SLOW_THRESHOLD_MS`: hosted 3 s, local 5 s, 8.10). `markFirstByte` is called by the reducer's
+  `direct_answer`/`body_delta` handlers (first content event only — `outcome` is not content);
+  `scheduleFirstPaint` stamps in a rAF and guards double-scheduling with a `WeakSet`;
+  `measures()` returns `{}` unless **both** firstByte and firstPaint exist (absent is absent).
+  `Turn.marks` is a deep `$state` object *(the one non-raw state on Turn)* so the working
+  indicator can leave the moment `firstByte` lands and the disclosure never shows stale marks.
+
 - `thread.svelte.ts` — the conversation on screen. `draft` (the composed question) lives here, not
   in the input component, so the router's manual insert, ThreadView's re-edit and stop's
   question-restore all reach one text. Guards in `submit()`: whitespace no-op, `scope.canSubmit`,
@@ -122,11 +130,44 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   invariant when Phase 6's narrowing candidates arm. Zero-scope and over-limit notices render from
   store state (not submit attempts). Stop restores the question into the draft.
 - `ThreadView.svelte` — the thread shell. The question is a button that re-edits (sets
-  `thread.draft`); state line is text (`working…`/`stopped`/`abandoned`/`incomplete`/`broken`/
-  `finished`). Renderer `'answer'` (and `null`, pre-outcome) goes to `AnswerView`; `'narrowing'`,
-  `'ranked-causes'` and `'coverage-failure'` go to their Phase 6 components below (ThreadView
-  passes optional `router` and `sources` props down for them); error/broken/empty-scope/cancelled
-  keep the plain-text placeholder until Phase 7.
+  `thread.draft`); the state line is text **plus a static glyph** (`.state-shape`: ● working,
+  ✓ finished, ✕ broken, ◗ incomplete, ■ stopped, □ abandoned) — 8.4's two channels; the glyph is
+  deliberately unanimated (11.9 allows motion only on the working indicator). Routing: the error
+  family first (`error`/`broken`/`empty-scope`, **plus `state === 'failed' && renderer === null`**
+  — a rejection/version-mismatch turn, whose `failureOf(turn)` is passed to ErrorView), then
+  `'answer'`/`null`/`'cancelled'` → AnswerView (cancelled retains what arrived), then the Phase 6
+  renderers. Per-turn footer: `.incomplete-note` + Retry gated on `turn.incomplete &&
+  !isErrorFamily(turn)` (the getter is true for *any* failed turn, including rejections — don't
+  widen the gate), `.abandoned-note` on engine-cancelled-not-user (9.16), and
+  `DiagnosticsDisclosure` when failed / error / broken / `framing === 'unparsed'` (9.3).
+  Below the turns: `WorkingIndicator` then the one `aria-live="polite"` `.announcer` (13.5) —
+  announced-once bookkeeping is a `WeakMap<Turn, {streaming, terminal}>` written from an
+  `$effect`; a narrowing announcement includes the candidates and that digits select them.
+  New props: `providerClass`, `reducedMotion`, `providerName`, `onconfigure` (wired by the Phase 9
+  page; provider knowledge itself is the Phase 8 store).
+- `WorkingIndicator.svelte` — shown only while the active turn has no `firstByte` (8.2 is about
+  the wait for *first content*; once text arrives, the text is the liveness). Elapsed time is a
+  1 s `setInterval` incrementing plain `$state` — deliberately not `performance.now()`, so fake
+  timers drive it deterministically. Default: pulsing shape (`[data-animated="true"]`, the only
+  animated element on the surface); `reducedMotion` (default from `matchMedia`, prop-injectable):
+  static shape + `.elapsed` seconds counter, which sits **outside** the announcer region
+  (Decision 7). Past `SLOW_THRESHOLD_MS[providerClass]`: "Taking longer than usual." + Cancel
+  (stop + restore question to an empty draft, 8.6).
+- `ErrorView.svelte` — the §9 outcome table. Branch order: `no-sources-selected` → `.empty-scope`
+  (3.2 wording + select-all, **no `.error` class** — 9.12 forbids reading as a failure); then
+  `failure !== undefined || renderer === 'broken'` → `.error.broken` (version mismatch names both
+  versions from the error's fields, `EngineRejection` names `rejected`, unknown outcome names
+  neither and leaves `detail` to the disclosure); else per-outcome `.error` states. Wording keys
+  on `outcome` + `reason` sub-code only, never `detail` (9.5, 9.10: authentication-failed gets
+  configuration **instead of** retry). The 9.8 countdown mirrors the indicator's interval pattern
+  (`Math.ceil(retry_after) − waited`, retry disabled while > 0; absent `retry_after` → honest "did
+  not say how long", retry enabled). 9.11 drops rejected ids (from `envelope.scope_dropped` — the
+  only addressable channel that names them) via an idempotent `$effect` toggling the scope store,
+  then re-ask = `thread.submit(turn.question)` against the pruned snapshot. `corpus-empty` offers
+  no control (no in-app action exists; names `manuals/` + ingestion).
+- `DiagnosticsDisclosure.svelte` — a `<details class="diagnostics">` rendering exactly `detail`,
+  `framing`, `timings` (entries verbatim) and the client marks/measures — nothing else, nothing
+  parsed from `detail`, no request echo (that structure is what makes 9.17 hold).
 - `NarrowingView.svelte` — the §6 narrowing renderer. Candidates are numbered buttons in engine
   order; the digits arm through `router.arm()` **only while the turn is the thread's last settled
   turn** (`thread.awaitingNarrowing && turns.at(-1) === turn`) — the counterpart to AskSurface's
@@ -203,6 +244,13 @@ installed but not yet configured (no browser tests exist yet — config comes wi
 - **Component tests need `resolve.conditions: ['browser']` under vitest** (gated on
   `process.env.VITEST` in vite.config.ts) — without it vitest resolves Svelte's *server* entry and
   `render()` dies with `lifecycle_function_unavailable: mount(...) is not available on the server`.
+- Fake-timer tests (thresholds, countdowns) must not settle turns through `vi.waitFor` where the
+  assertion cares about elapsed time — `waitFor` under fake timers auto-advances them. The
+  errors suite settles with a `flush()` of ~20 microtask turns + `tick()` instead (SSE frames
+  travel entirely on microtasks with the stub channel), then advances timers explicitly.
+- `screen.getByText` regexes over ThreadView now collide with the announcer region and the 9.14/
+  9.16 notes (e.g. /finished/, /abandoned/ match twice); scope such queries to `.state` or use
+  `getAllByText`.
 - `src/lib/testing/turn-channel.ts` is the shared stub engine: `sseChannel()` (a controllable
   SSE `Response` carrying the version header, with an `abort()` that errors the stream the way a
   real aborted fetch does) and `fakeEngine()` (records `TurnRequest`s, one channel per turn,

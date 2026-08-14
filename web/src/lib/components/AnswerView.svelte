@@ -12,6 +12,7 @@
 <script lang="ts">
 	import type { InlineSpan } from '../engine/blocks';
 	import type { Turn } from '../engine/turn.svelte';
+	import { scheduleFirstPaint } from '../state/perf.svelte';
 	import { passages as defaultPassages, type PassageStore } from '../state/passages.svelte';
 	import { scope as defaultScope, type ScopeStore } from '../state/scope.svelte';
 	import type { ThreadStore } from '../state/thread.svelte';
@@ -49,6 +50,15 @@
 		}
 		thread?.submit(part);
 	}
+
+	const streaming = $derived(turn.state === 'acknowledged' || turn.state === 'streaming');
+
+	// 8.8/8.9: firstPaint is a requestAnimationFrame after the first content is
+	// in the DOM — this effect runs after the render that inserted it.
+	$effect(() => {
+		const hasContent = turn.envelope.direct_answer !== undefined || turn.blocks.length > 0;
+		if (hasContent && turn.marks.firstPaint === undefined) scheduleFirstPaint(turn.marks);
+	});
 </script>
 
 {#snippet spans(list: readonly InlineSpan[])}
@@ -59,7 +69,8 @@
 	{/each}
 {/snippet}
 
-<div class="answer">
+<!-- 13.5: fragments are never announced individually; the announcer carries transitions. -->
+<div class="answer" aria-live="off" aria-busy={streaming}>
 	{#if turn.envelope.scope_dropped !== undefined}
 		<!-- 3.11: the engine's prune, reported with this turn — never the user's own narrowing. -->
 		<p class="scope-dropped">

@@ -12,6 +12,60 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/state/perf.svelte.ts` — per-turn marks and the slow-wait thresholds**
+  (`ui/ask-and-source-picker` Phase 7). `submit` is stamped at Turn construction in the submit
+  handler, `firstByte` when the first content event leaves the SSE reader, and `firstPaint` in a
+  requestAnimationFrame after that content is in the DOM; `measures()` computes 8.8
+  (firstPaint − submit) and 8.9 (firstPaint − firstByte), returning nothing where a mark is
+  absent. `SLOW_THRESHOLD_MS` fixes the "taking longer than usual" threshold per provider class —
+  hosted 3 s, local 5 s, inside 8.10's bands.
+- **`web/src/lib/components/WorkingIndicator.svelte` — the waiting states** (Phase 7). Shown
+  below the thread while the active turn awaits first content, so its removal cannot shift
+  painted text (8.2, Decision 2); the submitted question stays visible while waiting (8.3).
+  Unmistakably live by animation — the surface's only animation beside arriving text (11.9) — or,
+  under `prefers-reduced-motion`, an elapsed-seconds counter paired with the static shape,
+  excluded from the announcement region so ticks are never announced (13.6, Decision 7). Past the
+  per-provider-class threshold, plain "taking longer than usual" text and a cancel control appear
+  (8.5); cancelling returns to ready with the question preserved and partial output never
+  presented as finished (8.6).
+- **`web/src/lib/components/ErrorView.svelte` — the §9 error renderers** (Phase 7). Every error
+  outcome states what happened plainly with at least one action and never raw exception text
+  (9.1, 9.2): `provider-unconfigured` keyed on the `reason` sub-code alone, opening provider
+  configuration with the typed question preserved (9.5); `provider-unreachable` naming the
+  provider (9.6); `timeout` attributing the stall to the provider, distinct from unreachable
+  (9.7); `provider-rate-limited` counting `retry_after` down where supplied and stating honestly
+  where the provider gave no interval (9.8); `provider-error` retrying with `detail` behind the
+  disclosure (9.9), or offering configuration in place of retry on `authentication-failed`
+  (9.10); `unknown-source-id` naming the rejected ids, dropping them from the stored scope and
+  re-asking the remainder in one activation (9.11); `no-sources-selected` as the 3.2 empty-scope
+  state (9.12); `corpus-empty` naming `manuals/` and the ingestion step (9.13). Broken states
+  carrying no outcome render here too: a malformed-request rejection naming what was rejected
+  (9.15), an unknown turn-stream version naming both versions (9.19), and an unrecognised
+  outcome (9.4).
+- **`web/src/lib/components/DiagnosticsDisclosure.svelte` — the 9.3 disclosure** (Phase 7).
+  Renders exactly the engine's `detail`, `framing` and `timings` plus the client's per-turn
+  marks — nothing else, nothing parsed out of `detail`, no request echoed (which keeps 9.17
+  structural). Mounted on every failed/error/broken turn and on any turn carrying
+  `framing: unparsed`.
+
+### Changed
+
+- **`web/src/lib/components/ThreadView.svelte`** (Phase 7): per-turn state now signals through
+  two channels — a static glyph beside the text label, never colour alone (8.4); the error
+  family (including failed turns with no outcome) routes to `ErrorView`, `cancelled` retains
+  whatever arrived, `incomplete` turns keep their partial text marked with a retry (9.14), and an
+  engine-cancelled turn the user did not cancel is marked abandoned without disturbing its
+  replacement (9.16). One `aria-live="polite"` region announces streaming started, finished,
+  failed, coverage failure, partial answer and narrowing — with its candidates and that digits
+  select them — once each (13.5).
+- **`web/src/lib/components/AnswerView.svelte`** (Phase 7): the streamed body is
+  `aria-live="off"` with `aria-busy` while streaming, so fragments are never announced
+  individually (13.5); the first painted content schedules the `firstPaint` mark.
+- **`web/src/lib/engine/turn.svelte.ts`** (Phase 7): `Turn.marks` is reactive and the
+  `direct_answer`/`body_delta` handlers stamp `firstByte` on first content.
+
+### Added
+
 - **`web/src/lib/components/NarrowingView.svelte` — the narrowing renderer**
   (`ui/ask-and-source-picker` Phase 6). `needs-narrowing` renders the question and its 2–4
   candidates visually distinct from an answer, a coverage failure and an error (6.1), each a

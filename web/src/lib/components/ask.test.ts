@@ -299,6 +299,7 @@ describe('the thread shell (1.4)', () => {
 		channel.close();
 		await vi.waitFor(() => expect(thread.turns[1].state).toBe('settled'));
 		await tick();
-		expect(screen.getByText(/abandoned/i)).toBeTruthy();
+		// The state label and the 9.16 note both say abandoned.
+		expect(screen.getAllByText(/abandoned/i).length).toBeGreaterThan(0);
 	});
 });

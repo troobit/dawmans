@@ -289,14 +289,15 @@ describe('finished is distinguishable from streaming (4.6)', () => {
 		channel.emit('body_delta', { text: 'Unmute the master track.\n' });
 		await vi.waitFor(() => expect(thread.turns[0].state).toBe('streaming'));
 		await tick();
-		expect(screen.getByText(/working…/)).toBeTruthy();
-		expect(screen.queryByText(/finished/)).toBeNull();
+		// The per-turn state label; the 13.5 announcer is a separate channel.
+		expect(document.querySelector('.state')?.textContent).toMatch(/working…/);
+		expect(document.querySelector('.state')?.textContent).not.toMatch(/finished/);
 
 		channel.emit('done', { complete: true });
 		channel.close();
 		await vi.waitFor(() => expect(thread.turns[0].state).toBe('settled'));
 		await tick();
-		expect(screen.getByText(/finished/)).toBeTruthy();
-		expect(screen.queryByText(/working…/)).toBeNull();
+		expect(document.querySelector('.state')?.textContent).toMatch(/finished/);
+		expect(document.querySelector('.state')?.textContent).not.toMatch(/working…/);
 	});
 });

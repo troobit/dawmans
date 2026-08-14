@@ -11,6 +11,7 @@
 // A class instance holding `$state` fields: a reassigned module-level `$state`
 // is not reactive across the module boundary.
 
+import { markFirstByte, type TurnMarks } from '../state/perf.svelte';
 import { BlockParser, type Block } from './blocks';
 import type { AnswerEnvelope, Citation, Outcome, TurnEvent } from './records';
 import type { SseFrame, StreamEnd } from './sse';
@@ -77,8 +78,13 @@ export class Turn {
 	readonly question: string;
 	/** A detached copy: scope changes mid-answer touch only the next turn (3.9). */
 	readonly scopeAtAsk: readonly string[];
-	/** Per-turn marks for 8.7–8.9; `submit` is stamped at construction, in the submit handler. */
-	readonly marks: { submit: number; firstByte?: number; firstPaint?: number };
+	/**
+	 * Per-turn marks for 8.7–8.9 and the 9.3 disclosure; `submit` is stamped at
+	 * construction, in the submit handler. Reactive so the working indicator can
+	 * leave the moment first content exists and the disclosure never shows stale
+	 * marks (perf.svelte.ts stamps the rest).
+	 */
+	marks: TurnMarks = $state({ submit: 0 });
 
 	state = $state<TurnState>('acknowledged');
 	/** Fixed by the `outcome` event before the first word paints; null while unknown. */
@@ -97,7 +103,7 @@ export class Turn {
 	constructor(question: string, scopeAtAsk: readonly string[]) {
 		this.question = question;
 		this.scopeAtAsk = [...scopeAtAsk];
-		this.marks = { submit: performance.now() };
+		this.marks.submit = performance.now();
 		this.#parser = new BlockParser((passageId) => this.#assignMarker(passageId));
 	}
 
@@ -213,8 +219,15 @@ export class Turn {
 			});
 			turn.renderer = rendererFor(data.outcome);
 		},
-		direct_answer: (turn, data) => turn.#merge({ direct_answer: data.text }),
-		body_delta: (turn, data) => turn.#appendBody(data.text),
+		direct_answer: (turn, data) => {
+			// The first content event: the 8.8/8.9 measurement lands here.
+			markFirstByte(turn.marks);
+			turn.#merge({ direct_answer: data.text });
+		},
+		body_delta: (turn, data) => {
+			markFirstByte(turn.marks);
+			turn.#appendBody(data.text);
+		},
 		citation: (turn, data) => {
 			turn.citations = new Map(turn.citations).set(data.passage_id, data);
 		},

@@ -10,24 +10,56 @@
 	import type { Block, InlineSpan } from '../engine/blocks';
 	import type { Turn } from '../engine/turn.svelte';
 	import type { KeyRouter } from '../keys';
+	import type { ProviderClass } from '../state/perf.svelte';
 	import { scope as defaultScope, type ScopeStore } from '../state/scope.svelte';
 	import { thread as defaultThread, type ThreadStore } from '../state/thread.svelte';
 	import AnswerView from './AnswerView.svelte';
 	import CoverageFailureView, { type SourcesLike } from './CoverageFailureView.svelte';
+	import DiagnosticsDisclosure from './DiagnosticsDisclosure.svelte';
+	import ErrorView from './ErrorView.svelte';
 	import NarrowingView from './NarrowingView.svelte';
 	import RankedCausesView from './RankedCausesView.svelte';
+	import WorkingIndicator from './WorkingIndicator.svelte';
 
 	let {
 		thread = defaultThread,
 		scope = defaultScope,
 		router = undefined,
-		sources = undefined
+		sources = undefined,
+		providerClass = 'hosted',
+		reducedMotion = undefined,
+		providerName = null,
+		onconfigure = undefined
 	}: {
 		thread?: ThreadStore;
 		scope?: ScopeStore;
 		router?: KeyRouter;
 		sources?: SourcesLike;
+		providerClass?: ProviderClass;
+		reducedMotion?: boolean;
+		providerName?: string | null;
+		onconfigure?: (() => void) | undefined;
 	} = $props();
+
+	/** The states §9 routes to ErrorView, including a failed turn with no outcome (9.15, 9.19). */
+	function isErrorFamily(turn: Turn): boolean {
+		return (
+			turn.renderer === 'error' ||
+			turn.renderer === 'broken' ||
+			turn.renderer === 'empty-scope' ||
+			(turn.state === 'failed' && turn.renderer === null)
+		);
+	}
+
+	/** 9.3: the disclosure exists on every error state and on `framing: unparsed`. */
+	function hasDiagnostics(turn: Turn): boolean {
+		return (
+			turn.state === 'failed' ||
+			turn.renderer === 'error' ||
+			turn.renderer === 'broken' ||
+			turn.envelope.framing === 'unparsed'
+		);
+	}
 
 	/** Working / finished / broken as text — one of 8.4's two channels. */
 	function stateLabel(turn: Turn): string {
@@ -41,6 +73,69 @@
 		}
 		return 'finished';
 	}
+
+	/**
+	 * The shape channel beside the label — 8.4's second independent channel,
+	 * distinct per state and never colour alone. Static: the only animation
+	 * beside arriving text belongs to the working indicator (11.9).
+	 */
+	function stateShape(turn: Turn): string {
+		if (turn.state === 'acknowledged' || turn.state === 'streaming') return '●';
+		if (turn.envelope.outcome === 'cancelled') return turn.userCancelled ? '■' : '□';
+		if (turn.state === 'failed') {
+			return turn.envelope.outcome === 'incomplete' ? '◗' : '✕';
+		}
+		return '✓';
+	}
+
+	// 13.5: one polite region announcing each state transition once — never
+	// the streamed fragments, never the reduced-motion counter's ticks.
+	let announcement = $state('');
+	const announcedFlags = new WeakMap<Turn, { streaming: boolean; terminal: boolean }>();
+
+	function terminalAnnouncement(turn: Turn): string {
+		if (turn.envelope.outcome === 'cancelled') return '';
+		if (turn.state === 'failed') return 'Answer failed.';
+		switch (turn.renderer) {
+			case 'narrowing': {
+				const narrowing = turn.envelope.narrowing;
+				if (narrowing === undefined) return 'The question needs narrowing.';
+				const candidates = narrowing.candidates
+					.map((candidate, index) => `${index + 1}: ${candidate}`)
+					.join(', ');
+				return `Needs narrowing — ${narrowing.question} Candidates: ${candidates}. Press a number key to select one.`;
+			}
+			case 'coverage-failure':
+				return 'The sources in scope do not cover this question.';
+			case 'empty-scope':
+				return 'No sources are selected.';
+			case 'error':
+			case 'broken':
+				return 'Answer failed.';
+			default:
+				return turn.envelope.outcome === 'partially-answered'
+					? 'Answer finished, partially — parts were not covered.'
+					: 'Answer finished.';
+		}
+	}
+
+	$effect(() => {
+		const turn = thread.turns.at(-1);
+		if (turn === undefined) return;
+		let flags = announcedFlags.get(turn);
+		if (flags === undefined) {
+			flags = { streaming: false, terminal: false };
+			announcedFlags.set(turn, flags);
+		}
+		if (turn.state === 'streaming' && !flags.streaming) {
+			flags.streaming = true;
+			announcement = 'Answer streaming.';
+		}
+		if ((turn.state === 'settled' || turn.state === 'failed') && !flags.terminal) {
+			flags.terminal = true;
+			announcement = terminalAnnouncement(turn);
+		}
+	});
 
 	function spanText(spans: readonly InlineSpan[]): string {
 		return spans
@@ -74,9 +169,22 @@
 				>
 					{turn.question}
 				</button>
+				<span class="state-shape" data-state={stateLabel(turn)} aria-hidden="true"
+					>{stateShape(turn)}</span
+				>
 				<span class="state">{stateLabel(turn)}</span>
 			</header>
-			{#if turn.renderer === 'answer' || turn.renderer === null}
+			{#if isErrorFamily(turn)}
+				<ErrorView
+					{turn}
+					{thread}
+					{scope}
+					{providerName}
+					{onconfigure}
+					failure={thread.failureOf(turn)}
+				/>
+			{:else if turn.renderer === 'answer' || turn.renderer === null || turn.renderer === 'cancelled'}
+				<!-- `cancelled` retains whatever arrived (8.6, 9.16); the notes below mark it. -->
 				<AnswerView {turn} {thread} {scope} />
 			{:else if turn.renderer === 'narrowing'}
 				<NarrowingView {turn} {thread} {router} />
@@ -92,8 +200,31 @@
 					<p class="block">{blockText(block)}</p>
 				{/each}
 			{/if}
+
+			{#if turn.incomplete && !isErrorFamily(turn)}
+				<!-- 9.14: retained, marked, never presented as finished; retry offered. -->
+				<p class="incomplete-note">
+					<span>This answer is incomplete — it stopped before finishing.</span>
+					<button type="button" onclick={() => thread.submit(turn.question)}>Retry</button>
+				</p>
+			{/if}
+
+			{#if turn.envelope.outcome === 'cancelled' && !turn.userCancelled}
+				<!-- 9.16: abandoned, distinct from incomplete and from an error. -->
+				<p class="abandoned-note">Abandoned — a newer question replaced this turn.</p>
+			{/if}
+
+			{#if hasDiagnostics(turn)}
+				<DiagnosticsDisclosure {turn} />
+			{/if}
 		</article>
 	{/each}
+
+	<!-- Below the thread, never above: its removal cannot shift text (Decision 2). -->
+	<WorkingIndicator {thread} {providerClass} {reducedMotion} />
+
+	<!-- 13.5: state transitions only; the streamed body is aria-live off. -->
+	<p class="announcer" role="status" aria-live="polite">{announcement}</p>
 </section>
 
 <style>
@@ -133,6 +264,59 @@
 	.state {
 		color: var(--colour-text-secondary); /* spelling-ignore */
 		font-size: var(--font-size-secondary);
+	}
+
+	/* 11.6: the glyph is a channel that survives greyscale; colour rides along. */
+	.state-shape {
+		font-size: var(--font-size-secondary);
+		color: var(--colour-state-working); /* spelling-ignore */
+	}
+
+	.state-shape[data-state='finished'] {
+		color: var(--colour-state-finished); /* spelling-ignore */
+	}
+
+	.state-shape[data-state='broken'],
+	.state-shape[data-state='incomplete'] {
+		color: var(--colour-state-broken); /* spelling-ignore */
+	}
+
+	.state-shape[data-state='stopped'],
+	.state-shape[data-state='abandoned'] {
+		color: var(--colour-text-secondary); /* spelling-ignore */
+	}
+
+	.incomplete-note,
+	.abandoned-note {
+		margin: 0;
+		color: var(--colour-text-secondary); /* spelling-ignore */
+		font-size: var(--font-size-control);
+	}
+
+	.incomplete-note button {
+		background: var(--colour-surface);
+		color: var(--colour-text); /* spelling-ignore */
+		font-size: var(--font-size-control);
+		border: 1px solid var(--colour-text-secondary);
+		border-radius: 4px;
+		padding: 0.15em 0.6em;
+		margin-inline-start: 0.5em;
+	}
+
+	.incomplete-note button:focus-visible {
+		outline: 2px solid var(--colour-focus-ring);
+		outline-offset: 1px;
+	}
+
+	.announcer {
+		/* Visually hidden, present to assistive technology (13.5). */
+		position: absolute;
+		width: 1px;
+		height: 1px;
+		overflow: hidden;
+		clip-path: inset(50%);
+		white-space: nowrap;
+		margin: 0;
 	}
 
 	.direct {

@@ -276,7 +276,7 @@ references:
 
 ## Phase 7: Waiting states and errors
 
-- [ ] 35. Write tests for waiting states, thresholds and perf marks <!-- id:f9ae01y -->
+- [x] 35. Write tests for waiting states, thresholds and perf marks <!-- id:f9ae01y -->
   - `acknowledged` is entered synchronously in the submit handler, before `fetch` is called, so the acknowledgement paint never waits on the network (8.1, 8.7); the working indicator is unmistakably live and sits below the thread so its removal cannot shift text (8.2, Decision 2); the submitted question stays visible while waiting (8.3).
   - Working, finished and broken are mutually distinguishable by at least two channels each — shape and text, never colour alone (8.4, the channel design behind 8.11); past the per-provider-class threshold, plain "taking longer than usual" text and a cancel control appear — hosted and local thresholds differ and sit above that class's observed median (8.5, 8.10).
   - A user cancel returns to ready with the question preserved and never presents partial output as finished (8.6).
@@ -287,13 +287,13 @@ references:
   - Stream: 1
   - Requirements: [8.1](requirements.md#8.1), [8.2](requirements.md#8.2), [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.5](requirements.md#8.5), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [8.10](requirements.md#8.10), [8.11](requirements.md#8.11), [11.9](requirements.md#11.9), [13.5](requirements.md#13.5), [13.6](requirements.md#13.6)
 
-- [ ] 36. Implement the waiting states and perf.svelte.ts <!-- id:f9ae01z -->
+- [x] 36. Implement the waiting states and perf.svelte.ts <!-- id:f9ae01z -->
   - The turn state machine's visible states, the working indicator with its reduced-motion counter variant, the per-provider-class threshold, the announcement region, and the per-turn marks.
   - Blocked-by: f9ae01y (Write tests for waiting states, thresholds and perf marks)
   - Stream: 1
   - Requirements: [8.1](requirements.md#8.1), [8.2](requirements.md#8.2), [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.5](requirements.md#8.5), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [8.10](requirements.md#8.10), [8.11](requirements.md#8.11), [11.9](requirements.md#11.9), [13.5](requirements.md#13.5), [13.6](requirements.md#13.6)
 
-- [ ] 37. Write tests for the error states <!-- id:f9ae020 -->
+- [x] 37. Write tests for the error states <!-- id:f9ae020 -->
   - No raw exception text, stack trace or payload as the primary message (9.1); every state states what happened plainly and offers at least one action (9.2); the diagnostic disclosure renders exactly the engine's `detail`, `framing` and `timings` plus the client's per-turn marks — nothing else, nothing parsed out of `detail` — and is also available on any turn carrying `framing: unparsed` (9.3).
   - `provider-unconfigured` keys on the `reason` sub-code and never the wording: no-provider-kind, missing-credential, disclosure-unacknowledged — each opening provider configuration with the typed question preserved; a configured local provider or the shared backend is never unconfigured for lacking a key (9.5).
   - `provider-unreachable` names the provider with retry (9.6); `timeout` attributes the stall to the provider, distinct from unreachable (9.7); `provider-rate-limited` counts down `retry_after` where supplied, enabling retry when it elapses, and states honestly when the provider gave no interval — absence is never a fault and never invented, rounding permitted for display (9.8); `provider-error` with provider-rejected retries with `detail` behind the disclosure (9.9); authentication-failed offers configuration in place of retry — a retry on the same credential cannot succeed — keyed on the sub-code alone (9.10).
@@ -304,7 +304,7 @@ references:
   - Stream: 1
   - Requirements: [9.1](requirements.md#9.1), [9.2](requirements.md#9.2), [9.3](requirements.md#9.3), [9.5](requirements.md#9.5), [9.6](requirements.md#9.6), [9.7](requirements.md#9.7), [9.8](requirements.md#9.8), [9.9](requirements.md#9.9), [9.10](requirements.md#9.10), [9.11](requirements.md#9.11), [9.12](requirements.md#9.12), [9.13](requirements.md#9.13), [9.14](requirements.md#9.14), [9.15](requirements.md#9.15), [9.16](requirements.md#9.16), [9.17](requirements.md#9.17), [9.18](requirements.md#9.18), [9.19](requirements.md#9.19)
 
-- [ ] 38. Implement the error renderers and diagnostics disclosure <!-- id:f9ae021 -->
+- [x] 38. Implement the error renderers and diagnostics disclosure <!-- id:f9ae021 -->
   - The per-outcome error renderers of the design's outcome table, the reason-keyed wording and controls, the countdown, and the disclosure.
   - Blocked-by: f9ae020 (Write tests for the error states)
   - Stream: 1
