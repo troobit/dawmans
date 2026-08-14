@@ -50,17 +50,17 @@ amendment to that decision, not an ad-hoc `mkdir`.
 ## Specs
 
 All four are at **requirements and design complete**. Each design has been reviewed and repaired.
-All four now carry a `tasks.md` ledger; implementation has begun on `api/answer-engine`, whose
-phases 1 (package scaffold and the envelope records), 2 (the corpus view), 3 (retrieval and
-scoping), 4 (narrowing from triage entries), 5 (prompt, parser, grounding and the outcome
-procedure), 6 (providers, credentials and the state seam), 7 (conversation and the turn
-pipeline) and 8 (the local HTTP surface) are done.
+All four now carry a `tasks.md` ledger; `api/answer-engine` is **fully implemented** — phases 1
+(package scaffold and the envelope records), 2 (the corpus view), 3 (retrieval and scoping), 4
+(narrowing from triage entries), 5 (prompt, parser, grounding and the outcome procedure), 6
+(providers, credentials and the state seam), 7 (conversation and the turn pipeline), 8 (the local
+HTTP surface) and 9 (end-to-end, serve wiring and timing) are done, all 45 tasks.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, none started) | 60 |
-| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, 42 done) | 111 |
+| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, all done) | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, none started) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
@@ -95,12 +95,13 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 - **Files present:** `requirements.md`, `design.md`, `decision_log.md` (11 ADRs), `tasks.md`,
   `prerequisites.md`.
-- **Ledger:** 45 tasks; phases 1 (package scaffold and the envelope records, tasks 1–3), 2
-  (the corpus view, tasks 4–5), 3 (retrieval and scoping, tasks 6–11), 4 (narrowing from
-  triage entries, tasks 12–13), 5 (prompt, parser, grounding and the outcome procedure,
-  tasks 14–21), 6 (providers, credentials and the state seam, tasks 22–28), 7
-  (conversation and the turn pipeline, tasks 29–32) and 8 (the local HTTP surface, tasks
-  33–42) are done — the first implemented code in the repository.
+- **Ledger:** 45 tasks, **all done** — the first implemented code in the repository: phases 1
+  (package scaffold and the envelope records, tasks 1–3), 2 (the corpus view, tasks 4–5), 3
+  (retrieval and scoping, tasks 6–11), 4 (narrowing from triage entries, tasks 12–13), 5
+  (prompt, parser, grounding and the outcome procedure, tasks 14–21), 6 (providers,
+  credentials and the state seam, tasks 22–28), 7 (conversation and the turn pipeline, tasks
+  29–32), 8 (the local HTTP surface, tasks 33–42) and 9 (end-to-end, serve wiring and
+  timing, tasks 43–45).
 - 10 requirement sections, 111 anchored criteria. Header declares status *draft*.
 - Produces `Citation` and `AnswerEnvelope` ([`CONTRACTS.md`](CONTRACTS.md) §3–§4) and may emit only
   the outcomes in §6 of that file. Must define `StateSource` while shipping a null implementation
@@ -150,8 +151,12 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   (the loopback bind check and Host/Origin guard, fetch-passage, list-sources with both gap
   reports, the provider configuration routes over a masked-only registry, serve-document with
   realpath confinement and Range, and `POST /turn` streaming the CONTRACTS §4b event set over
-  SSE with the version header and the static mount) — with their tests: phases 1–8
-  of that ledger, 42 of 45 tasks.
+  SSE with the version header and the static mount) — and finally the end-to-end layer:
+  `dawmans serve` with the four-step startup order (view, model, warm encode, bind last),
+  end-to-end tests over a synthetic on-disk view and scripted providers covering every content
+  outcome and the mid-conversation corpus swap, the CI timing tests for 4.2/4.3 over a
+  synthetic 1,200-chunk index, and the `make bench` target for the real-provider budgets and
+  Decision 8's margin calibration — with their tests: all 9 phases, 45 of 45 tasks.
 
 **What is next**
 
@@ -159,9 +164,10 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   and §6a, and rewriting §4, §6 and §7 — and reconciled all four specs against it in the same pass.
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
-- The **task phase is complete** — all four specs carry a ledger — and implementation has begun:
-  `api/answer-engine` phase 9 (end-to-end, serve wiring and timing) is the next
-  unstarted work on that ledger, with the other three ledgers unstarted.
+- The **task phase is complete** — all four specs carry a ledger — and `api/answer-engine` is
+  fully implemented (45 of 45 tasks). The other three ledgers are unstarted; `make bench` and the
+  real-provider verification wait on the prerequisites (the Keychain key and an ingested corpus),
+  which in turn wait on `data/manual-corpus`.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes

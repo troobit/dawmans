@@ -2,7 +2,7 @@
 # build/test/lint.
 
 .DEFAULT_GOAL := help
-.PHONY: help build test lint spelling clean new-project
+.PHONY: help build test lint spelling bench clean new-project
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-10s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -18,6 +18,9 @@ lint: spelling ## Run linters
 
 spelling: ## Check spelling
 	bash tools/check_spelling.sh
+
+bench: ## Real-provider, real-index timing runs (skips when either is absent)
+	uv run python tools/bench.py
 
 clean: ## Remove build artefacts
 	rm -rf dist .pytest_cache .ruff_cache

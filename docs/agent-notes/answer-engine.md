@@ -1,9 +1,10 @@
 # Answer engine (`src/dawmans/answer/`)
 
-Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
-corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries), 5 (prompt, parser,
-grounding, outcome procedure), 6 (providers, credentials, state seam), 7 (conversation state,
-turn pipeline) and 8 (the local HTTP surface) are done.
+Implements `specs/api/answer-engine/`. All 9 phases are done: 1 (package scaffold + envelope
+records), 2 (the corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries),
+5 (prompt, parser, grounding, outcome procedure), 6 (providers, credentials, state seam),
+7 (conversation state, turn pipeline), 8 (the local HTTP surface) and 9 (end-to-end, serve
+wiring and timing).
 
 ## Package setup
 
@@ -333,5 +334,43 @@ turn pipeline) and 8 (the local HTTP surface) are done.
 - Test notes: httpx `ASGITransport` buffers the whole response, so incrementality and disconnect
   are tested by driving the raw ASGI app (capturing `http.response.body` messages as sent, receive
   returning `http.disconnect` on cue). `tests/answer/http_fixtures.py` holds the StubWatcher
-  (swap-on-check + `manifest_fault`), the shared corpus fixture and the request helpers; passage
-  ids in URLs need `quote(pid, safe="/")` for the `#`.
+  (swap-on-check + `manifest_fault`), the shared corpus fixture, the request helpers and
+  `parse_sse`; passage ids in URLs need `quote(pid, safe="/")` for the `#`.
+
+## Serve wiring, end-to-end and timing (`cli.py`, phase 9)
+
+- `run_serve` on `dawmans/cli.py` (not a `dawmans.answer` module — design §Module placement is a
+  closed list and names none). All serve-side imports are deferred into the functions: cli.py is
+  shared with the future ingest commands, whose environment installs the `ingest` extra only, so a
+  module-level starlette/fastembed import would break `dawmans --help` there.
+- Startup order: loopback check **first of all** (a refusal must not cost the 7.2 s model load —
+  the design only demands "before uvicorn.run"), then ViewWatcher (raises on a
+  present-but-unreadable manifest; a *missing* manifest serves an empty corpus), then
+  `load_model()` + one throwaway encode, then `run_server`. Both are injectable seams —
+  `load_model() -> (embedder, count_tokens)` and `run_server(app, host, port)` — so
+  `test_serve.py` asserts the order without the model or a socket; the view step is recorded by
+  monkeypatching `dawmans.answer.view.ViewWatcher` (run_serve does the from-import at call time).
+- `count_tokens` is `fastembed.TextEmbedding.token_count` — the resident BGE tokeniser, satisfying
+  Decision 8's no-SDK-call rule. The tokeniser only loads with the onnx model, i.e. after the warm
+  encode; the wiring order guarantees that.
+- Provider factory: KEYED_HOSTED reads the key at construction and returns None without one
+  (pre-flight maps that to missing-credential); LOCAL takes `--local-url` (default
+  `http://127.0.0.1:8080`, llama.cpp — the provider appends `/v1/chat/completions` itself, so no
+  `/v1` in the URL); SHARED_BACKEND is the stub. The 6.11 SecretFilter is installed on a
+  `logging.basicConfig` handler here. Default port 8722; `--static-dir` defaults to `web/build`
+  when present.
+- `tests/answer/test_end_to_end.py` drives the full stack minus the socket: a real ViewWatcher
+  over a disk index written by its `write_index` (view dir first, manifest last, explicit mtime
+  bump), one-hot vectors + a settable stub embedder for exact cosine control, the guarded app,
+  and per-turn `ScriptedProvider`s. Covers one turn per content outcome, the narrowing entry path
+  run to the ranked-causes terminal, and the corpus swap (a removed source → `scope_dropped`;
+  the last one removed → `no-sources-selected` — the third revision must still hold passages or
+  the corpus-empty gate would fire first). `test_serve.py` imports its fixtures.
+- `tests/answer/test_timing.py`: 4.2/4.3 in CI over an in-memory 1,200-chunk `make_view` (random
+  unit vectors, generated vocabulary); the query embed is a stub there — the real ~2.2 ms embed
+  is bench's. Overhead/retrieval/state each asserted against its own budget.
+- `make bench` → `tools/bench.py`: skips honestly without `index/manifest.json` or the Keychain
+  key. Measures first-token/completion p95 per provider class (narrowing question against the
+  first-token target only, 7.3), estimates 4.1 as first token + 100 ms paint allowance, and
+  calibrates Decision 8's 10% margin via `anthropic.Anthropic().messages.count_tokens` vs the BGE
+  count. Exits 1 on a missed budget. Never run in CI, so keep it lint-clean by hand.

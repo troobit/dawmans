@@ -27,6 +27,7 @@ from http_fixtures import (
     default_view,
     get,
     make_app,
+    parse_sse,
     request,
 )
 
@@ -134,21 +135,6 @@ def turn_app(provider=None, *, query=Q_BOTH):
     pipeline, watcher = make_pipeline(provider, query=query)
     app = make_app(watcher, pipeline=pipeline)
     return app, pipeline, provider
-
-
-def parse_sse(text):
-    events = []
-    for frame in text.split("\n\n"):
-        if not frame.strip():
-            continue
-        name, data_lines = None, []
-        for line in frame.split("\n"):
-            if line.startswith("event: "):
-                name = line[len("event: ") :]
-            elif line.startswith("data: "):
-                data_lines.append(line[len("data: ") :])
-        events.append((name, json.loads("\n".join(data_lines))))
-    return events
 
 
 def post_turn(app, body):

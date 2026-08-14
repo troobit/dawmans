@@ -365,7 +365,7 @@ references:
 
 ## Phase 9: End-to-end, serve wiring and timing
 
-- [ ] 43. Write end-to-end tests over a synthetic view and scripted providers <!-- id:f3kp043 -->
+- [x] 43. Write end-to-end tests over a synthetic view and scripted providers <!-- id:f3kp043 -->
   - Startup order: manifest read, view load, model loaded and warmed with a throwaway encode, bind last - a listener that accepts before the warm promises a budget it cannot meet, and the 7.2 s cold load must not be paid on the first question.
   - One turn per content outcome against scripted streams: answered with citations from both kinds carrying kind, doc_version and applicability; a conflict rendered as !conflict with both readings and separate citations; a partial answer naming uncovered_parts; a refusal with up to 3 suggestions; out-of-domain with suggestions suppressed; no-manual-for-device with required_device and required_manual against a fixture gaps report; the narrowing entry path run to the limit and terminating in ranked-causes whose direct_answer states the rank-1 check as an instruction.
   - contributing_sources[] is the set of source_id over supplied, reported with every answer.
@@ -374,13 +374,13 @@ references:
   - Stream: 1
   - Requirements: [1.4](requirements.md#1.4), [2.1](requirements.md#2.1), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [5.9](requirements.md#5.9), [5.10](requirements.md#5.10), [5.11](requirements.md#5.11), [7.1](requirements.md#7.1), [7.5](requirements.md#7.5), [7.6](requirements.md#7.6)
 
-- [ ] 44. Implement dawmans serve and the startup wiring <!-- id:f3kp044 -->
+- [x] 44. Implement dawmans serve and the startup wiring <!-- id:f3kp044 -->
   - The serve subcommand on cli.py: configuration (port, manuals root), the four-step startup order, uvicorn bound after the warm.
   - Blocked-by: f3kp024 (Implement provider/anthropic.py), f3kp026 (Implement provider/local.py and provider/shared.py), f3kp043 (Write end-to-end tests over a synthetic view and scripted providers)
   - Stream: 1
   - Requirements: [9.1](requirements.md#9.1)
 
-- [ ] 45. Add the timing tests and the bench target <!-- id:f3kp045 -->
+- [x] 45. Add the timing tests and the bench target <!-- id:f3kp045 -->
   - 4.2 (retrieval <= 10 ms median, <= 50 ms p95) and 4.3 (engine overhead <= 150 ms p95 with a stub provider) run in CI against a synthetic 1,200-chunk index; the overhead cap excludes retrieval and state acquisition, each measured against its own budget, or the cap would be consumed before any engine work began.
   - 4.1 and 4.6-4.8 need a real provider and a real index: `make bench`, skipped when either is absent - the same honest limitation the sibling specs accept for their full-corpus budgets.
   - A narrowing question is measured against the same first-token target for the provider class, never against a completion target that would have to precede it.

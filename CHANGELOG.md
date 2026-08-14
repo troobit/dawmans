@@ -12,6 +12,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **End-to-end, serve wiring and timing** (`api/answer-engine` phase 9, `dawmans/cli.py`,
+  `tools/bench.py`). `dawmans serve` is wired on `run_serve` in `cli.py` with the four-step
+  startup order of design §What the engine reads: the loopback check first of all — a refusal
+  never pays the 7.2 s model load — then the manifest read and view load (raising on a
+  present-but-unreadable manifest, serving an empty corpus on a missing one), then the embedding
+  model loaded and warmed with one throwaway encode, and the bind last, so no listener accepts
+  before the warm. The model loader and server runner are injectable seams; the resident BGE
+  tokeniser backs `count_tokens` (Decision 8 — no provider SDK call before `stream()`), the
+  provider factory constructs each kind against its own base URL with the keyed constructor as
+  the stored key's only reader, and the 6.11 `SecretFilter` is installed on the logging handler.
+  All serve-side imports are deferred so the shared CLI stays importable in an ingest-only
+  environment. End-to-end tests (`tests/answer/test_end_to_end.py`) drive the full stack minus
+  the socket — a real `ViewWatcher` over a synthetic on-disk index written view-directory-first
+  and manifest-last, the guarded app, the pipeline, scripted providers — covering one turn per
+  content outcome (answered with citations from both kinds, a `!conflict` with both readings
+  separately cited, a partial answer naming `uncovered_parts`, a refusal with resolved
+  suggestions, out-of-domain with suggestions suppressed, no-manual-for-device resolving
+  `required_device` and `required_manual` through a fixture gaps report), the narrowing entry
+  path run to its limit and terminating in `ranked-causes`, `contributing_sources[]` on every
+  answer, and the mid-conversation corpus swap (a removed source drops with `scope_dropped`;
+  removing the last yields `no-sources-selected`). Startup order and wiring tests are
+  `tests/answer/test_serve.py`. The CI timing tests (`tests/answer/test_timing.py`) hold 4.2
+  (retrieval ≤ 10 ms median / ≤ 50 ms p95) and 4.3 (engine overhead ≤ 150 ms p95, stub provider)
+  against a synthetic 1,200-chunk index, with retrieval and state acquisition excluded from the
+  overhead cap and each held to its own budget; `make bench` (`tools/bench.py`) covers 4.1 and
+  4.6–4.8 against a real provider and a real index, skipping honestly when either is absent,
+  measures a narrowing question against the first-token target only (7.3), and calibrates
+  Decision 8's 10% history-token margin against the provider's `count_tokens`.
+
 - **The local HTTP surface** (`api/answer-engine` phase 8, `dawmans/answer/http/guard.py` and
   `dawmans/answer/http/app.py`). `guard.py` holds the two 9.1–9.3 guards: `ensure_loopback_bind`
   refuses a non-loopback bind before uvicorn exists — exiting non-zero naming the address and the

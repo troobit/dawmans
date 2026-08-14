@@ -9,6 +9,7 @@ the way a re-ingest would.
 """
 
 import asyncio
+import json
 
 import httpx
 from corpus_fixtures import make_view, passage, sidecar_entry, triage_source, vendor_source
@@ -109,3 +110,19 @@ def request(app, method, path, *, headers=None, json_body=None, base_url=BASE):
 
 def get(app, path, **kwargs):
     return request(app, "GET", path, **kwargs)
+
+
+def parse_sse(text):
+    """The SSE frames of one turn stream as (event name, decoded payload) pairs."""
+    events = []
+    for frame in text.split("\n\n"):
+        if not frame.strip():
+            continue
+        name, data_lines = None, []
+        for line in frame.split("\n"):
+            if line.startswith("event: "):
+                name = line[len("event: ") :]
+            elif line.startswith("data: "):
+                data_lines.append(line[len("data: ") :])
+        events.append((name, json.loads("\n".join(data_lines))))
+    return events
