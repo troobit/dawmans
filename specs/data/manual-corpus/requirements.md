@@ -265,10 +265,13 @@ the right number, so that mapping a kit does not require me to open the PDF anyw
 5. <a name="7.5"></a>WHEN a table is larger than the maximum chunk size, the system SHALL split it
    between rows and SHALL repeat the column headings in each resulting chunk.
 6. <a name="7.6"></a>The system SHALL index the Alesis Nitro Max MIDI note table (§5.2, p25) such
-   that all 15 trigger-to-note pairs are recoverable from the indexed text, each trigger paired
+   that all 19 trigger-to-note pairs are recoverable from the indexed text, each trigger paired
    with the number printed beside it. That page is a required acceptance fixture for this
-   section: it is printed as two side-by-side panels under a heading that wraps across three
-   physical lines, which is precisely the layout 7.2 and 7.3 must survive.
+   section: it is printed as two side-by-side panels of unequal length — 11 rows on the left,
+   8 on the right — under a heading that wraps across three physical lines. Because the panels
+   are ragged, a cell SHALL be paired with its trigger by horizontal position rather than by row
+   index; pairing by index would silently mis-associate every row past the eighth. This is
+   precisely the layout 7.2 and 7.3 must survive.
 
 ## 8. Index Build and Incremental Update
 

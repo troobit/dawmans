@@ -327,7 +327,7 @@ defeats the classic decompilers, so recovery is no longer clean.
 
 **What the Live Object Model exposes.** Everything this feature needs, and more, with live change
 notification. From [LOM Track](https://docs.cycling74.com/apiref/lom/track/) (documentation states it
-describes Live 12.3.5): `arm`, `mute`, `solo`, `muted_via_solo`, `can_be_armed`, `name`, `color`,
+describes Live 12.3.5): `arm`, `mute`, `solo`, `muted_via_solo`, `can_be_armed`, `name`, `color`, <!-- spelling-ignore: Ableton API/page names -->
 `is_frozen`, `is_grouped`, `is_foldable`, `fold_state`, `is_visible`, `input_routing_type`,
 `input_routing_channel`, `output_routing_type`, `output_routing_channel`, plus the `available_*` lists,
 plus `input_meter_level` / `output_meter_level`, plus `devices`. Most are `get`/`set`/**`observe`** —
@@ -375,7 +375,7 @@ and a strong argument for depending on someone else's already-maintained script 
 
 Link synchronises **tempo, beat, phase, and (since Link v3) start/stop** across applications on a machine
 or LAN ([Link documentation](https://ableton.github.io/link/),
-[Live 12 manual: Synchronizing with Link](https://www.ableton.com/en/manual/synchronizing-with-link-tempo-follower-and-midi/)).
+[Live 12 manual: Synchronizing with Link](https://www.ableton.com/en/manual/synchronizing-with-link-tempo-follower-and-midi/)). <!-- spelling-ignore: Ableton API/page names -->
 
 It carries **no** notes, **no** control changes, **no** audio, and **no** session/track state. There is no
 track list, no arm/monitor/mute/solo, no routing, no device information. Link cannot answer a single one
@@ -570,7 +570,7 @@ Everything marked **[verified locally]** came from read-only inspection:
 - [Ableton — Installing third-party remote scripts](https://help.ableton.com/hc/en-us/articles/209072009-Installing-third-party-remote-scripts) (Cloudflare-gated)
 - [Ableton — Recovering a Set manually after a crash](https://help.ableton.com/hc/en-us/articles/115001878844-Recovering-a-Set-manually-after-a-crash) (Cloudflare-gated)
 - [Ableton Live 12 manual — Mixing](https://www.ableton.com/en/manual/mixing/)
-- [Ableton Live 12 manual — Synchronizing with Link, Tempo Follower, and MIDI](https://www.ableton.com/en/manual/synchronizing-with-link-tempo-follower-and-midi/)
+- [Ableton Live 12 manual — Synchronizing with Link, Tempo Follower, and MIDI](https://www.ableton.com/en/manual/synchronizing-with-link-tempo-follower-and-midi/) <!-- spelling-ignore: Ableton API/page names -->
 - [Ableton Link documentation](https://ableton.github.io/link/)
 - [Cycling '74 — Live Object Model index](https://docs.cycling74.com/apiref/lom/) (states it documents Live 12.3.5)
 - [Cycling '74 — LOM: Track](https://docs.cycling74.com/apiref/lom/track/)

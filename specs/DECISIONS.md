@@ -640,3 +640,82 @@ Adds `hardware_applicability` to `SourceRecord` and to the rendered `Citation` i
 scope.
 
 ---
+
+## Decision 10: Python for ingestion and the answer engine, SvelteKit for the browser surface
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+This repository is derived from a stack-agnostic template, and the stack was left as the derived
+project's job. [`AGENTS.md`](../AGENTS.md) still carries it as a `TODO`, and `make build`, `make test`
+and `make clean` error as unconfigured. Design cannot proceed for any of the four specs while that
+holds: a design document has to name what it is designing in.
+
+The load-bearing constraint is that the two hardest parts of DAWMans — layout-preserving PDF text
+extraction, and fast local embedding inference — have their strongest ecosystems in Python. The
+retrieval research in [`retrieval-approach.md`](../docs/agent-notes/retrieval-approach.md) benchmarked
+exactly those Python libraries on this machine, so the numbers the answer engine's latency budget
+rests on were obtained from that stack rather than assumed of it.
+
+Against that, [`ui/ask-and-source-picker`](ui/ask-and-source-picker/requirements.md) carries 151
+acceptance criteria, including streamed answers, one-key affordances, and measured legibility bands.
+That is a real interface with real state, not a set of server-rendered fragments, and it needs a
+frontend framework to match.
+
+### Decision
+
+Python owns ingestion (`data/manual-corpus`, `data/symptom-triage`) and the answer engine
+(`api/answer-engine`), exposing a loopback HTTP service with streamed responses. SvelteKit owns the
+browser surface (`ui/ask-and-source-picker`). Python dependencies and environments are managed with
+**uv**, and the SvelteKit side with **pnpm**. A single `make dev` target runs both. Retrieval stays
+entirely local and offline; only answer synthesis calls out to a provider.
+
+### Rationale
+
+Each half uses the ecosystem built for it. PDF layout extraction and ONNX inference are Python's
+established ground; a streamed, keyboard-driven interface with measured legibility requirements is
+the frontend framework's.
+
+The measured retrieval figures carry over unchanged as a result. The 0.011 ms brute-force cosine
+scan, the 2.2 ms query embed, and the 1.8 MB index were all measured with this stack, so adopting it
+means the answer engine's budget starts from evidence rather than needing re-validation against a
+different set of libraries.
+
+The split also costs no extra seam. The boundary between `api` and `ui` is already a spec boundary
+governed by [`CONTRACTS.md`](CONTRACTS.md), and it falls exactly where the runtime boundary falls —
+so the process boundary sits on a line the specs had drawn anyway.
+
+The package managers are each the fast, lockfile-first choice in their ecosystem, which matters most
+on a two-runtime project where the friction of the second toolchain is the main cost this decision
+carries. `uv` gives reproducible, lockfile-backed Python environments and subsumes the
+virtualenv/pip/pip-tools split into a single tool; `pnpm`'s content-addressed store and strict
+dependency resolution stop phantom dependencies — imports that resolve only because something else
+pulled the package in — from working at all.
+
+### Alternatives Considered
+
+- **All TypeScript, SvelteKit full-stack**: One language, one process, one dependency manager, and the simplest thing to run - Rejected because PDF layout extraction and ONNX inference are materially weaker in Node, and both are load-bearing. Adopting it would invalidate the benchmarks and force re-validation of the two riskiest components in the project.
+- **Python batch index plus a TypeScript app**: Ingestion as a standalone tool emitting a portable index that the app only reads - Rejected as a stack choice because it turns the on-disk index format into a cross-language contract that must be versioned and kept compatible, which is a heavier commitment than the process boundary it replaces. It remains a viable *later* refactor if the ingestion tool ever wants to ship separately.
+- **Go backend with an embedded Svelte UI**: A single static binary, and the best operational story of the three - Rejected because Go's PDF text-layout extraction and ONNX bindings are the weakest of the options considered, on precisely the two capabilities the product depends on.
+
+### Consequences
+
+**Positive:**
+- Each half uses tooling proven for its job, rather than one stack stretched across both.
+- The measured performance figures from the retrieval research carry over without re-validation.
+- Retrieval needs no hosted service, which honours the local and FOSS preference recorded in `AGENTS.md`.
+
+**Negative:**
+- Two runtimes and two dependency managers on a single-developer project.
+- `make dev` has to orchestrate both, and is now a moving part that can fail on its own.
+- A contributor needs both toolchains installed before anything runs, and specifically needs `uv` and `pnpm` rather than merely a Python and a Node installation.
+- The engine and the UI must be run and debugged as two processes rather than one.
+
+### Impact
+
+Unblocks the design phase for all four specs, fixes what `AGENTS.md` records as the stack, and
+determines the `.gitignore`, CI and `Makefile` targets that follow from it.
+
+---
