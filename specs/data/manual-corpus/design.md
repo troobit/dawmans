@@ -57,10 +57,10 @@ result, so it must read the passages **this** run produced.
 | 6 | Language selection | `vendor-manual` | `Page[]` | blocks marked `english` | 4.1–4.6 |
 | 7 | Unit assembly | `vendor-manual` | `Page[]` + `SectionMap` | `Region[]`; **clears** `furniture` inside detected tables, then drops what is still marked | 3.5, 7.1–7.3, 7.6, 10.3 |
 | 8 | Chunk | `vendor-manual` | `Region[]` | `Passage[]` | 6.1–6.2, 6.7–6.11, 7.4–7.5 |
-| 9 | Embed + shard commit | `vendor-manual` | `Passage[]` | `index/shards/<slug>.*` | 8.2–8.5, 8.7 |
+| 9 | Embed + shard commit | `vendor-manual` | `Passage[]` | `index/shards/<slug>.*` | 8.2–8.5, 8.7, 8.8 |
 | 10 | Authored load | `authored-triage` | entry store + **committed vendor shards** | `Region[]` | 12.3, 12.5–12.6, 12.8 |
 | 11 | Chunk, embed + shard commit | `authored-triage` | `Region[]` | `index/shards/authored_triage.*` | as 8–9 |
-| 12 | Merge + manifest commit | run | all shards | `index/*` | 8.1, 8.6, 9.1, 9.4–9.6, 12.7 |
+| 12 | Merge + manifest commit | run | all shards | `index/*` | 8.1, 8.6, 8.8–8.11, 9.1, 9.4–9.6, 12.7 |
 | 13 | Rig report | run | `rig.yaml` + inventory | `index/gaps.json`, run report | 11.1–11.6 |
 
 Stage 11 is stages 8–9 called again over the authored regions; their being the same code is 12.2.
@@ -782,12 +782,16 @@ resolved here unilaterally beyond the design position stated above.
    (§Figures). Either 10.3 becomes chunk-scoped or CONTRACTS §2 gains a field.
 2. **6.11 requires rejecting the source**, which 1.6's closed rejection list does not admit and
    which discards a source over one chunk. Implemented as a failure (§Error Handling).
-3. **No acceptance criterion asks for a dense index, a lexical index, or an embedding model.**
-   §8's "a queryable one" in 8.1 is the only hook, and it is doing a great deal of work:
-   `vectors.npy`, `index/views/*/lexical/` and the whole embedding stage rest on it, and Decision 3
-   derives the 350-word cap from an embedding window no criterion requires. This is a requirements
-   gap, not a design one — the artefacts are needed for `api/answer-engine` to function — but it
-   should be closed by a criterion naming what "queryable" means.
+3. ~~**No acceptance criterion asks for a dense index, a lexical index, or an embedding model.**~~
+   **Closed.** 8.1's "a queryable one" was the only hook, and it was doing a great deal of work:
+   `vectors.npy`, `index/views/*/lexical/` and the whole embedding stage rested on it, and
+   Decision 3 derives the 350-word cap from an embedding window no criterion required. §8 now
+   states queryability directly: 8.8 requires both kinds of matching over the same passages (the
+   lexical and dense indexes), 8.9 requires every `Passage` and `SourceRecord` field readable
+   without a source PDF (`passages.jsonl`, `sources.json`), 8.10 requires source-subset
+   restriction (the `row_start`/`row_count` slice), and 8.11 requires the artefacts to be
+   self-describing (`index_version`, `corpus_revision`). Neither 8.8 nor any other criterion names
+   an embedding model or a word cap; those remain design choices under Decisions 2 and 3.
 4. **§11 and 12.5 are written for a filename-bearing source.** 12.5 and the Terms section say an
    authored `source_id` is derived from its own content; CONTRACTS §1 now fixes it at the constant
    `authored/triage`, and fixes `hardware_applicability` at `assumed`, because a content digest in

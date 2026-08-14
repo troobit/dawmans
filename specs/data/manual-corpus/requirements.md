@@ -48,6 +48,11 @@ it is searched or rendered.
   pageless; its page fields are absent and are never synthesised (12.8).
 - **Ingestion run** — a single pass that brings the index up to date with both source stores:
   `manuals/` and the authored entry store (§12).
+- **Queryable index** — the state the artefacts written by an ingestion run must be in for another
+  process to search them: both kinds of matching available over the same passages, readable without
+  any source PDF, restrictable to a chosen subset of sources, and self-describing enough to be
+  rejected when incompatible. §8 states this as criteria ([8.8](#8.8)–[8.11](#8.11)); it is what
+  "a queryable one" in [8.1](#8.1) means.
 - **Rejection** — an expected, per-source outcome: the source is excluded and the reason
   reported, and the run still succeeds. Distinct from a **failure**, which is unexpected and
   fails the run.
@@ -274,16 +279,17 @@ the right number, so that mapping a kit does not require me to open the PDF anyw
    index; pairing by index would silently mis-associate every row past the eighth. This is
    precisely the layout 7.2 and 7.3 must survive.
 
-## 8. Index Build and Incremental Update
+## 8. Index Build, Queryability and Incremental Update
 
 **User Story:** As the studio owner, I want rebuilding the corpus to be a matter of seconds, so
-that adding a manual or fixing an ingestion bug never becomes a chore I avoid.
+that adding a manual or fixing an ingestion bug never becomes a chore I avoid — and I want what a
+rebuild leaves behind to be searchable by the answering side without it opening a single PDF.
 
 **Acceptance Criteria:**
 
 1. <a name="8.1"></a>The system SHALL complete a full rebuild of the reference corpus (~1068 pages,
    ~250,000 words) in under 60 seconds on the target machine, measured from an empty index to a
-   queryable one.
+   queryable one ([8.8](#8.8)–[8.11](#8.11)).
 2. <a name="8.2"></a>The system SHALL complete the text-extraction stage of a full rebuild in under
    5 seconds for the reference corpus.
 3. <a name="8.3"></a>WHEN a single new source of either kind appears in its store — `manuals/` or
@@ -303,6 +309,23 @@ that adding a manual or fixing an ingestion bug never becomes a chore I avoid.
    chunks unchanged, so that no source is ever left partly rebuilt. Rollback SHALL be scoped to
    the failing source: sources that ingested successfully in the same run SHALL commit and remain
    queryable.
+8. <a name="8.8"></a>The system SHALL make both **exact-term matching** — a passage containing a
+   query term literally, including model names, version strings, hyphenated and slashed tokens and
+   bare numerals — and **meaning-based matching** — a passage whose wording differs from the query
+   — available over the same set of passages produced by the run. Neither kind alone satisfies this
+   criterion.
+9. <a name="8.9"></a>The system SHALL make every field of `Passage` (CONTRACTS §2) and of
+   `SourceRecord` (CONTRACTS §1) readable from the artefacts an ingestion run writes, with no
+   access to any source PDF, so that a citation can be rendered and its applicability judged
+   without opening the document it came from.
+10. <a name="8.10"></a>The system SHALL allow matching to be restricted to any chosen subset of the
+    indexed sources, without reading the passages of the sources left out. This is what per-source
+    scoping in the answering side rests on.
+11. <a name="8.11"></a>The artefacts SHALL be self-describing: they SHALL declare the identity of
+    the process that produced them, such that a consumer expecting a different one refuses to
+    interpret them rather than misreading them, and SHALL carry a corpus revision identifier that
+    changes when and only when the indexed content changes, so that a consumer can detect the
+    change with a single cheap read rather than by diffing the corpus.
 
 > **Basis for the targets.** A full layout-preserving text extraction of the 1009-page Live 12
 > manual — the largest source by an order of magnitude — measured at 0.7 seconds and yielded
