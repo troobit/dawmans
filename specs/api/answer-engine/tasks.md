@@ -9,24 +9,24 @@ references:
 
 ## Phase 1: Package scaffold and the envelope records
 
-- [ ] 1. Scaffold the dawmans.answer package and the serve dependency group <!-- id:f3kp001 -->
+- [x] 1. Scaffold the dawmans.answer package and the serve dependency group <!-- id:f3kp001 -->
   - Create the src/dawmans/answer/ module tree of design 'Module placement' with empty modules; register `dawmans serve` as a stub subcommand on the existing cli.py.
   - Split [project.optional-dependencies]: pymupdf, lingua-py and fontTools under `ingest`; fastembed, bm25s, numpy, anthropic, starlette, uvicorn and keyring under `serve` - the API host runs `uv sync --extra serve` and PyMuPDF is never installed.
   - Add the confinement test: every dawmans.answer.* module and dawmans/triage/ import in a subprocess with a sys.meta_path finder that raises on `fitz` - this catches the accidental corpus.pdf import a dual-group dev environment hides.
   - Stream: 1
   - References: specs/api/answer-engine/design.md
 
-- [ ] 2. Write tests for the Citation, AnswerEnvelope and Cause records <!-- id:f3kp002 -->
+- [x] 2. Write tests for the Citation, AnswerEnvelope and Cause records <!-- id:f3kp002 -->
   - Fields exactly the CONTRACTS 3, 4, 4c and 4e tables; no field outside them can be set; reason, retry_after, detail and framing are flat optional members of the one envelope.
   - Pageless citation: section_number, page and doc_version absent - never empty strings, never synthesised; entry_location present on authored-triage only and absent on a vendor-manual; kind always present.
   - Cause: rank always present and equal to its position in causes[]; cites[] and fix_cites[] are passage_id lists, never nested citation records.
   - The outcome enum is exactly the 17 members of CONTRACTS 6 and reason exactly the five values of 6a - assert an unlisted member cannot be constructed, because the caller cannot render an outcome the engine has not named.
-  - Stream: 1
   - Blocked-by: f3kp001 (Scaffold the dawmans.answer package and the serve dependency group)
+  - Stream: 1
   - Requirements: [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.8](requirements.md#3.8), [9.9](requirements.md#9.9)
   - References: specs/CONTRACTS.md
 
-- [ ] 3. Implement envelope.py and the outcome and reason enums <!-- id:f3kp003 -->
+- [x] 3. Implement envelope.py and the outcome and reason enums <!-- id:f3kp003 -->
   - Frozen dataclasses for Citation, AnswerEnvelope, Cause and RequiredManual per CONTRACTS 3, 4, 4c, 4e; StrEnums for outcome and reason.
   - Blocked-by: f3kp002 (Write tests for the Citation, AnswerEnvelope and Cause records)
   - Stream: 1
@@ -40,8 +40,8 @@ references:
   - The sidecar name is derived by the slug rule from the constant `authored/triage`, never spelled: a view whose authored sidecar is written `authored-triage.json` fails loudly at load rather than serving with no device declarations - the silent failure 5.13 exists to prevent.
   - os.stat on the manifest before each turn: a corpus_revision change discards the view wholesale - vectors, lexical, passages, sources, gaps, sidecar - and loads manifest.view_dir; nothing partial is reused, so no answer can mix revisions.
   - The reload is never charged to a turn: the swap happens before the turn's timer starts, corpus_reload_ms is run-level, and an in-flight turn keeps its files.
-  - Stream: 1
   - Blocked-by: f3kp003 (Implement envelope.py and the outcome and reason enums)
+  - Stream: 1
   - Requirements: [5.10](requirements.md#5.10), [5.13](requirements.md#5.13)
 
 - [ ] 5. Implement view.py <!-- id:f3kp005 -->
@@ -58,8 +58,8 @@ references:
   - The union is computed even though owned-but-undocumented is empty today - assert against a fixture gaps report declaring a device that the union admits it (the Decision 12 dormancy the live corpus cannot produce).
   - A passage declaring devices disjoint from the scope is excluded from the turn entirely - filter, never merely ranked lower; a passage declaring none is scoped by its source alone; selecting the triage source does not put every entry in scope.
   - Device-match closeness is not used at all - 5.13 permits it for ranking and there is no evaluation set to tune it with.
-  - Stream: 1
   - Blocked-by: f3kp005 (Implement view.py)
+  - Stream: 1
   - Requirements: [5.12](requirements.md#5.12), [5.13](requirements.md#5.13)
 
 - [ ] 7. Implement scope.py <!-- id:f3kp007 -->
@@ -74,8 +74,8 @@ references:
   - Ranking across selected sources is on relevance alone, never weighted by page or chunk count; one selected source and all selected sources are the same mask path, so 5.4 and 5.8 have no special case and none exists.
   - Scope soundness property: no returned passage's source_id is outside the selected set; retrieval makes no outbound network request and operates wholly on the loaded view.
   - The question is embedded with the BGE query prefix, not the passage prefix.
-  - Stream: 1
   - Blocked-by: f3kp007 (Implement scope.py)
+  - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.7](requirements.md#1.7), [5.1](requirements.md#5.1), [5.4](requirements.md#5.4), [5.5](requirements.md#5.5), [5.8](requirements.md#5.8)
 
 - [ ] 9. Implement retrieve.py dense, lexical and fusion <!-- id:f3kp009 -->
@@ -89,8 +89,8 @@ references:
   - Both constants are configuration, not literals - they are guesses until the evaluation set exists.
   - No qualifying in-scope candidate means the turn is uncovered per 2.1, never synthesised from weak matches.
   - Floor/cap precedence property (Decision 5): one slot per qualifying source first, qualification evaluated per source rather than over the fused pool; cap = max(8, |qualifying|, 12 on a narrowing expansion); qualifying sources over 12 raise the cap exactly as 5.6 directs over 1.3, and every qualifying source contributes >= 1.
-  - Stream: 1
   - Blocked-by: f3kp009 (Implement retrieve.py dense, lexical and fusion)
+  - Stream: 1
   - Requirements: [1.3](requirements.md#1.3), [2.7](requirements.md#2.7), [5.6](requirements.md#5.6)
 
 - [ ] 11. Implement the threshold and the allocation rule <!-- id:f3kp011 -->
@@ -108,8 +108,8 @@ references:
   - A state value that already supplies a candidate's value removes that candidate; all removed means no narrowing question is asked - only engine-built candidates make this executable.
   - Cause provenance property: causes[] equals the entry's first <= 4 causes in order, every rank equals its 1-based position, every passage_id in cites[] and fix_cites[] resolves into the turn's citations[], and an empty fix_cites[] implies the cause's citation carries unbacked - the engine reads the flag and never sets it.
   - 7.7 is structural on the entry path: each cause carries its own check and fix pointer, so every candidate changes what is retrieved or reported.
-  - Stream: 1
   - Blocked-by: f3kp011 (Implement the threshold and the allocation rule)
+  - Stream: 1
   - Requirements: [1.13](requirements.md#1.13), [7.2](requirements.md#7.2), [7.6](requirements.md#7.6), [7.7](requirements.md#7.7), [7.8](requirements.md#7.8)
 
 - [ ] 13. Implement narrow.py <!-- id:f3kp013 -->
@@ -127,8 +127,8 @@ references:
   - History enters in a block the framing spec marks uncitable; state values enter a separate labelled block with origin and age, with the staleness direction for saved-file origins or values older than 60 s and the state-versus-manual conflict direction (state side unattributed to any citation).
   - History truncated oldest-first to 800 tokens counted locally with the resident BGE tokeniser at a 10% margin; no provider SDK call occurs before stream() (Decision 8) - count_tokens is reserved for offline bench calibration.
   - The narrowing counter is carried into assembly: at 2 the prompt forbids ?narrow and directs ranked-causes - without that carriage 7.5 has no mechanism at all.
-  - Stream: 1
   - Blocked-by: f3kp013 (Implement narrow.py)
+  - Stream: 1
   - Requirements: [1.2](requirements.md#1.2), [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.9](requirements.md#1.9), [1.12](requirements.md#1.12), [1.13](requirements.md#1.13), [2.1](requirements.md#2.1), [2.4](requirements.md#2.4), [2.6](requirements.md#2.6), [2.8](requirements.md#2.8), [2.9](requirements.md#2.9), [7.5](requirements.md#7.5), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7), [8.10](requirements.md#8.10), [10.3](requirements.md#10.3), [10.8](requirements.md#10.8)
 
 - [ ] 15. Implement prompt.py <!-- id:f3kp015 -->
@@ -143,8 +143,8 @@ references:
   - Block classification at column 0 from the closed CONTRACTS 4d set; an unknown first line becomes a paragraph, never dropped; !conflict arity is a producer obligation checked and reported through framing - a block already emitted is never re-typed.
   - Sigil hoists: ~uncovered into uncovered_parts[]; ?narrow (fallback path only) into narrowing; ?cause into the fallback causes[] with rank equal to emitted order; @device into required_device; !suggest into suggested_sources[] resolved against sources.json with non-resolving ids dropped, at most 3, and the field absent - never an empty array - when none survives; !caveat and !conflict stay in body as their 4d blocks.
   - Inline forms: [[p:passage_id]] markers and backtick key-term spans, no other emphasis; the outcome token precedes direct_answer and direct_answer precedes every body block, so 1.8's ordering holds in the stream itself.
-  - Stream: 1
   - Blocked-by: f3kp003 (Implement envelope.py and the outcome and reason enums)
+  - Stream: 1
   - Requirements: [1.4](requirements.md#1.4), [1.8](requirements.md#1.8), [1.10](requirements.md#1.10), [1.11](requirements.md#1.11), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.5](requirements.md#2.5), [7.1](requirements.md#7.1)
 
 - [ ] 17. Implement parse.py <!-- id:f3kp017 -->
@@ -160,8 +160,8 @@ references:
   - A prose block that only orders or eliminates causes over cited facts is never marked - the CONTRACTS 8 split made executable; the signal is emitted after the last body delta and before done, never deferred past the turn.
   - History non-citability property: markers appearing in history text never produce a Citation.
   - State-value non-citability property: a marker appearing in a state block never produces a Citation - state values are never in supplied, the structural half of 8.6 alongside task 14's prompt-level attribution direction.
-  - Stream: 1
   - Blocked-by: f3kp017 (Implement parse.py)
+  - Stream: 1
   - Requirements: [3.1](requirements.md#3.1), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.6](requirements.md#3.6), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [8.6](requirements.md#8.6), [10.3](requirements.md#10.3)
 
 - [ ] 19. Implement ground.py and citation assembly <!-- id:f3kp019 -->
@@ -176,8 +176,8 @@ references:
   - In-flight: cancelled is first in the fixed order - a turn that is both cancelled and has failed after partial output classifies cancelled, never incomplete (the in-flight table's row 5 ahead of row 6); then the streamed-output check precedes every error-kind gate - incomplete precedence property, any provider failure after >= 1 streamed token yields incomplete whatever the failure kind; then unreachable, rate-limited carrying retry_after, the 10 s timeout naming the provider as the stalled component, and provider-error including 401 as authentication-failed - distinguishable from missing-credential by the sub-code, never by the wording in detail.
   - required_device: an @device name matching gaps.owned_but_undocumented substitutes the canonical id and rig display name; an unmatched name is carried free-form and is valid output, not an error.
   - required_manual: assembled with named placeholders inside the filename string and placeholders[] listing exactly the placeholder fields; absent altogether where the device does not resolve to a canonical id - tested against a fixture gaps report, since the live report is empty and the field is dormant, not removed (CONTRACTS 4e).
-  - Stream: 1
   - Blocked-by: f3kp019 (Implement ground.py and citation assembly)
+  - Stream: 1
   - Requirements: [2.10](requirements.md#2.10), [4.9](requirements.md#4.9), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [6.6](requirements.md#6.6), [6.7](requirements.md#6.7), [6.9](requirements.md#6.9), [6.10](requirements.md#6.10), [9.9](requirements.md#9.9)
 
 - [ ] 21. Implement outcome.py and required_manual assembly <!-- id:f3kp021 -->
@@ -193,8 +193,8 @@ references:
   - requires_key is derived from the kind; max_words is fixed at 400 - 1.6's longer form has no transport in the MVP and the deferral is recorded in the design, so no request field is invented here.
   - state/base.py and state/null.py: StateValue as the flat (key, value, observed_at, origin, origin_kind) triple (Decision 7), StateSnapshot, the StateSource protocol, and NullStateSource returning an empty snapshot immediately - the flat shape is what admits LogTail and Als implementations without redefinition.
   - Interfaces plus a trivial null return - no behaviour to fail a test against, so no preceding test task; the null path's no-degradation guarantee is asserted in the turn-pipeline tests.
-  - Stream: 2
   - Blocked-by: f3kp001 (Scaffold the dawmans.answer package and the serve dependency group)
+  - Stream: 2
   - Requirements: [6.1](requirements.md#6.1), [8.1](requirements.md#8.1), [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.5](requirements.md#8.5)
 
 - [ ] 23. Write tests for the Anthropic provider <!-- id:f3kp023 -->
@@ -203,8 +203,8 @@ references:
   - cache_control on the last system block; a selected model whose cache minimum the ~600-token prompt does not clear reports prompt_cache: unavailable rather than silently losing the cache.
   - Connection refused/DNS/TLS raise the unreachable kind; a 401 with a key present raises the auth kind, feeding 6.6's distinction; deltas stream via text_stream.
   - CI runs against a scripted SDK; the live Keychain read and a real-key call run on a developer machine only - see prerequisites.md.
-  - Stream: 2
   - Blocked-by: f3kp022 (Define the provider and StateSource seam types)
+  - Stream: 2
   - Requirements: [6.7](requirements.md#6.7), [6.8](requirements.md#6.8)
   - References: specs/api/answer-engine/prerequisites.md
 
@@ -221,8 +221,8 @@ references:
   - Local: the client is constructed against a loopback base URL only, so no outbound network request occurs for the whole turn - 6.14 holds by construction, asserted with networking poisoned.
   - Shared backend: a stub behind the disclosure gate - selecting it returns requires_disclosure_ack: true and records nothing; a turn attempted before acknowledgement fails as provider-unconfigured with reason disclosure-unacknowledged.
   - The same scripted stream through each of the three provider classes yields the same envelope shape - streamed text, citations, timings, refusal signalling - because the one parser sits engine-side.
-  - Stream: 2
   - Blocked-by: f3kp022 (Define the provider and StateSource seam types)
+  - Stream: 2
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.4](requirements.md#6.4), [6.14](requirements.md#6.14), [6.15](requirements.md#6.15)
 
 - [ ] 26. Implement provider/local.py and provider/shared.py <!-- id:f3kp026 -->
@@ -236,8 +236,8 @@ references:
   - Masking is structural: ProviderStatus carries masked: str | None and no field that can hold a full key; every read path returns the last-4 masked form or None, and the full value has exactly one reader - the provider's client constructor.
   - The logging.Filter backstop drops any record whose formatted output contains the stored secret; the raw key appears in no log record at any level, and the same predicate filters detail - no credential material, no stack trace, no raw provider payload, no path outside the two store roots.
   - Each provider constructs its own client against its own base URL; no shared send-the-key-to-the-configured-URL path exists for a misconfiguration to redirect.
-  - Stream: 2
   - Blocked-by: f3kp022 (Define the provider and StateSource seam types)
+  - Stream: 2
   - Requirements: [6.11](requirements.md#6.11), [6.12](requirements.md#6.12), [6.13](requirements.md#6.13)
 
 - [ ] 28. Implement provider/credentials.py and the logging filter <!-- id:f3kp028 -->
@@ -254,8 +254,8 @@ references:
   - Retrieval re-runs every turn: a narrowing answer re-retrieves with the original question plus the answer and never reuses the previous turn's passages unchanged.
   - Corpus-change pruning: a source removed from the corpus drops from the carried scope and is reported through scope_dropped rather than applied silently; none remaining yields no-sources-selected.
   - The per-symptom consecutive-narrowing counter increments across narrowing turns and resets on an answer - the mechanism 7.5 rides on.
-  - Stream: 1
   - Blocked-by: f3kp005 (Implement view.py)
+  - Stream: 1
   - Requirements: [5.11](requirements.md#5.11), [7.4](requirements.md#7.4), [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.4](requirements.md#10.4), [10.5](requirements.md#10.5), [10.6](requirements.md#10.6), [10.7](requirements.md#10.7)
 
 - [ ] 30. Implement conversation.py <!-- id:f3kp030 -->
@@ -274,8 +274,8 @@ references:
   - timings records retrieval, state acquisition, engine overhead, first token and completion as durations only.
   - A question spanning two selected sources synthesises one answer citing both, with the small guide represented under the floor.
   - contributing_sources[] equals the set of source_id over supplied and is reported with every answer - supplied-derived, never citation-derived (design 'contributing_sources[]').
-  - Stream: 1
   - Blocked-by: f3kp015 (Implement prompt.py), f3kp021 (Implement outcome.py and required_manual assembly), f3kp022 (Define the provider and StateSource seam types), f3kp030 (Implement conversation.py)
+  - Stream: 1
   - Requirements: [4.4](requirements.md#4.4), [4.9](requirements.md#4.9), [4.10](requirements.md#4.10), [4.11](requirements.md#4.11), [5.7](requirements.md#5.7), [5.9](requirements.md#5.9), [6.3](requirements.md#6.3), [6.5](requirements.md#6.5), [6.9](requirements.md#6.9), [6.10](requirements.md#6.10), [8.2](requirements.md#8.2), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [9.13](requirements.md#9.13)
 
 - [ ] 32. Implement the turn pipeline <!-- id:f3kp032 -->
@@ -292,8 +292,8 @@ references:
   - Host: evil.example is 403 - the Host check is what closes DNS rebinding, since a hostname resolving to 127.0.0.1 reaches the socket carrying the attacker's Host; Origin: null (a file:// page) is 403; 127.0.0.1, localhost and [::1] with the port pass.
   - A cross-port Origin: http://localhost:5173 is 403 - what the dev proxy's Origin rewrite exists to avoid, and what a same-port-only test would miss.
   - The 403 is machine-readable with no outcome field: a request rejection, not a turn.
-  - Stream: 1
   - Blocked-by: f3kp001 (Scaffold the dawmans.answer package and the serve dependency group)
+  - Stream: 1
   - Requirements: [9.1](requirements.md#9.1), [9.2](requirements.md#9.2), [9.3](requirements.md#9.3)
 
 - [ ] 34. Implement http/guard.py and the bind check <!-- id:f3kp034 -->
@@ -307,8 +307,8 @@ references:
   - GET /sources returns, for every source of both kinds: source_id, display_name, kind, doc_version where the kind carries one, and hardware_applicability including confirmed/assumed - a field this operation omits reaches nobody.
   - Both gap reports are relayed alongside, never derived: owned-but-undocumented returned as an empty list rather than omitted - it is the sole resolver of a canonical device id and refills the day a device is declared ahead of its manual; documented-but-unconfirmed names the assumed APC guide.
   - An unreadable new manifest is reported here while the live view keeps serving; no filesystem path appears in any payload.
-  - Stream: 1
   - Blocked-by: f3kp005 (Implement view.py), f3kp034 (Implement http/guard.py and the bind check)
+  - Stream: 1
   - Requirements: [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [9.5](requirements.md#9.5), [9.6](requirements.md#9.6), [9.7](requirements.md#9.7)
 
 - [ ] 36. Implement the passage and sources routes <!-- id:f3kp036 -->
@@ -321,8 +321,8 @@ references:
   - GET /provider, PUT /provider, PUT and DELETE /provider/credential, POST /provider/test: every response carries at most the masked form; the raw key appears in no response body and no log record from any of these operations.
   - PUT /provider to shared-backend returns requires_disclosure_ack: true and records nothing; test-provider reports reachability without synthesising a turn.
   - Question, answer and passage text log at DEBUG only; credentials at no level.
-  - Stream: 1
   - Blocked-by: f3kp028 (Implement provider/credentials.py and the logging filter), f3kp034 (Implement http/guard.py and the bind check)
+  - Stream: 1
   - Requirements: [9.4](requirements.md#9.4), [9.8](requirements.md#9.8), [9.11](requirements.md#9.11)
 
 - [ ] 38. Implement the provider routes <!-- id:f3kp038 -->
@@ -336,8 +336,8 @@ references:
   - An authored-triage id, an unknown id and a renamed file each 404, so the caller degrades the citation to its string form rather than a broken action; no request body or path parameter can reach the filesystem - the loaded index is the allowlist - and a realpath outside the manuals root is refused.
   - Filename round-trip: for every ingested vendor-manual, rebuilding `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` from its SourceRecord fields names the ingested file - doc_version arrives without the leading v, so there is one reconstruction rule and no `_vv1.0_`.
   - The route streams bytes and parses nothing, so the PyMuPDF confinement test still passes.
-  - Stream: 1
   - Blocked-by: f3kp036 (Implement the passage and sources routes)
+  - Stream: 1
   - Requirements: [9.4](requirements.md#9.4)
 
 - [ ] 40. Implement the serve-document route <!-- id:f3kp040 -->
@@ -353,8 +353,8 @@ references:
   - Body deltas arrive incrementally as the scripted provider emits them, never withheld until synthesis completes; a caller disconnect mid-stream is treated as cancellation.
   - A 1001-character question is rejected with HTTP 422 and {"rejected": "question-too-long", "limit": 1000, "received": N} - no outcome field, no envelope, no truncation: no turn was started and the taxonomy does not describe it.
   - The static mount serves web/build at / so the surface is same-origin - listed here because ui/ask-and-source-picker depends on it.
-  - Stream: 1
   - Blocked-by: f3kp032 (Implement the turn pipeline), f3kp034 (Implement http/guard.py and the bind check)
+  - Stream: 1
   - Requirements: [1.8](requirements.md#1.8), [4.5](requirements.md#4.5), [9.10](requirements.md#9.10), [9.12](requirements.md#9.12), [9.14](requirements.md#9.14), [9.15](requirements.md#9.15)
 
 - [ ] 42. Implement POST /turn and the SSE emitter <!-- id:f3kp042 -->
@@ -370,8 +370,8 @@ references:
   - One turn per content outcome against scripted streams: answered with citations from both kinds carrying kind, doc_version and applicability; a conflict rendered as !conflict with both readings and separate citations; a partial answer naming uncovered_parts; a refusal with up to 3 suggestions; out-of-domain with suggestions suppressed; no-manual-for-device with required_device and required_manual against a fixture gaps report; the narrowing entry path run to the limit and terminating in ranked-causes whose direct_answer states the rank-1 check as an instruction.
   - contributing_sources[] is the set of source_id over supplied, reported with every answer.
   - Corpus swap mid-conversation: the view is discarded before the next turn retrieves, a removed source drops from the carried scope with a scope_dropped event, and removing the last one yields no-sources-selected.
-  - Stream: 1
   - Blocked-by: f3kp038 (Implement the provider routes), f3kp040 (Implement the serve-document route), f3kp042 (Implement POST /turn and the SSE emitter)
+  - Stream: 1
   - Requirements: [1.4](requirements.md#1.4), [2.1](requirements.md#2.1), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [5.9](requirements.md#5.9), [5.10](requirements.md#5.10), [5.11](requirements.md#5.11), [7.1](requirements.md#7.1), [7.5](requirements.md#7.5), [7.6](requirements.md#7.6)
 
 - [ ] 44. Implement dawmans serve and the startup wiring <!-- id:f3kp044 -->
@@ -386,7 +386,7 @@ references:
   - A narrowing question is measured against the same first-token target for the provider class, never against a completion target that would have to precede it.
   - `make bench` also calibrates Decision 8's history-token margin: compare the resident BGE tokeniser's counts against the provider's count_tokens over sample prompts and report whether the configured 10% covers the observed divergence - the margin is a guess until this runs.
   - The real-provider and real-index runs need the Keychain key and an ingested corpus - see prerequisites.md.
-  - Stream: 1
   - Blocked-by: f3kp044 (Implement dawmans serve and the startup wiring)
+  - Stream: 1
   - Requirements: [4.1](requirements.md#4.1), [4.2](requirements.md#4.2), [4.3](requirements.md#4.3), [4.6](requirements.md#4.6), [4.7](requirements.md#4.7), [4.8](requirements.md#4.8), [7.3](requirements.md#7.3)
   - References: specs/api/answer-engine/prerequisites.md

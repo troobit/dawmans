@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The `dawmans` Python package** (`api/answer-engine` phase 1). `src/` layout on uv + hatchling,
+  with the `dawmans.answer` module tree from the design's module placement, a `dawmans` CLI whose
+  only registered subcommand is the `serve` stub, and `make build`/`test`/`lint` wired to uv,
+  pytest and ruff.
+- **The ingest/serve dependency split.** `[project.optional-dependencies]` confines PyMuPDF (AGPL),
+  lingua and fonttools to `ingest`; the API host syncs `serve` (fastembed, bm25s, numpy, anthropic,
+  starlette, uvicorn, keyring) and never installs PyMuPDF. A subprocess test imports every
+  `dawmans.answer.*` module with `fitz`/`pymupdf` poisoned on `sys.meta_path`, catching the
+  accidental corpus import a dual-group dev environment hides.
+- **The envelope records and outcome enums** (`dawmans/answer/envelope.py`). Frozen dataclasses
+  `Citation`, `AnswerEnvelope`, `Cause` and `RequiredManual` whose field sets are exactly the
+  CONTRACTS §3/§4/§4c/§4e tables, and `Outcome` (17 members) / `Reason` (5 values) StrEnums closed
+  to CONTRACTS §6/§6a. Construction enforces the contract invariants: absent is `None` and never an
+  empty string, an authored-triage citation cannot carry a page, section number or `doc_version`,
+  `entry_location` is authored-only, a cause's `rank` equals its position in `causes[]`, and
+  `retry_after` is non-negative and unrounded. 32 tests assert the field sets and invariants.
+
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
   itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite
