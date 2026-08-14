@@ -213,10 +213,13 @@ def synthetic_rejections() -> dict[str, dict]:
                 ],
             )
         )
+    # The code points are deliberately *not* the APC guide's 0xF0/F1/F4/F5: those are in
+    # the glyph corruption table and repair to arrows, which is not a rejection. These four
+    # are the same font with no entry anywhere — path 3, the unmappable case 5.5 counts.
     symbols = Line(
         bbox=(72.0, 280.0, 100.0, 291.0),
         spans=[
-            Span(text="ðñôõ" * 8, bbox=(72.0, 280.0, 100.0, 291.0), font="Wingdings3", size=10.0)
+            Span(text="ÐÑÒÓ" * 8, bbox=(72.0, 280.0, 100.0, 291.0), font="Wingdings3", size=10.0)
         ],
     )
     unreadable = Document(
@@ -241,7 +244,8 @@ def synthetic_rejections() -> dict[str, dict]:
                 "unmappable characters over 2% of the extracted text layer is the "
                 "`unreadable-text` rejection (5.5). The denominator is every extracted "
                 "character, counted after furniture suppression and before language "
-                "selection"
+                "selection. The symbol run is a Wingdings3 code point the corruption "
+                "table does not hold, since a repaired run is not a rejection"
             ),
             **unreadable.to_dict(),
         },

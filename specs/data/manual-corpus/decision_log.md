@@ -872,3 +872,65 @@ block granularity, the two inheritance guards, the audit's page ranges — is.
 - The language labels are hand-written ground truth, so a mislabelled block is a test asserting the wrong thing with nothing to catch it.
 - The redacted fixture cannot test the language identifier itself, only the selection around it, and that limit has to stay visible or a later reader will over-trust the fixture.
 - A masked fixture is unreadable to a human checking whether it captured the right pages; the `asserts` note and the page range are all there is to go on.
+
+---
+
+## Decision 12: The language-neutral guard is confidence alone
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's English selection scores blocks and gives two guards for when a score is not to be
+trusted. The second reads: "A block whose top confidence is below 0.5 *and* whose tokens are
+predominantly non-alphabetic inherits the same way." It was written for the Nitro Max MIDI note
+table and the APC specifications table — numbers, units and dimensions that no identifier calls
+English, and whose loss would take the pages that answer "which note does the kick pad send".
+
+Running the finished stage against the real APC guide (24 pages, `multi`) showed the conjunction
+leaking the other way. Physical pp11 and 15 — French and Italian — were selected as partly English.
+The block responsible on p11 is `• Mac OS X : Live > Preferences`: eight tokens, five of them
+alphabetic, scored English at 0.42. It passes the confidence half of the guard and fails the
+alphabetic half, so it is trusted, and the short French step below it — `4. Cliquez sur l'onglet
+MIDI/Sync.` — then inherits *from it* and reaches the index as English. That is requirement 4.1
+failing on the one multilingual source in the corpus.
+
+### Decision
+
+A block inherits when the identifier's top confidence is below 0.5, whatever its tokens look like.
+The "predominantly non-alphabetic" clause of the design's second guard is superseded.
+
+### Rationale
+
+Confidence below the threshold means the identifier has not decided anything, and a verdict it did
+not reach is not evidence to index on. Inheriting the neighbouring decision is the safer answer in
+both directions: on an English page the neighbours are English, and on a French page they are not.
+
+The new condition is a strict superset of the old one — a table of numerals is unconfident as well
+as non-alphabetic — so everything the guard was written to protect is still protected, and the tests
+that pin the MIDI note table and the specifications table pass unchanged. Measured on the APC guide,
+the audit goes from `english [[1,6],[11,11],[15,15],[23,24]]` to `english [[1,6],[23,24]],
+excluded [[7,22]]`, which is what §4 describes.
+
+### Alternatives Considered
+
+- **Leave the guard as the design writes it**: Accept the two partial pages, since the audit reports them - Rejected because the audit reports the page as partial, not the sentence as French. A reader asking a question in English can be answered with a French step quoted as though it were the manual's English, which is exactly what 4.1 exists to prevent, and "it is in the audit" is not a defence a user ever sees.
+- **Raise the confidence threshold instead**: Keep the conjunction, move 0.5 up until the false positive falls below it - Rejected because it treats a structural fault as a tuning problem. The UI-path line scores 0.42 and a genuine English paragraph in this corpus scores 0.73, so a threshold exists — but it would be fitted to one measurement on one guide, and the next fitting would be someone else's.
+- **Exclude a block whose page is predominantly foreign**: Decide the page first, then the blocks in it - Rejected because it is page granularity wearing block granularity's clothes, and 4.3 asks for finer than a page so that a page holding two translations contributes its English part. The APC's own p23 appendix is the case that needs it.
+
+### Consequences
+
+**Positive:**
+- No non-English text reaches the index from the one multilingual source in the corpus.
+- The rule is one sentence rather than a conjunction, and the guard's two motivating cases are unaffected.
+- The stage's selection now matches the audit §4's own example describes, so the requirement and the behaviour can be read against each other.
+
+**Negative:**
+- More blocks inherit rather than being scored, so a genuinely English block on an otherwise foreign page is now excluded unless the identifier is confident about it. On this corpus that is the intended outcome; on a future guide with long stretches of English inside a foreign chapter it costs coverage the old rule would have kept.
+- A document whose every block scores under 0.5 is included whole, with nothing scored anywhere. That is the design's stated fallback and not new, but the wider guard makes it reachable by more documents.
+
+### Impact
+
+`src/dawmans/corpus/pdf/language.py` (`_score_block`), the design's §English selection, and the
+`NEUTRAL_CONFIDENCE` constant's meaning. `tests/test_pdf_language.py` pins the measured case.

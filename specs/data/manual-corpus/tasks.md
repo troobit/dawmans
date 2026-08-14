@@ -108,7 +108,7 @@ references:
 
 ## Phase 4: Text conditioning
 
-- [ ] 12. Write tests for furniture marking <!-- id:e7lsx24 -->
+- [x] 12. Write tests for furniture marking <!-- id:e7lsx24 -->
   - Property - furniture safety: no line whose normalised key occurs on exactly one page is ever suppressed.
   - A repeated right-aligned page number in the top or bottom 8% band is marked; a numeric line inside a detected table on one page is not.
   - Stage 3 only marks. Assert nothing is deleted here - clearing is stages 5 and 7, and the drop is at the end of stage 7.
@@ -116,13 +116,13 @@ references:
   - Stream: 1
   - Requirements: [3.6](requirements.md#3.6)
 
-- [ ] 13. Implement corpus/pdf/furniture.py <!-- id:e7lsx25 -->
+- [x] 13. Implement corpus/pdf/furniture.py <!-- id:e7lsx25 -->
   - Normalise a band line to a key (casefold, collapse whitespace, digit runs to `#`); mark a key occurring on >=60% of pages, or >=5 pages in a document of <=10, at a consistent y-band, plus any digits-only line in those bands.
   - Blocked-by: e7lsx24 (Write tests for furniture marking)
   - Stream: 1
   - Requirements: [3.6](requirements.md#3.6)
 
-- [ ] 14. Write tests for glyph detection and repair <!-- id:e7lsx26 -->
+- [x] 14. Write tests for glyph detection and repair <!-- id:e7lsx26 -->
   - Against apc_p3_arrows: the Wingdings3 run at U+00F0/F1/F4/F5 repairs to arrows, and a genuine Spanish n-tilde in the body face on the same fixture is left alone - detection is font-keyed, not character-keyed, with no condition on neighbouring spans.
   - A mutated span with no mapping sets degraded and yields U+FFFD in Passage.text; assert the raw characters are never indexed as words, so BM25 cannot match them.
   - The corruption table is keyed on the code point the extractor returns after ToUnicode (0xF0/F1/F4/F5), not the published Wingdings 3 codes - pin the resulting characters so a wrong entry fails a test rather than reaching a user.
@@ -132,14 +132,14 @@ references:
   - Stream: 1
   - Requirements: [5.1](requirements.md#5.1), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.4](requirements.md#5.4), [5.5](requirements.md#5.5)
 
-- [ ] 15. Implement corpus/pdf/glyphs.py <!-- id:e7lsx27 -->
+- [x] 15. Implement corpus/pdf/glyphs.py <!-- id:e7lsx27 -->
   - Mapping in order: embedded glyph names via extract_font + fontTools post table through the Adobe Glyph List, using get_texttrace() for raw glyph ids; then the static corruption table keyed on (family, extracted code point); then unmappable.
   - Most subsetters emit post v3.0 with no glyph names, so for a novel symbol font the realistic outcome is degraded with 5.5 as the backstop - do not build the first path up into something it cannot be.
   - Blocked-by: e7lsx26 (Write tests for glyph detection and repair)
   - Stream: 1
   - Requirements: [5.1](requirements.md#5.1), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.4](requirements.md#5.4), [5.5](requirements.md#5.5)
 
-- [ ] 16. Write tests for English content selection <!-- id:e7lsx28 -->
+- [x] 16. Write tests for English content selection <!-- id:e7lsx28 -->
   - A source declared with a single ISO 639-1 code is not scored at all: assert Live's keyboard-shortcut chapter (3,979 words, 24 sentence-final stops over 23 pages) is fully included, and that its audit lists every page as included.
   - Detection runs only where lang is `multi`, at block granularity; against apc_pages, pp3-6 and p23 are selected and pp7-22 excluded with no page range anywhere in the code (4.2, 4.6).
   - Short blocks (<8 words) inherit from the nearest scored block above, else below, else the page's predecessor; the first page of a document with no scored block anywhere is included.
@@ -151,7 +151,7 @@ references:
   - Stream: 1
   - Requirements: [4.1](requirements.md#4.1), [4.2](requirements.md#4.2), [4.3](requirements.md#4.3), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [4.6](requirements.md#4.6)
 
-- [ ] 17. Implement corpus/pdf/language.py <!-- id:e7lsx29 -->
+- [x] 17. Implement corpus/pdf/language.py <!-- id:e7lsx29 -->
   - lingua-py, offline, constrained to the languages present in the corpus plus English, returning confidence values; writes the english_pages / excluded_pages / partial_pages audit.
   - Blocked-by: e7lsx28 (Write tests for English content selection)
   - Stream: 1

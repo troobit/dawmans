@@ -11,6 +11,8 @@ dependencies = [
     # Embedding. Network-capable, so ingestion runs it with HF_HUB_OFFLINE=1 against a
     # `models/` cache populated once by `make fetch-model` (requirement 8.5).
     "fastembed>=0.4",
+    "fonttools>=4.63.0",
+    "lingua-language-detector>=2.2.0",
 ]
 
 [dependency-groups]

@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Text conditioning: furniture, glyph repair and English selection** (`dawmans/corpus/pdf/`,
+  `data/manual-corpus` phase 4). Three stages that annotate the span model rather than rewrite it.
+  `furniture.py` marks running headers, running footers and standalone page numbers in the top and
+  bottom 8% bands (3.6) and deletes nothing — the mark is cleared again by sectioning and by table
+  detection, and the drop is the chunker's. `glyphs.py` repairs the APC Key 25's Clip Stop arrows,
+  which its `Wingdings3` ToUnicode CMap mangles into `ð, ñ, ô, õ`: detection is font-keyed, so the
+  genuine French `ô` printed two lines away in the body face survives, and so do the `Symbol`
+  bullets on the same page. What cannot be mapped becomes U+FFFD and sets `degraded` (5.3), and over
+  2% of the extracted text layer is the `unreadable-text` rejection (5.5). `language.py` scores
+  blocks with `lingua` where the declared language is `multi`, and does not score a source declared
+  with one code at all — Live's 3,979-word keyboard-shortcut chapter has 24 full stops in it and no
+  identifier calls it English.
 - **PDF extraction and the span model** (`dawmans/corpus/pdf/extract.py`, `data/manual-corpus`
   phase 3). `page.get_text("dict")` per page into `Page`/`Block`/`Line`/`Span`, each span keeping its
   bbox, font name, size and flags so glyph repair can key on the font, row assembly on geometry and
@@ -81,6 +93,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The language-neutral guard is confidence alone** (`data/manual-corpus` Decision 12, design
+  §English selection). The design wrote it as low confidence *and* predominantly non-alphabetic
+  tokens; run against the real APC guide, that conjunction selected its French and Italian pages as
+  partly English. `• Mac OS X : Live > Preferences` scores English at 0.42 with alphabetic tokens,
+  so it was trusted, and the short French step below it inherited from it — requirement 4.1 failing
+  on the corpus's only multilingual source. Confidence alone covers strictly more than the pair did,
+  so the MIDI note table and the specifications table the guard was written for are unaffected.
+- **The spelling check skips `tests/fixtures/`.** The fixtures quote vendor manuals verbatim, and
+  correcting a manual's spelling would make the fixture a document nobody shipped.
 - **The design's account of the corpus, corrected against the corpus** (`data/manual-corpus`
   design §Section map and §Build budget, Decisions 10 and 11). Capturing the fixtures read the PDFs
   rather than describing them, and three claims did not survive: every manual carries an embedded

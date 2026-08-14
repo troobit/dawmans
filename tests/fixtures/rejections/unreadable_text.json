@@ -1,5 +1,5 @@
 {
- "asserts": "unmappable characters over 2% of the extracted text layer is the `unreadable-text` rejection (5.5). The denominator is every extracted character, counted after furniture suppression and before language selection",
+ "asserts": "unmappable characters over 2% of the extracted text layer is the `unreadable-text` rejection (5.5). The denominator is every extracted character, counted after furniture suppression and before language selection. The symbol run is a Wingdings3 code point the corruption table does not hold, since a repaired run is not a rejection",
  "schema": "dawmans.pdf.extraction/1",
  "page_count": 1,
  "toc": [],
@@ -88,7 +88,7 @@
       {
        "bbox": [72.0, 280.0, 100.0, 291.0],
        "spans": [
-        {"text": "ðñôõðñôõðñôõðñôõðñôõðñôõðñôõðñôõ", "bbox": [72.0, 280.0, 100.0, 291.0], "font": "Wingdings3", "size": 10.0, "flags": 0}
+        {"text": "ÐÑÒÓÐÑÒÓÐÑÒÓÐÑÒÓÐÑÒÓÐÑÒÓÐÑÒÓÐÑÒÓ", "bbox": [72.0, 280.0, 100.0, 291.0], "font": "Wingdings3", "size": 10.0, "flags": 0}
        ]
       }
      ]

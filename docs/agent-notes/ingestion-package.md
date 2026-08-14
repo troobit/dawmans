@@ -12,15 +12,17 @@ separate tree.
   `bench`.
 - uv resolved to Python 3.12 (`requires-python = ">=3.12"`).
 - Dependencies arrive with the code that uses them. Declared so far: `pymupdf` (task 1,
-  for the AGPL rule to have something to bite on) and `fastembed` (needed by
-  `make fetch-model`). `bm25s`, `lingua-language-detector`, `fonttools` and `pyyaml`
-  come with their phases.
+  for the AGPL rule to have something to bite on), `fastembed` (needed by
+  `make fetch-model`), and `fonttools` + `lingua-language-detector` (phase 4, glyph repair
+  and English selection). `bm25s` and `pyyaml` come with their phases.
 - `ruff format` rewrites Python code blocks **inside Markdown**, which would reflow the
   deliberately aligned samples in `specs/`. `extend-exclude = ["*.md"]` in `pyproject.toml`
   stops it; do not remove that line.
 - `tools/check_spelling.sh` scans every git-tracked file, source included, and is
   case-sensitive. Write `normalised`, `initialise`, `serialise` in Python too — a
-  banned word in a docstring fails `make lint`.
+  banned word in a docstring fails `make lint`. `tests/fixtures/` is skipped: those files
+  quote vendor manuals verbatim, and "correcting" a manual's spelling would make the
+  fixture a document nobody shipped.
 
 ## The AGPL confinement
 
@@ -162,6 +164,72 @@ Measured against the real corpus (2026-08-15): 1107 pages in 3.99 s, of which Li
 3.45 s. Requirement 8.2 allows 5 s for the corpus, so the headroom is 25% and it slopes
 with page count — the design's ~1 s estimate was extrapolated from a *layout* extraction
 and is corrected in §Build budget.
+
+## Furniture — `corpus/pdf/furniture.py`
+
+Stage 3, and it **only marks**. `Line.furniture` is cleared again by sectioning (a chapter title
+printed in the header band) and by table detection (a table reaching into the band), and the drop
+happens at the end of stage 7. Nothing here deletes text, and a test asserts the whole span model
+is byte-identical afterwards but for the marks.
+
+- Candidates are lines lying wholly inside the top or bottom 8% of the page box, non-blank.
+- The key is casefold + collapsed whitespace + digit runs to `#`, which is what makes `471` on
+  p471 and `472` on p472 one key. Digits are `[0-9]`, not `\d`.
+- Two rules: a key on ≥60% of pages (or ≥5 pages of a document of ≤10) **at a consistent y-band**,
+  and a digits-only line, which skips both the threshold and the band test.
+- **Both stop at more than one page.** The design states the digits-only rule with no repetition
+  bound, but the furniture-safety property forbids suppressing a key that occurs on exactly one
+  page, so the bound applies to both. That property is the only real guard here: suppressed text
+  produces no diff and no error.
+- Consistency is measured from the *nearer* page edge, so a header and a footer are never one key
+  at one height, and pages of different sizes still compare.
+- On this corpus the digits-only rule does all the work — all three guides print a bare page
+  number — and the repeated-key rule is for the next manual that prints a running title.
+
+## Glyph repair — `corpus/pdf/glyphs.py`
+
+Stage 4. The APC Key 25's four Clip Stop arrows are `Wingdings3` with a ToUnicode CMap that maps
+the font's 0x70/71/74/75 into Latin-1 (+0x80), so they extract as `ð, ñ, ô, õ`. **Repair cannot
+come from ToUnicode: ToUnicode is the fault.**
+
+- Detection is font-keyed **and** letter-keyed: a symbol family emitting a non-ASCII *letter*. The
+  letter half matters — the same page sets its bullets in `Symbol`, and `•` is a symbol that
+  arrived intact. Repairing it would be the corruption.
+- The corruption table is keyed on `(family, code point the extractor returned)` — 0xF0/F1/F4/F5,
+  **not** the published Wingdings 3 codes. The four characters are `▲▼◀▶`, read off the rendered
+  page rather than from a chart; the fixture pins them.
+- Path 1 (embedded glyph names) is implemented and, on this corpus, returns nothing: the APC's
+  Wingdings3 subset has **no `post` table at all**. `glyph_names()` accepts only `post` format 2.0
+  — fontTools will otherwise invent an order from the `cmap`, and those names are not evidence.
+- `embedded_names(doc, families)` takes the families `document_symbol_families()` found in the span
+  model. Passing them is not an optimisation: walking Live 12's 1009 pages' resources to discover
+  there is no symbol font measured **5.2 s**; with the families it is 0.03 s.
+- The module imports no PyMuPDF. It calls `get_fonts`, `get_texttrace` and `extract_font` on
+  whatever it is handed, which is what lets the wiring be tested with a stub.
+- The 5.5 denominator is every extracted character **after furniture marking, before language
+  selection**. Repair itself runs over furniture too, because the mark can still be cleared.
+- Measured: APC 60 spans repaired, none degraded; Live nothing to do.
+
+## English selection — `corpus/pdf/language.py`
+
+Stage 6, `lingua` (models bundled in the package, so offline), constrained to `en/es/fr/it/de`.
+
+- **A source declared with one ISO 639-1 code is never scored.** The detector is not called at all,
+  4.5 cannot fire, and the 4.4 audit lists every page as included.
+- Scoring is per block. A block under 8 words, or one the identifier is under 0.5 confident about,
+  inherits: nearest scored block above on the page, else below, else the page's own decision. Pages
+  resolve the same way — predecessor, else successor, else included.
+- The `and predominantly non-alphabetic` half of the design's guard is **superseded** (Decision 12):
+  it let `• Mac OS X : Live > Preferences` on the French page be trusted at 0.42, and the French
+  step below inherited from it. Confidence alone is a strict superset, so the tables the guard was
+  written for are still kept.
+- `partial_pages` ⊆ `english_pages`. The design's illustrative audit puts page 1 in both `excluded`
+  and `partial`, which cannot both hold; the property in §Testing Strategy governs.
+- Measured on the real APC guide: `english [[1,6],[23,24]]`, `excluded [[7,22]]`, no partial pages,
+  0.05 s. Pages 1, 2 and 24 are cover and back matter with nothing scorable on them, so they
+  inherit and are included.
+- `lingua`'s `IsoCode639_1` is a Rust-backed class: attribute access works, subscripting and
+  iteration do not.
 
 ## Fixtures — `tests/fixtures/`, `tools/capture_fixture.py`, `make fixtures`
 

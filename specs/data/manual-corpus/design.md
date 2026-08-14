@@ -450,10 +450,17 @@ satisfies 4.3's "page granularity or finer". Two guards, both necessary:
   first block is a heading, the common case — it inherits the nearest scored block **below** it
   instead; if the page has no scored block at all, it inherits the page's own predecessor's
   decision, and the first page of a document with no scored block anywhere is included.
-- **Language-neutral blocks.** A block whose top confidence is below 0.5 *and* whose tokens are
-  predominantly non-alphabetic inherits the same way. Without this, the Nitro Max MIDI note table
-  and the APC specifications table — numbers, units, dimensions — would be classed as non-English
-  and discarded.
+- **Unconfident blocks.** A block whose top confidence is below 0.5 inherits the same way. Without
+  this, the Nitro Max MIDI note table and the APC specifications table — numbers, units, dimensions
+  — would be classed as non-English and discarded.
+
+  ~~A block whose top confidence is below 0.5 *and* whose tokens are predominantly non-alphabetic
+  inherits the same way.~~ **Superseded by [Decision 12](decision_log.md)** (2026-08-15): measured
+  against the real APC guide, the conjunction leaks. `• Mac OS X : Live > Preferences` on the French
+  page scores English at 0.42 with predominantly alphabetic tokens, so it passed the guard, was
+  trusted, and the short French step below it inherited from it and reached the index — 4.1 failing
+  on the corpus's only multilingual source. Confidence alone covers strictly more than the pair did,
+  so both motivating cases above are unaffected.
 
 The APC front page prints its own language index (`English ( 3 – 6 )`, `Appendix English ( 23 )`).
 It is deliberately **not** parsed: it is exactly the per-manual structure 4.2 forbids depending on,
@@ -467,6 +474,12 @@ Audit (4.4), written to `index/audits/<slug>.json` and reported alongside the in
 
 `partial_pages` lists every page included only in part, so a sub-page selection is visible rather
 than hidden inside a whole-page range. No English content at all ⇒ rejection (4.5).
+
+The sample above is illustrative and its page 1 is wrong in one way worth naming: it appears in both
+`excluded_pages` and `partial_pages`, and a page cannot be both. The governing statement is the
+audit-completeness property in §Testing Strategy — included ∪ excluded is every page, the two are
+disjoint, and partial ⊆ **included** — because a page is partial for having had part of it kept.
+That is what `language.py` implements.
 
 ### Glyph repair (5.1–5.5)
 

@@ -65,6 +65,10 @@ for f in "${FILES[@]}"; do
     abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
     [[ "$abs" == "$SELF" ]] && continue          # skip self (holds the word list)
     case "$f" in .git/*) continue ;; esac
+    # The fixtures are captured extraction snapshots: their text is the vendor's own words,
+    # quoted verbatim so a stage can be tested against what the manual actually says.
+    # Correcting a manual's spelling would make the fixture a document nobody shipped.
+    case "$f" in tests/fixtures/*) continue ;; esac
     # grep -I skips binary files; -n line numbers; -E extended regex (case-sensitive).
     # Lines containing "spelling-ignore" are exempt — use sparingly, for unavoidable
     # external identifiers (e.g. API event names, CLI flags like -no-color).
