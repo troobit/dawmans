@@ -12,6 +12,23 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Retrieval and scoping** (`api/answer-engine` phase 3, `dawmans/answer/scope.py` and
+  `dawmans/answer/retrieve.py`). `device_scope` derives the turn's device scope over source kind —
+  the selected vendor manuals' `hardware_applicability.device` unioned with the
+  owned-but-undocumented gaps, widening to every indexed vendor-manual device when no vendor
+  manual is selected — and `in_device_scope` is 5.13's predicate: a passage declaring devices
+  disjoint from the scope is excluded from the turn entirely, a filter and never a ranking input.
+  `candidate_pool` runs the design's retrieval order — BGE query-prefix embed, candidate mask
+  (selected row slices minus device-filtered rows), masked dense and lexical rankings, RRF fusion
+  at k=10 — with masking *preceding* top-k on both retrievers so out-of-scope rows never consume
+  the depth-50 slots. `retrieve` applies the two-arm relevance threshold (cosine ≥ 0.30, or BM25
+  rank 1 *within its own source* sharing a query term of document frequency ≤ 5%) with both
+  constants as configuration, per-source qualification, and Decision 5's allocation: one floor
+  slot per qualifying source, remaining slots by fused rank, cap `max(8, |qualifying|, 12 on a
+  narrowing expansion)`. No qualifying in-scope candidate means the turn is uncovered per 2.1.
+  38 tests cover the scope derivation, the mask-precedes-top-k behaviour, the fusion
+  monotonicity/invariance/decisiveness properties Decision 1 rests on, the threshold arms and the
+  floor/cap precedence property.
 - **The corpus view** (`api/answer-engine` phase 2, `dawmans/answer/view.py`). `CorpusView` loads
   one immutable revision of the merged index view in the design's load order — manifest first,
   refusing to serve on an `index_version` the engine cannot interpret — then mmaps `vectors.npy`

@@ -52,7 +52,7 @@ references:
 
 ## Phase 3: Retrieval and scoping
 
-- [ ] 6. Write tests for device scope derivation and the passage predicate <!-- id:f3kp006 -->
+- [x] 6. Write tests for device scope derivation and the passage predicate <!-- id:f3kp006 -->
   - Scope over source kind: the selected vendor-manual records' hardware_applicability.device unioned with gaps.owned_but_undocumented; the authored source contributes nothing - reading a device off it would yield None and poison the set.
   - No vendor-manual selected: the scope is every indexed vendor-manual device plus the gaps, derivable from sources.json and gaps.json alone; rig.yaml is never read.
   - The union is computed even though owned-but-undocumented is empty today - assert against a fixture gaps report declaring a device that the union admits it (the Decision 12 dormancy the live corpus cannot produce).
@@ -62,13 +62,13 @@ references:
   - Stream: 1
   - Requirements: [5.12](requirements.md#5.12), [5.13](requirements.md#5.13)
 
-- [ ] 7. Implement scope.py <!-- id:f3kp007 -->
+- [x] 7. Implement scope.py <!-- id:f3kp007 -->
   - Device scope derivation and the passage predicate, applied inside the candidate mask - the only place where "filter, not rank" holds by construction.
   - Blocked-by: f3kp006 (Write tests for device scope derivation and the passage predicate)
   - Stream: 1
   - Requirements: [5.12](requirements.md#5.12), [5.13](requirements.md#5.13)
 
-- [ ] 8. Write tests for masked hybrid retrieval and RRF fusion <!-- id:f3kp008 -->
+- [x] 8. Write tests for masked hybrid retrieval and RRF fusion <!-- id:f3kp008 -->
   - Masking precedes top-k on both retrievers: out-of-scope and device-filtered rows never consume the depth-50 slots - retrieve-then-mask would make a narrow scope look like poor coverage, and that failure is asserted against.
   - Fusion properties at k=10 (Decision 1): monotonicity - improving a rank never lowers the fused rank; input invariance with ties broken by passage_id; decisiveness - a sole rank-1 hit outranks every double hit at ranks worse than (k+2, k+2), the arithmetic the decision rests on, stated executably.
   - Ranking across selected sources is on relevance alone, never weighted by page or chunk count; one selected source and all selected sources are the same mask path, so 5.4 and 5.8 have no special case and none exists.
@@ -78,13 +78,13 @@ references:
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.7](requirements.md#1.7), [5.1](requirements.md#5.1), [5.4](requirements.md#5.4), [5.5](requirements.md#5.5), [5.8](requirements.md#5.8)
 
-- [ ] 9. Implement retrieve.py dense, lexical and fusion <!-- id:f3kp009 -->
+- [x] 9. Implement retrieve.py dense, lexical and fusion <!-- id:f3kp009 -->
   - Candidate mask, `vectors @ q` with argpartition to depth 50, bm25s with the mask as a weight mask, RRF at k=10.
   - Blocked-by: f3kp008 (Write tests for masked hybrid retrieval and RRF fusion)
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.7](requirements.md#1.7), [5.1](requirements.md#5.1), [5.4](requirements.md#5.4), [5.5](requirements.md#5.5), [5.8](requirements.md#5.8)
 
-- [ ] 10. Write tests for the relevance threshold and passage allocation <!-- id:f3kp010 -->
+- [x] 10. Write tests for the relevance threshold and passage allocation <!-- id:f3kp010 -->
   - Two threshold arms, either qualifies: cosine >= 0.30, or BM25 rank 1 within its own source sharing a query term of document frequency <= 5% - per-source rank 1, not global, or the 5-page APC guide would qualify for nothing and the floor would never fire on it.
   - Both constants are configuration, not literals - they are guesses until the evaluation set exists.
   - No qualifying in-scope candidate means the turn is uncovered per 2.1, never synthesised from weak matches.
@@ -93,7 +93,7 @@ references:
   - Stream: 1
   - Requirements: [1.3](requirements.md#1.3), [2.7](requirements.md#2.7), [5.6](requirements.md#5.6)
 
-- [ ] 11. Implement the threshold and the allocation rule <!-- id:f3kp011 -->
+- [x] 11. Implement the threshold and the allocation rule <!-- id:f3kp011 -->
   - The two arms, per-source qualification, and the floor-then-fused-rank allocation in retrieve.py.
   - Blocked-by: f3kp010 (Write tests for the relevance threshold and passage allocation)
   - Stream: 1

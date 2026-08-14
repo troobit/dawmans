@@ -1,7 +1,7 @@
 # Answer engine (`src/dawmans/answer/`)
 
-Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records) and 2 (the
-corpus view) are done.
+Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
+corpus view) and 3 (retrieval and scoping) are done.
 
 ## Package setup
 
@@ -61,3 +61,35 @@ corpus view) are done.
     manifest starts with `view = None`.
 - `from_manifest` cross-checks `sum(row_count) == len(passages) == vectors.shape[0]` and fails
   loudly on mismatch — cheap guard for the no-mixed-revisions invariant.
+
+## Retrieval and scoping (`scope.py`, `retrieve.py`)
+
+- `scope.py` holds `device_scope` (5.12) and `in_device_scope` (5.13). Scope derivation branches
+  on *whether any vendor-manual is selected*, not on which: none selected → every indexed
+  vendor-manual device plus the gaps. Gap members are accepted as either bare device-id strings or
+  `{device, ...}` mappings — the corpus spec never pins the member shape, only that `rig.yaml`'s
+  `display_name` appears in the reports.
+- `retrieve.py` splits at the design's step-5/step-6 seam: `candidate_pool()` is embed → mask →
+  dense → lexical → RRF (tested by `test_retrieve.py`), `retrieve()` adds τ + floor/cap allocation
+  on top (tested by `test_threshold.py`). Both take the *already embedded* query vector;
+  `embed_query()` is separate so tests control cosines exactly and the BGE query prefix is
+  asserted in isolation.
+- Ranking uses a full `np.lexsort((pids, -scores))` instead of the design table's bare
+  `argpartition`: boundary ties under argpartition are arrival-ordered, which would break the
+  fusion input-invariance property. Cost is µs at ~1,200 rows.
+- The lexical arm's document frequencies come from bm25s internals: `lexical.scores` is a CSC-like
+  dict where `indptr[t]..indptr[t+1]` slices the doc postings for token id `t` (ids via
+  `vocab_dict`). df = slice length; the same slice gives "which docs share the term". No corpus
+  re-tokenisation. Pinned bm25s 0.3.10 — re-check on upgrade.
+- Query tokenisation is `bm25s.tokenize(question, stopwords=None, return_ids=False)`. The
+  `stopwords=None` must match what the (not yet implemented) manual-corpus index build uses;
+  parity is asserted only through the in-memory fixtures for now.
+- `bm25.get_scores(tokens, weight_mask=mask)` returns full-corpus scores with masked rows zeroed;
+  lexical candidacy additionally requires score > 0, so masked and no-overlap rows never rank.
+- Fixture trick (`tests/answer/corpus_fixtures.py`): `make_view()` builds a `CorpusView` entirely
+  in memory (no disk round-trip), and default vectors are `np.eye(N)` — one-hot rows make
+  `vectors @ q` read the query's component per row, so tests state every cosine directly.
+- Allocation subtleties: floor picks keep their fused positions (a boundary-qualifying small
+  source lands *last* in `supplied`); a qualifying source that misses both depth-50 cuts still
+  gets its floor slot (appended after the fused-ordered picks); cap arithmetic is
+  `max(8, |qualifying|, 12 if narrowing)` in one place.
