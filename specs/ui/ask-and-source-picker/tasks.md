@@ -184,7 +184,7 @@ references:
 
 ## Phase 5: Answer rendering and citations
 
-- [ ] 23. Write tests for the answer renderer <!-- id:f9ae01m -->
+- [x] 23. Write tests for the answer renderer <!-- id:f9ae01m -->
   - Partial content paints progressively (4.1); `direct_answer` renders first with detail and citations following in supplied order (4.3); every §4d block and inline type renders visually distinct — `!caveat` in reading position and never behind a disclosure, `!conflict` with both readings and their separate citations, neither chosen (4.4); steps separately identifiable (4.5); finished distinguishable from streaming (4.6).
   - `contributing_sources` named distinctly from merely-in-scope sources (4.7); `partially-answered` renders as an answer with each `uncovered_parts[]` entry visually subordinate, never as a refusal or error (4.8); a per-part control re-asks the uncovered part alone, widening to the engine-named sources, with the answered part left on screen (4.9).
   - A turn carrying `scope_dropped[]` names the dropped sources with that turn and states the corpus no longer holds them (3.11).
@@ -193,13 +193,13 @@ references:
   - Stream: 1
   - Requirements: [3.11](requirements.md#3.11), [4.1](requirements.md#4.1), [4.2](requirements.md#4.2), [4.3](requirements.md#4.3), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [4.6](requirements.md#4.6), [4.7](requirements.md#4.7), [4.8](requirements.md#4.8), [4.9](requirements.md#4.9), [4.10](requirements.md#4.10), [4.11](requirements.md#4.11), [4.12](requirements.md#4.12), [11.7](requirements.md#11.7)
 
-- [ ] 24. Implement the answer renderer <!-- id:f9ae01n -->
+- [x] 24. Implement the answer renderer <!-- id:f9ae01n -->
   - Presentation only — no fetching, no persistence; consumes the reducer's blocks and envelope.
   - Blocked-by: f9ae01m (Write tests for the answer renderer)
   - Stream: 1
   - Requirements: [3.11](requirements.md#3.11), [4.1](requirements.md#4.1), [4.2](requirements.md#4.2), [4.3](requirements.md#4.3), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [4.6](requirements.md#4.6), [4.7](requirements.md#4.7), [4.8](requirements.md#4.8), [4.9](requirements.md#4.9), [4.10](requirements.md#4.10), [4.11](requirements.md#4.11), [4.12](requirements.md#4.12), [11.7](requirements.md#11.7)
 
-- [ ] 25. Write tests for the citation list and its inline marks <!-- id:f9ae01o -->
+- [x] 25. Write tests for the citation list and its inline marks <!-- id:f9ae01o -->
   - The location slot renders `section_number` and `section_title` as the two fields they are, with only what exists — an unnumbered document shows no invented number (5.1); a pageless authored citation puts the entry's symptom title in the slot with page and section absent, never 0 and never empty (5.15).
   - The five inline obligations render on the citation entry with no disclosure in the path: `doc_version` (5.2), assumed `hardware_applicability` naming the revision described (5.3), "figure on pN" (5.4), `kind` as the user's own note, distinguishable from a manufacturer citation in greyscale (5.14), and `unbacked` (5.16). Inline means on the citation, not mid-prose — five caveats in the sentence would breach 11.7 on the first citation (Decision 3).
   - `entry_location` shows file and line beside the open action, copyable in one activation; never in the location slot, never rendered as a section or page (5.19).
@@ -208,13 +208,13 @@ references:
   - Stream: 1
   - Requirements: [5.1](requirements.md#5.1), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.4](requirements.md#5.4), [5.12](requirements.md#5.12), [5.13](requirements.md#5.13), [5.14](requirements.md#5.14), [5.15](requirements.md#5.15), [5.16](requirements.md#5.16), [5.17](requirements.md#5.17), [5.19](requirements.md#5.19)
 
-- [ ] 26. Implement the citation list <!-- id:f9ae01p -->
+- [x] 26. Implement the citation list <!-- id:f9ae01p -->
   - The list below the answer, one entry per marker integer in first-appearance order, carrying every §3 rendering obligation.
   - Blocked-by: f9ae01o (Write tests for the citation list and its inline marks)
   - Stream: 1
   - Requirements: [5.1](requirements.md#5.1), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.4](requirements.md#5.4), [5.12](requirements.md#5.12), [5.13](requirements.md#5.13), [5.14](requirements.md#5.14), [5.15](requirements.md#5.15), [5.16](requirements.md#5.16), [5.17](requirements.md#5.17), [5.19](requirements.md#5.19)
 
-- [ ] 27. Write tests for passage expansion and open-at-source <!-- id:f9ae01q -->
+- [x] 27. Write tests for passage expansion and open-at-source <!-- id:f9ae01q -->
   - Expansion fetches GET /passages/{passage_id} on activation and shows the text verbatim, visually distinguishable from summary text (5.6), revealed in place without navigating away (5.7); collapse restores the citation element's viewport offset via its rect, not `scrollY` — content above may have grown while streaming continued (5.8).
   - A session `Map` cache, prefetched on focus and never on hover (1.12): focus precedes activation by a keystroke, so the 150 ms target is a cache hit in the ordinary case, and a miss shows the working indicator past 300 ms rather than an empty area (5.18).
   - `degraded` marks the expanded passage distinctly from the unavailable state (5.10); a failed fetch keeps the source, its cited location and the open action — never a hidden citation or empty area (5.11); focus, expand and open all work by keyboard alone (5.9).
@@ -223,7 +223,7 @@ references:
   - Stream: 1
   - Requirements: [5.5](requirements.md#5.5), [5.6](requirements.md#5.6), [5.7](requirements.md#5.7), [5.8](requirements.md#5.8), [5.9](requirements.md#5.9), [5.10](requirements.md#5.10), [5.11](requirements.md#5.11), [5.18](requirements.md#5.18), [5.19](requirements.md#5.19)
 
-- [ ] 28. Implement passage expansion and openAtSource <!-- id:f9ae01r -->
+- [x] 28. Implement passage expansion and openAtSource <!-- id:f9ae01r -->
   - Expansion, the passage cache, the focus prefetch and both open-at-source branches on the citation entry.
   - Blocked-by: f9ae01q (Write tests for passage expansion and open-at-source)
   - Stream: 1

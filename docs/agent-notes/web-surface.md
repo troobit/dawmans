@@ -120,7 +120,43 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   store state (not submit attempts). Stop restores the question into the draft.
 - `ThreadView.svelte` — the thread shell. The question is a button that re-edits (sets
   `thread.draft`); state line is text (`working…`/`stopped`/`abandoned`/`incomplete`/`broken`/
-  `finished`). Body rendering is a deliberate plain-text placeholder until task 24.
+  `finished`). Renderer `'answer'` (and `null`, pre-outcome) goes to `AnswerView`; every other
+  renderer family keeps a plain-text placeholder until Phases 6–7.
+- `AnswerView.svelte` — the §4 answer renderer: `scope_dropped` notice, `direct_answer` first,
+  blocks in arrival order (`.heading/.step/.bullet/.paragraph/.caveat/.conflict>.reading`,
+  backtick spans as `<kbd>`, markers as `<sup class="marker">`), then `.uncovered` with a
+  per-part re-ask button (widens scope to `suggested_sources` via `scope.toggle`, then
+  `thread.submit(part)`), `.contributing` (names via the turn's citation map), and the
+  CitationList. Props `thread`/`scope`/`passages` are injectable, defaulting to the singletons.
+- `CitationList.svelte` / `CitationEntry.svelte` — one entry per marker integer in
+  first-appearance order; a citation resolved only by `causes[]` (no prose marker) appends after,
+  numbered on. All five §3 inline obligations are elements on the entry (`.doc-version`, `.kind`
+  "your own note", `.applicability`, `.figures`, `.unbacked`), the location slot renders only what
+  exists (symptom title for authored, 5.15), `entry_location` + copy button sit outside the slot
+  (5.19). `uncited` (settled ∧ empty map) and `ungrounded` notices live on the list.
+- Expansion (CitationEntry): prefetch **on the expand button's focus**, never hover; expanded
+  passage is a `.passage` blockquote with `.degraded-mark` distinct from `.passage-unavailable`;
+  the working indicator appears only after a 300 ms timeout while status is `loading` (timer set
+  in an `$effect`, the flag written only in the untracked timer callback). Collapse restores the
+  **entry's own rect top** via `window.scrollBy(0, delta)` after `tick()` — never `scrollY`.
+  openAtSource: vendor = plain `<a target="_blank" rel="noopener">` to `serveDocumentHref`
+  (`#page=N` exactly); authored = the expansion + copyable `entry_location`
+  (`navigator.clipboard.writeText`). No third branch, no `file://`.
+
+## Passage cache (`src/lib/state/passages.svelte.ts`)
+
+`PassageStore` — session `Map` of `loading/ready/failed` per `passage_id`, injectable fetcher
+(defaults to `client.fetchPassage`). `prefetch()` no-ops on loading/ready and **retries on
+failed**, so a citation activated after an outage recovers; `ready` is never refetched (a passage
+cannot change without re-ingestion, which changes its id).
+
+## Gotcha: the reducer must clone the open block on snapshot
+
+`BlockParser` streams into its **last** block by mutating it in place; `Turn.#snapshotBlocks`
+copies the outer array only. Under `$state.raw` a keyed `{#each}` compares items referentially, so
+a delta extending an already-painted paragraph never repainted. Fix (in `turn.svelte.ts`): the
+snapshot `structuredClone`s the last block (the only one still open); earlier blocks are closed
+and keep their references. Don't "simplify" this back to `[...parser.blocks]`.
 
 ## Testing stack
 

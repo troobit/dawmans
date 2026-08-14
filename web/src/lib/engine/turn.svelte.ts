@@ -179,9 +179,18 @@ export class Turn {
 		this.#snapshotBlocks();
 	}
 
-	/** Replace by append, never mutate in place: blocks are `$state.raw` (design, Data Models). */
+	/**
+	 * Replace by append, never mutate in place: blocks are `$state.raw`
+	 * (design, Data Models). The parser streams into its last block until that
+	 * block closes, so the last block is the one whose contents may differ from
+	 * the previous snapshot — it is cloned to a fresh reference or the renderer,
+	 * comparing referentially, would never repaint the growing block (4.1).
+	 * Every earlier block is closed and final, and keeps its reference.
+	 */
 	#snapshotBlocks(): void {
-		this.blocks = [...this.#parser.blocks];
+		const parsed = this.#parser.blocks;
+		const last = parsed[parsed.length - 1];
+		this.blocks = last === undefined ? [] : [...parsed.slice(0, -1), structuredClone(last)];
 	}
 
 	#merge(fields: Partial<AnswerEnvelope>): void {

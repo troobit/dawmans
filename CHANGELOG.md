@@ -12,6 +12,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/components/AnswerView.svelte` — the answer renderer** (`ui/ask-and-source-picker`
+  Phase 5). The §4 renderer over the reducer's blocks and envelope, presentation only:
+  `direct_answer` first (4.3), every CONTRACTS §4d block and inline type visually distinct —
+  headings, separately identifiable steps (4.5), bullets, paragraphs, `!caveat` in reading
+  position and never behind a disclosure, `!conflict` with both readings and their separate
+  citation markers, neither chosen (4.4) — backtick key terms as discrete `<kbd>` elements never
+  smaller than body text (4.12), and markers as their stable first-appearance integers
+  (Decision 3). A turn carrying `scope_dropped[]` names the dropped sources with that turn as the
+  engine's prune, never the user's own narrowing (3.11); `contributing_sources` are named
+  distinctly from the merely-in-scope (4.7); `partially-answered` renders as an answer with each
+  uncovered part visually subordinate and a per-part control that re-asks it alone, widening scope
+  to the engine-named sources with the answered part left on screen (4.8, 4.9). ThreadView routes
+  the `answer` renderer family here.
+- **`web/src/lib/components/CitationList.svelte` / `CitationEntry.svelte` — the citation list**
+  (Phase 5). One entry per marker integer in first-appearance order, each carrying every
+  CONTRACTS §3 obligation inline with no disclosure in the path (Decision 3): `doc_version`
+  (5.2), assumed `hardware_applicability` naming the revision described (5.3), "figure on pN"
+  (5.4), the authored kind as the user's own note distinguishable in greyscale (5.14), and
+  `unbacked` (5.16). The location slot renders `section_number` and `section_title` as the two
+  fields they are with only what exists (5.1); a pageless authored citation shows its symptom
+  title with page and section absent (5.15); `entry_location` sits beside the open action,
+  copyable in one activation, never in the location slot (5.19). A settled answer with no
+  citations is marked uncited (5.12) and `ungrounded` marks the rendered text as unverified
+  without blanking it (5.13).
+- **`web/src/lib/state/passages.svelte.ts` — the session passage cache** (Phase 5). A `Map` of
+  loading/ready/failed states over the fetch-passage operation, prefetched on focus and never on
+  hover (1.12, 5.18): focus precedes activation by a keystroke, so expansion is a cache hit in the
+  ordinary case, and a failed entry retries on the next activation. Components fetch nothing
+  themselves.
+- **Passage expansion and open-at-source on the citation entry** (Phase 5). Expansion reveals the
+  passage verbatim in place, visually distinguishable from summary text (5.6, 5.7), with a
+  working indicator only past 300 ms on a cache miss (5.18); collapse restores the entry's own
+  viewport offset via its rect, not `scrollY` (5.8); `degraded` is marked distinctly from the
+  unavailable state, which keeps the source, its cited location and the open action (5.10, 5.11).
+  openAtSource is two branches and no third (5.5, CONTRACTS §3a): a vendor manual is a plain link
+  — `target="_blank"`, `rel="noopener"`, the serve-document route at exactly `#page=N` — and an
+  authored entry is the expansion plus its copyable `entry_location`; no `file://` URL is ever
+  attempted.
+
 - **`web/src/lib/keys.ts` — the keyboard router and arming registry** (`ui/ask-and-source-picker`
   Phase 4, Decision 5). One `keydown` listener on `window` with the design's decision table:
   modifiers and foreign text-entry targets pass through; `Escape` dismisses the topmost overlay
@@ -100,6 +139,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **The turn reducer now clones the still-open block on snapshot**
+  (`web/src/lib/engine/turn.svelte.ts`, Phase 5). The parser streams into its last block by
+  mutating it in place, and under `$state.raw` a keyed render compares items referentially — so a
+  delta extending an already-painted paragraph never repainted. The snapshot now
+  `structuredClone`s the last block (the only one still open); every earlier block is closed and
+  keeps its reference (4.1).
 - **`web/vite.config.ts`** — vitest now resolves Svelte's browser entry
   (`resolve.conditions: ['browser']` under `VITEST`), without which component tests fail with
   `lifecycle_function_unavailable`.

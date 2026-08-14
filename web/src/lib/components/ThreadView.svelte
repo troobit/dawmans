@@ -1,16 +1,22 @@
 <!--
 	The thread shell: turns oldest first, each holding its question in an
 	inspectable, re-editable form (1.4) and whatever the engine has said so
-	far. Body rendering here is a plain-text placeholder until the answer
-	renderer lands (task 24); the per-outcome renderers of §4–§9 replace the
-	state line in later phases. Presentation only — no fetching, no persistence.
+	far. A turn whose outcome selected the answer renderer — or whose outcome
+	has not arrived yet — renders through AnswerView; the remaining renderer
+	families (§6, §7, §9) keep the plain-text placeholder until their phases.
+	Presentation only — no fetching, no persistence.
 -->
 <script lang="ts">
 	import type { Block, InlineSpan } from '../engine/blocks';
 	import type { Turn } from '../engine/turn.svelte';
+	import { scope as defaultScope, type ScopeStore } from '../state/scope.svelte';
 	import { thread as defaultThread, type ThreadStore } from '../state/thread.svelte';
+	import AnswerView from './AnswerView.svelte';
 
-	let { thread = defaultThread }: { thread?: ThreadStore } = $props();
+	let {
+		thread = defaultThread,
+		scope = defaultScope
+	}: { thread?: ThreadStore; scope?: ScopeStore } = $props();
 
 	/** Working / finished / broken as text — one of 8.4's two channels. */
 	function stateLabel(turn: Turn): string {
@@ -59,12 +65,16 @@
 				</button>
 				<span class="state">{stateLabel(turn)}</span>
 			</header>
-			{#if turn.envelope.direct_answer !== undefined}
-				<p class="direct">{turn.envelope.direct_answer}</p>
+			{#if turn.renderer === 'answer' || turn.renderer === null}
+				<AnswerView {turn} {thread} {scope} />
+			{:else}
+				{#if turn.envelope.direct_answer !== undefined}
+					<p class="direct">{turn.envelope.direct_answer}</p>
+				{/if}
+				{#each turn.blocks as block, index (index)}
+					<p class="block">{blockText(block)}</p>
+				{/each}
 			{/if}
-			{#each turn.blocks as block, index (index)}
-				<p class="block">{blockText(block)}</p>
-			{/each}
 		</article>
 	{/each}
 </section>
