@@ -229,7 +229,7 @@ references:
 
 ## Phase 6: Chunking and passage identity
 
-- [ ] 26. Write property tests for passage_id <!-- id:e7lsx2i -->
+- [x] 26. Write property tests for passage_id <!-- id:e7lsx2i -->
   - Determinism over the whole pipeline, not just the hash function: ingesting the same PDF bytes twice yields an identical (passage_id, text) sequence.
   - Sensitivity - any text change alters the id; a whitespace-only or NFC-form change does not. Case is preserved, since two chunks differing only in case are different text.
   - Metadata invariance - perturbing doc_version, page offsets or section numbers leaves every id unchanged (also data/symptom-triage 8.2-8.3).
@@ -240,13 +240,13 @@ references:
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1)
 
-- [ ] 27. Implement corpus/passage_id.py <!-- id:e7lsx2j -->
+- [x] 27. Implement corpus/passage_id.py <!-- id:e7lsx2j -->
   - NFC, collapse whitespace, sha256 of the body text; source_id is the visible prefix and is not hashed, so cross-source collisions are impossible by construction and a fetch can route on the prefix without a lookup.
   - Blocked-by: e7lsx2i (Write property tests for passage_id)
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1)
 
-- [ ] 28. Write tests for the chunker and the citation header <!-- id:e7lsx2k -->
+- [x] 28. Write tests for the chunker and the citation header <!-- id:e7lsx2k -->
   - Property - cap: no chunk exceeds 350 words unless it is a marked part of an over-cap atomic unit.
   - Property - coverage round-trip: over the packing type that records each chunk's overlap length, concatenating a region's chunks and removing the recorded overlap reproduces the region's text in order.
   - Property - region purity: every chunk's (section_number, section_title) equals exactly one region's; overlap never crosses a region boundary or an atomic unit.
@@ -261,7 +261,7 @@ references:
   - Stream: 1
   - Requirements: [6.2](requirements.md#6.2), [6.7](requirements.md#6.7), [6.8](requirements.md#6.8), [6.9](requirements.md#6.9), [6.10](requirements.md#6.10), [6.11](requirements.md#6.11), [7.4](requirements.md#7.4), [7.5](requirements.md#7.5), [12.6](requirements.md#12.6), [12.8](requirements.md#12.8)
 
-- [ ] 29. Implement corpus/chunk.py <!-- id:e7lsx2l -->
+- [x] 29. Implement corpus/chunk.py <!-- id:e7lsx2l -->
   - Greedy packing within one region at a 350-word cap, ~50 words of overlap snapped to a sentence boundary, and the emission contract table of design 'Region/Unit -> Passage' - every Passage field comes from exactly one rule there.
   - Blocked-by: e7lsx2k (Write tests for the chunker and the citation header)
   - Stream: 1

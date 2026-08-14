@@ -103,6 +103,12 @@ class Region:
     page_end: int | None
     inferred: bool  # sectioning came from path C heading styles
     units: list[Unit]
+    #: CONTRACTS §2 `entry_location`, on an `authored-triage` region only: the entry's own
+    #: `source_file` and line, joined by `TriageLoader`. It is region-scoped because a
+    #: region is exactly one entry, and it is carried onto every passage of that region
+    #: unchanged — never set, cleared or derived here (12.6), and never an input to
+    #: `passage_id` (CONTRACTS §2). None on a `vendor-manual`, which has a page instead.
+    entry_location: str | None = None
 
 
 @dataclass(frozen=True, slots=True)

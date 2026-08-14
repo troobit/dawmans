@@ -201,6 +201,7 @@ class Region:                     # exactly one section or one titled region (6.
     page_end: int | None
     inferred: bool                # sectioning came from path C heading styles
     units: list[Unit]
+    entry_location: str | None    # CONTRACTS §2, authored only; see below
 
 @dataclass(frozen=True)
 class Unit:
@@ -219,6 +220,14 @@ what 1.5 of `data/symptom-triage` depends on.
 numbered procedure that fits the cap, and a procedure can start on p11 and end on p12. One page per
 unit would force either a 6.10 violation or a citation naming p11 for text printed on p12.
 
+`Region.entry_location` is CONTRACTS §2's field of the same name, carried across the seam. It is
+**region-scoped because a region is exactly one authored entry** (`data/symptom-triage` §Passage
+emission), and it is the only route the field has: `LoadResult.sidecar` is keyed by `passage_id`,
+which does not exist until the chunker has run, so a sidecar cannot supply a field the chunker needs
+in order to emit a passage at all. `TriageLoader` sets it, the chunker copies it onto every passage
+of that region and never derives, clears or hashes it (12.6, CONTRACTS §2). It is `None` on a
+`vendor-manual`, which has a page instead. [Decision 14](decision_log.md) records the alternatives.
+
 ### `Region`/`Unit` → `Passage` — the emission contract
 
 This is the whole output of the spec. Every `Passage` field comes from exactly one rule here.
@@ -234,7 +243,7 @@ This is the whole output of the spec. Every `Passage` field comes from exactly o
 | `degraded` | OR over **all** the chunk's units | a flagless repeated heading contributes nothing, so a chunk of degraded rows stays degraded |
 | `has_figures` | OR over all the chunk's units | chunk-scoped, see §Figures |
 | `unbacked` | OR over all the chunk's units | set only by `TriageLoader`; carried unchanged (12.6) |
-| `entry_location` | the entry's own `source_file` and `line` | `authored-triage` only; supplied by `TriageLoader`, carried unchanged, and never an input to `passage_id` (12.6, CONTRACTS §2) |
+| `entry_location` | `Region.entry_location` — the entry's own `source_file` and `line` | `authored-triage` only; supplied by `TriageLoader`, carried unchanged, and never an input to `passage_id` (12.6, CONTRACTS §2) |
 
 ### Source identity and discovery
 
@@ -562,6 +571,15 @@ Greedy packing within one region, cap 350 words:
 - A procedure exceeding the cap splits between steps.
 - Overlap ~50 words, snapped to a sentence boundary, **within a region only** and never across an
   atomic unit. Overlapping a region boundary would make the citation ambiguous, which 6.7 forbids.
+- **A repeat replaces overlap; the two are never carried together.** Where a chunk copies a
+  `repeat_on_split` unit, the repeat already gives the continuity overlap exists to provide, and
+  carrying both would put that text into the hashed passage twice. This is the kind-neutral form of
+  `data/symptom-triage` §Passage emission's "chunk overlap is suppressed for authored regions": its
+  symptom statement is a `repeat_on_split` unit, so the rule reaches it without the chunker knowing
+  what kind of source it is (12.2). [Decision 15](decision_log.md).
+- Where a region holds a **second** table, the first table's heading is not copied onto it: the
+  repeats carried into a new chunk are dropped when the next unit is itself `repeat_on_split`.
+  Naming columns a row is not in is worse than naming none.
 
 **Page range (6.8).** `page_start`/`page_end` are the min and max over the chunk's
 **page-contributing** units only — the units whose text originates in this chunk. A copied

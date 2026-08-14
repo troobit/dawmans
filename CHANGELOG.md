@@ -12,6 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Passage identity** (`dawmans/corpus/passage_id.py`, `data/manual-corpus` phase 6). The digest
+  covers the chunk's body text and nothing else (6.1, Decision 5), with `source_id` carried as a
+  visible prefix rather than hashed, so cross-source collisions are impossible by construction and a
+  fetch routes on the prefix without a lookup. Whitespace and Unicode composition are normalised
+  away — a re-extraction differing only in line wrapping must not orphan every citation in the
+  retained UI history at once — and case is kept, because two chunks differing only in case are
+  different text. Where chunks share a digest the **first in document order keeps the unsuffixed
+  identifier**; suffixing all of them would destroy the stable identifier of a copy whose text did
+  not change. Determinism is asserted end to end over the same PDF bytes, not by re-hashing one
+  string.
+- **The chunker and the citation header** (`dawmans/corpus/chunk.py`). Greedy packing to the
+  350-word cap within one region, so no chunk spans two sections (6.7) and the blast radius of a
+  vendor edit stays inside one. Pages come from the chunk's **own** units, so a split table's
+  continuation chunk records p26 rather than the p25 of the heading copied onto it (6.8); flags are
+  the OR over every unit it holds, copied ones included, so a chunk of degraded rows stays degraded
+  under a clean heading (5.3). An atomic unit that fits is never split (6.10, 7.4), one that does
+  not is split with every part marked, and a split table repeats its joined heading — its own, never
+  a previous table's (7.5). The citation header is embedded and BM25-indexed but is never part of
+  `Passage.text`, and the section marker is omitted entirely rather than rendered as `§None`. A
+  chunk page outside the source's range is a **failure**, not a rejection (6.11), and the check is
+  skipped for a pageless source (12.8).
 - **Sectioning, layout and region assembly** (`dawmans/corpus/pdf/`, `data/manual-corpus` phase 5).
   The stages that turn an annotated span model into the shared `Region[]`/`Unit[]` shape.
   `sections.py` builds the section map from the document's own structure — embedded outline, printed
@@ -123,6 +144,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **`Region` carries `entry_location`** (`data/manual-corpus` Decision 14, design §The loader
+  protocol). CONTRACTS §2 requires the field on every authored passage and `records.py` refuses to
+  construct one without it, but the seam had nowhere for it to travel. The sidecar cannot supply it:
+  it is keyed by `passage_id`, which the chunker is the stage that mints. A region is exactly one
+  authored entry, so the field is region-scoped; `TriageLoader` sets it and the chunker copies it,
+  never deriving, clearing or hashing it (12.6). `data/symptom-triage` §Passage emission still has
+  to name it in its own `Region` construction table.
+- **A repeat replaces overlap rather than joining it** (`data/manual-corpus` Decision 15, design
+  §Chunking). `data/symptom-triage` needs overlap suppressed for its regions, because a split entry
+  would otherwise carry its symptom statement twice in hashed, user-visible text. Stated as "overlap
+  is taken only where the continuation copies no `repeat_on_split` unit", the rule reaches that case
+  without the chunker knowing what kind of source it has (12.2), and it keeps a split table's full
+  room for rows.
 - **Stage 7 and the load path are their own modules** (`data/manual-corpus` Decision 13, design
   §Module placement). The design's module tree stopped at `pdf/layout.py`, leaving `Region[]`
   assembly and the loader that sequences the stages without a home. `pdf/units.py` and

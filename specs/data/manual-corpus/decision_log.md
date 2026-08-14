@@ -986,3 +986,134 @@ opens PDFs.
 ### Impact
 
 `src/dawmans/corpus/pdf/units.py`, `src/dawmans/corpus/pdf/loader.py`, design §Module placement.
+
+---
+
+## Decision 14: `entry_location` crosses the seam on `Region`
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+CONTRACTS §2 puts `entry_location` on `Passage` and requires it on every `authored-triage` passage —
+`records.py` refuses to construct one without it, since it is the whole of the open-at-source action
+for a source that has no page (CONTRACTS §3a). The chunker is the stage that constructs `Passage`
+records, and the loader seam it reads had nowhere for the field to travel: `Region` and `Unit` carry
+section identity, pages, order and flags, and nothing else.
+
+Implementing the chunker made the gap unavoidable. `data/symptom-triage` publishes the entry's
+`source_file` and line in its **sidecar**, which is keyed by `passage_id` — an identifier that does
+not exist until the chunker has run. A sidecar therefore cannot supply a field the chunker needs in
+order to emit the passage the sidecar would be keyed to.
+
+### Decision
+
+Add `entry_location: str | None = None` to `Region`. `TriageLoader` sets it, the chunker copies it
+onto every `Passage` of that region unchanged, and no stage of this spec derives, clears or hashes
+it. It stays `None` on a `vendor-manual`, which has a page instead.
+
+### Rationale
+
+A region is exactly one authored entry (`data/symptom-triage` §Passage emission: one `Region` per
+entry, with the symptom as its `section_title`), so the entry's location is a property of the region
+and of nothing smaller. Putting it on `Unit` would repeat one value across every cause of an entry
+and invite a chunk whose units disagree about where the entry lives.
+
+The field is inert for the `vendor-manual` half of the seam, which is what keeps 12.2 structural:
+the chunker copies whatever is there, and the only branch anywhere is the `None` a manual carries.
+It defaults, so no existing construction site changes.
+
+### Alternatives Considered
+
+- **Keep it in the sidecar and have the chunker read it back**: No seam change - Rejected as
+  circular: the sidecar is keyed by `passage_id`, which the chunker is the stage that mints.
+- **Put it on `Unit`**: Uniform with `unbacked`, which is per-unit for a real reason - Rejected
+  because the location is per entry; per-unit invites disagreement inside one chunk and buys nothing.
+- **Pass a map into the chunker beside the regions**: Keeps `Region` unchanged - Rejected because
+  there is one authored source and many entries, so the map would have to be keyed by the region
+  itself — which is the field, with an indirection in front of it.
+- **Derive it in the chunker from the region title**: No plumbing at all - Rejected outright: 12.6
+  gives the content and validation of an authored source to `data/symptom-triage`, and a derived
+  locator would be a claim about a file this spec never read.
+
+### Consequences
+
+**Positive:**
+- The one field CONTRACTS §2 requires on an authored passage has a route to the passage, and it is
+  the same route as every other passage field: the region.
+- The chunker stays kind-neutral — it copies a field rather than testing a kind.
+- `Passage.__post_init__` now validates the seam end to end: an authored region reaching the chunker
+  without a location fails at construction rather than producing a citation with no open action.
+
+**Negative:**
+- A field on the shared `Region` that is meaningless for every source in `manuals/`.
+- `data/symptom-triage`'s own design table for `Region` construction does not yet list it, so that
+  spec's emission table is one field behind this one until it is amended.
+
+### Impact
+
+`src/dawmans/corpus/loader.py`, `src/dawmans/corpus/chunk.py`, design §The loader protocol and
+§`Region`/`Unit` → `Passage`, and an outstanding amendment to `data/symptom-triage` §Passage
+emission.
+
+---
+
+## Decision 15: A repeat replaces overlap, rather than joining it
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The chunker carries ~50 words of overlap into each continuation chunk within a region, and repeats
+every `repeat_on_split` unit — a table's joined heading (7.5) — onto each part of a split.
+`data/symptom-triage` §Passage emission requires the opposite for its own regions: "chunk overlap is
+suppressed for authored regions", because an entry's symptom statement is a `repeat_on_split` unit
+and a split entry would otherwise carry the symptom twice in text that is hashed into `passage_id`
+and shown to the user when the citation is expanded.
+
+Requirement 12.2 makes everything from `Region` onwards shared code, so the chunker cannot answer
+this with an `if kind == "authored-triage"`.
+
+### Decision
+
+Overlap is taken only where the continuation chunk copies **no** `repeat_on_split` unit. Where a
+repeat is copied, it is the whole of the carried text.
+
+### Rationale
+
+The rule is kind-neutral and states the actual reason: a repeat and overlap exist to do the same
+job — give the continuation enough context to read on its own — and doing it twice duplicates text
+into the digest. Written this way it covers the authored case the triage design asks for, and it
+also covers the split table, where overlap was already forbidden because table rows are atomic.
+
+It also keeps the cap honest. A chunk carrying a heading *and* 50 words of overlap has 50 fewer
+words of room for the rows it exists to hold, on every part of every split table.
+
+### Alternatives Considered
+
+- **Suppress overlap for pageless regions**: One line, and it catches today's only case - Rejected
+  because it keys on the wrong property: a pageless source is 12.8's concern, nothing about having
+  no pages implies anything about continuity, and a future paged source with repeated units would
+  get both.
+- **Suppress overlap when the source kind is `authored-triage`**: Exactly what the triage design
+  says - Rejected as the `if kind ==` branch 12.2 exists to prevent, in the one module that is most
+  load-bearing for the seam.
+- **Carry both**: No rule at all - Rejected because it duplicates the symptom statement inside
+  `Passage.text`, which is hashed (6.1) and is what the user is shown when a citation is expanded.
+
+### Consequences
+
+**Positive:**
+- One rule, stated in terms of the seam's own types, satisfies two specs.
+- Split table chunks keep their full room for rows.
+
+**Negative:**
+- A region mixing prose and a table loses overlap at the split immediately after the table's heading
+  is copied, where prose alone would have had it. The heading is the more useful of the two at that
+  boundary, so this is a trade rather than a regression.
+
+### Impact
+
+`src/dawmans/corpus/chunk.py`, design §Chunking.

@@ -333,6 +333,60 @@ dropped.
 - `assemble(…, spans=…)` takes stage 5's output back from the loader so the anchor-quality
   audit does not cost a second walk over every line.
 
+## Passage identity — `corpus/passage_id.py`
+
+`passage_id(source_id, text)` = `f"{source_id}#{sha256(canonical(text))[:16]}"`. `canonical` is
+NFC, whitespace runs collapsed, stripped — and nothing else. Case is **not** folded.
+
+- `source_id` is a visible prefix, not hashed. Cross-source collisions are impossible by
+  construction and `fetch-passage` routes on the prefix.
+- `assign_ids(source_id, texts)` owns the duplicate rule and it is **asymmetric on purpose**:
+  the first of k identical chunks keeps the bare ID, the rest take `.2`…`.k`. Suffixing all k
+  would mean a source newly acquiring a second copy of some boilerplate destroys the stable ID
+  of the first copy, whose text did not change. The cost of the asymmetry is pinned by a test:
+  a duplicate inserted *before* an existing one does promote.
+- `unicodedata.normalize` is imported as `normalised` with a `spelling-ignore` marker.
+  `tools/check_spelling.sh` bans the American spelling and cannot tell a stdlib name from
+  prose. Note the checker scans **git-tracked files only**, so `make lint` says nothing about a
+  new file until it is `git add`ed.
+- Determinism is a property of the pipeline, not of this function, and is tested by ingesting
+  the same synthetic PDF bytes twice and comparing the whole `(passage_id, text)` sequence.
+
+## The chunker — `corpus/chunk.py`
+
+`chunk_source(record, regions)` → `list[Chunk]`, where `Chunk` is the passage plus what only
+the chunker knows: its `header`, the `units` that contributed (copies included), how many words
+it `carried` in, and whether it is a marked part of an over-cap atomic unit.
+
+- Packing restarts at every region, so the coverage round-trip, region purity and the overlap
+  rules are all region-local. Identifiers are assigned across the **whole source** afterwards,
+  because 6.1's duplicate rule is source-scoped.
+- `carried` is a **word count**, and it is what makes the round-trip property checkable:
+  `chunk.passage.text.split()[chunk.carried:]` concatenated over a region gives the region's
+  own words back, in order.
+- Pages are the min/max over `_Part.own` — the units whose text originates in this chunk. A
+  copied heading and overlap contribute words but not pages. Flags are the OR over
+  `_Part.units`, which is copies **plus** own units; the overlap's source unit is deliberately
+  not in it, since only a fragment of it is present.
+- **A repeat replaces overlap** (Decision 15). Overlap is taken only where the continuation
+  copies no `repeat_on_split` unit, which is how `data/symptom-triage`'s "suppress overlap for
+  authored regions" is satisfied without an `if kind ==`.
+- The repeat run is tracked at *placement* time, not when a unit is popped: a unit that does
+  not fit is pushed back and seen twice, and counting it twice copies one heading in twice.
+  Repeats are dropped when the next queued unit is itself `repeat_on_split` — that is a second
+  table in the same region, and naming columns a row is not in is worse than naming none.
+- `partial_unit` marks 7.4's case only: a split of an **atomic** unit. Splitting long prose is
+  ordinary 6.8 chunking and is not marked.
+- Splits snap to a sentence boundary where one falls inside the room, and fall back to a word
+  cut where the first sentence already exceeds it. Overlap snaps the same way, with the same
+  fallback bounded to `OVERLAP_WORDS`.
+- `check_pages` raises `PageRangeError` for 6.11 — a **failure**, not a rejection — and returns
+  immediately for a pageless source. `token_budget(chunks, count)` takes the tokeniser as a
+  callable, because the model is loaded by `index/embed.py` and this module must not import it;
+  the real-tokeniser test skips unless `models/` has been populated.
+- `Region.entry_location` (Decision 14) is the only route CONTRACTS §2's field has to a
+  `Passage`: the sidecar is keyed by `passage_id`, which this stage mints.
+
 ## Fixtures — `tests/fixtures/`, `tools/capture_fixture.py`, `make fixtures`
 
 The vendor PDFs are gitignored, so the guides enter the test suite as committed extraction
