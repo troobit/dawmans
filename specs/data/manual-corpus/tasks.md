@@ -44,7 +44,7 @@ references:
 
 ## Phase 2: Discovery and source identity
 
-- [ ] 5. Write tests for the filename grammar and source identity <!-- id:e7lsx1x -->
+- [x] 5. Write tests for the filename grammar and source identity <!-- id:e7lsx1x -->
   - Grammar accept/reject table against the anchored expression: kebab-case fields, dotted version (v12, v1.0, v2.10.3), lang as ISO 639-1 or `multi`; a rejected filename reports the offending name and the expected pattern.
   - Round-trip property: for every accepted filename, `f"{vendor}_{product}_{doctype}_v{doc_version}_{lang}.pdf"` reproduces it exactly - doc_version is stored without the leading `v` (2.7).
   - source_id is `<vendor>/<product>` with no version; display_name is the title-cased vendor and product with no version appended.
@@ -55,13 +55,13 @@ references:
   - Stream: 1
   - Requirements: [1.3](requirements.md#1.3), [2.1](requirements.md#2.1), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.4](requirements.md#2.4), [2.5](requirements.md#2.5), [2.6](requirements.md#2.6), [2.7](requirements.md#2.7), [12.5](requirements.md#12.5)
 
-- [ ] 6. Implement the filename grammar and identity derivation <!-- id:e7lsx1y -->
+- [x] 6. Implement the filename grammar and identity derivation <!-- id:e7lsx1y -->
   - dawmans/corpus/discover.py: the anchored expression, identity derivation, slug rule, and collision detection by grouping on source_id before any work.
   - Blocked-by: e7lsx1x (Write tests for the filename grammar and source identity)
   - Stream: 1
   - Requirements: [1.3](requirements.md#1.3), [2.1](requirements.md#2.1), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.4](requirements.md#2.4), [2.5](requirements.md#2.5), [2.6](requirements.md#2.6), [2.7](requirements.md#2.7), [12.5](requirements.md#12.5)
 
-- [ ] 7. Write tests for store scanning, fingerprints and removal <!-- id:e7lsx1z -->
+- [x] 7. Write tests for store scanning, fingerprints and removal <!-- id:e7lsx1z -->
   - A missing or unreadable store removes no shard and reports the store unavailable; an existing empty store removes its shards. This is the test that stops an unmounted volume deleting every authored passage.
   - Removal is scoped by the store recorded on the shard, so 9.5 never tests a source of one kind against the other kind's store.
   - sha256 over file bytes as the fingerprint; a changed fingerprint marks the source for re-ingestion.
@@ -70,7 +70,7 @@ references:
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.2](requirements.md#1.2), [1.4](requirements.md#1.4), [9.2](requirements.md#9.2), [9.3](requirements.md#9.3), [9.5](requirements.md#9.5), [12.3](requirements.md#12.3)
 
-- [ ] 8. Implement store scanning, fingerprinting and removal <!-- id:e7lsx20 -->
+- [x] 8. Implement store scanning, fingerprinting and removal <!-- id:e7lsx20 -->
   - Extend discover.py with both stores, the unknown-vs-empty distinction, and removal of a shard plus its sidecar and audit.
   - Blocked-by: e7lsx1z (Write tests for store scanning, fingerprints and removal)
   - Stream: 1

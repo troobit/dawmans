@@ -12,6 +12,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Source discovery and identity** (`dawmans/corpus/discover.py`, `data/manual-corpus` phase 2).
+  The filename grammar of 2.1–2.3 as one anchored expression, with `SourceIdentity.filename` as its
+  exact inverse: `api/answer-engine` rebuilds a name from a `SourceRecord`'s own fields to serve the
+  PDF behind a citation (CONTRACTS §3a) and to assemble `required_manual` (§4e), so `doc_version` is
+  stored without its leading `v` and the round trip is asserted as a property. `source_id` is
+  `<vendor>/<product>` with the version deliberately outside it, and the shard slug maps `/`→`_`
+  rather than `/`→`-`, which would fold `a/b-c` and `a-b/c` onto one shard.
+- **Both source stores scanned in one run, and a missing store distinguished from an empty one.**
+  An absent, unreadable or not-a-directory store reports as unavailable and its discovery set is
+  *unknown*, so no shard from it is removed; only an existing, empty store removes its shards. That
+  is what stops an unmounted volume deleting every authored passage and reporting success. Removal
+  is keyed on the store recorded in the shard's own meta, so 9.5's "never test a source of one kind
+  against the other kind's store" holds by construction, and a removed source takes its view sidecar
+  and its ingestion audit with it.
+- **Discovery rejections, per 1.3, 2.5 and 2.6.** A malformed filename is reported with the offending
+  name and the expected pattern; two files resolving to one `source_id` reject both rather than
+  silently indexing one, and a shard standing under a rejected identity is removed. A non-PDF in
+  `manuals/` is skipped with no report line. The run-level pass also catches the one collision no
+  single store can see — a vendor manual named `authored_triage_*.pdf` lands on the authored store's
+  constant identity, which the slug rule cannot distinguish.
 - **The `dawmans` Python package, scaffolded** (`data/manual-corpus` phase 1). `src/` layout managed
   with uv, the module tree of the design's Module placement, and the Makefile targets that were
   still erroring: `build`, `test`, `lint`, `clean`, plus `fetch-model` (the one-off model cache

@@ -74,6 +74,56 @@ structural rather than a set of `if kind ==` branches.
 `Unit` carries `page_start` **and** `page_end` because a procedure that fits the chunk
 cap may still span p11–p12, and 6.10 forbids splitting it.
 
+## Discovery — `corpus/discover.py`
+
+Stage 1. Reads directories and hashes bytes; opens no PDF. Two halves, one module:
+
+**The filename grammar.** `FILENAME_PATTERN` is one anchored expression and
+`SourceIdentity.filename` is its exact inverse, because `api/answer-engine` rebuilds the
+name from a `SourceRecord`'s own fields (CONTRACTS §3a, §4e). Two details that look like
+nits and are not:
+
+- `doc_version` is stored **without** the leading `v`, so the inverse is
+  `_v{doc_version}_` and never `_vv1.0_`.
+- Digits are `[0-9]`, not `\d`. Python's `\d` matches Arabic-Indic and other scripts'
+  digits, which would admit a name two other specs must rebuild byte for byte.
+- `display_name` is mechanical title-casing of vendor + product: `akai_apc-key-25` →
+  `Akai Apc Key 25`. Ugly on acronyms and deliberate — the version is never appended,
+  because CONTRACTS §3 already shows `doc_version` inline on the citation.
+
+A file whose suffix is not `.pdf` (case-insensitively) is skipped silently per 1.3;
+`FOO.PDF` therefore reaches the grammar and is *rejected*, rather than vanishing. That is
+the intended reading: silently skipping a mis-named PDF loses it with no report line.
+
+**Store scanning.** `StoreScan.available` is the whole point of the type. An absent,
+unreadable or not-a-directory store returns `available=False`, meaning its discovery set
+is **unknown**, and `remove_absent_sources` removes nothing for it. Only an existing,
+empty store yields an empty set and removes its shards. Without that split an unmounted
+volume deletes every authored passage and reports success.
+
+Other non-obvious rules here:
+
+- Removal is keyed on the `store` recorded in `shards/<slug>.meta.json`, not on which
+  scan is running, so 9.5's "never test a source of one kind against the other kind's
+  store" holds by construction. A shard from a store this run did not scan at all is
+  kept, same as an unavailable one.
+- A shard goes with its `.sidecar.json` and its `audits/<slug>.json`.
+- A **rejected** source is not in `source_ids`, so its shard is removed — otherwise an
+  answer could cite a source the run refused to index.
+- An unparseable shard meta is skipped, never deleted: it names no store and no source,
+  so nothing can tell whether its shard is stale.
+- `discover_stores()` is the run-level pass, and it exists for exactly one case:
+  `authored_triage_notes_v1_en.pdf` is legal grammar and lands on the authored store's
+  constant `authored/triage`. Neither store's own scan can see that, and the slug rule
+  cannot either (both sides form `authored_triage`), so the collision is caught on
+  `source_id` and rejected in both stores under 2.6.
+- `fingerprint_changed()` is only the **fingerprint** component of the shard cache key.
+  `index/build.py` owns the other three (`ingestion_version`, embedding model, dimension)
+  at task 34/35; a fixed ingestion bug changes no PDF byte and must still re-ingest.
+
+`data/symptom-triage` owns the authored store (`triage/` at the repo root) and supplies
+its own `StoreScan`; tests here build one by hand to stand in for `TriageLoader`.
+
 ## `make bench`
 
 `bench` guards on `manuals/*.pdf` (gitignored, so a fresh clone has none) and runs
