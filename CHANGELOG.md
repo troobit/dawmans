@@ -12,6 +12,45 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/engine/client.ts` — the engine client** (`ui/ask-and-source-picker` Phase 2). The
+  nine `api/answer-engine` operations as stateless typed wrappers over relative routes — no host,
+  no port, no retries. Non-envelope HTTP failures (422 question-too-long, 403 host/origin) throw a
+  typed `EngineRejection` carrying the engine's machine-readable `rejected` name, distinct from any
+  outcome (9.15). `serveDocumentHref` builds the open-at-source link as the serve-document route
+  plus `#page=N` and nothing else (5.5).
+- **`web/src/lib/engine/sse.ts` — the SSE turn-stream reader.** Incremental UTF-8 decoding
+  (`TextDecoder` with `{stream: true}`) so a multi-byte character split across network chunks never
+  paints as U+FFFD; frames reassembled across arbitrary chunk boundaries; a data-less event never
+  dispatched. `turnEvents` checks the `dawmans-turn-stream` version header before reading a single
+  body byte, refusing an unknown version by naming both (9.19), and reports end-of-stream without
+  `done` as an explicit incomplete signal — never a settled turn (9.14). No reconnection and no
+  resumption exist.
+- **`web/src/lib/engine/blocks.ts` — the append-only block parser** over CONTRACTS §4d's closed
+  set (Decision 2). A block's type is fixed by its first line within at most 10 characters and
+  never revised across any chunk split; an unknown first line degrades to a paragraph and never
+  emits nothing (4.4); a `!conflict` with other than two readings stays the conflict it declared
+  itself. Citation markers `[[p:<passage_id>]]` are buffered from `[` until complete or disproved
+  and painted immediately as their first-appearance integer, so late citation resolution cannot
+  reflow the line (Decision 3); backtick spans become discrete key-term elements.
+- **`web/src/lib/engine/turn.svelte.ts` — the event → Turn reducer.** Fills
+  `Partial<AnswerEnvelope>` append-only from CONTRACTS §4b's sixteen events, with the citation map
+  keyed by `passage_id` and the marker order list. Two compile-time totality guards: every §6
+  outcome maps to a renderer (`Record<Outcome, TurnRenderer>`) and every §4b event has exactly one
+  handler (a mapped type over `TurnEvent`); an unknown outcome renders broken carrying `detail`
+  (9.4) while an unknown event is ignored (9.19) — deliberately opposite rules. End of stream
+  without `done` marks the turn incomplete, retaining the partial text.
+- **`web/src/lib/state/scope.svelte.ts` — the scope store** (Phase 3, carried with this change):
+  selection, persistence and decay per §3, with `sessionStorage` presence as the session boundary
+  and the 8-hour clause on `lastQuestionAt` (Decision 4), silent load-time pruning of stale ids
+  (3.8), release-with-reinstate (3.6) and the 2.4 admission rule for newly reported sources.
+
+### Fixed
+
+- **Web Storage in vitest under Node ≥ 22.** Node's experimental `localStorage`/`sessionStorage`
+  globals (lazy getters, undefined without `--localstorage-file`) shadow jsdom's in vitest, which
+  skips keys the Node global already owns — so storage was undefined in every test. A
+  `vitest-setup.ts` installs an in-memory `Storage` over both globals.
+
 - **`web/` — the browser surface scaffold** (`ui/ask-and-source-picker` Phase 1). A SvelteKit SPA
   built to static assets with `adapter-static` (`ssr = false`, `prerender = true`), for the engine
   to mount at `/` so the page shares its origin (Decision 1). The Vite dev proxy forwards `/turn`,

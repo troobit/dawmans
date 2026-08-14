@@ -43,6 +43,11 @@ export default defineConfig({
 	},
 	test: {
 		environment: 'jsdom',
+		// jsdom only provides Web Storage on a non-opaque origin; without a URL
+		// the environment defaults to about:blank and `localStorage` is undefined.
+		environmentOptions: { jsdom: { url: 'http://localhost/' } },
+		// Node's own experimental storage globals shadow jsdom's; see the setup file.
+		setupFiles: ['./vitest-setup.ts'],
 		include: ['src/**/*.test.ts']
 	}
 });

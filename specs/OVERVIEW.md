@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-14 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 32 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 32 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4
 
 ---
 
@@ -51,14 +51,15 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 All four are at **requirements and design complete**. Each design has been reviewed and repaired.
 All four now carry a `tasks.md` ledger, so every spec is implementable. Implementation has begun on
-`ui/ask-and-source-picker`, whose first phase (scaffold, contract types and design tokens) is done.
+`ui/ask-and-source-picker`: Phase 1 (scaffold, contract types and design tokens) and Phase 2 (engine
+client and the turn stream) are done, and Phase 3 (scope, sources and history stores) has begun.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, none started) | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
-| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, 4 done) | 154 |
+| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, 13 done) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
@@ -101,8 +102,10 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 ### `specs/ui/ask-and-source-picker/`
 
 - **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs), `tasks.md`.
-- **Ledger:** 47 tasks over 9 phases, two work streams; the 4 tasks of Phase 1 (scaffold, contract
-  types and design tokens) are done, delivering `web/`.
+- **Ledger:** 47 tasks over 9 phases, two work streams; Phase 1 (scaffold, contract types and
+  design tokens) and Phase 2 (engine client, SSE reader, block parser and turn reducer) are done —
+  13 tasks — delivering `web/` with its `src/lib/engine/` layer, and Phase 3's scope-store tests
+  are written.
 - 13 requirement sections, 154 anchored criteria — **129 behavioural [B]** and **25 target-and-band
   [T]**, the latter run as the iterative loop of [`PROCESS.md`](PROCESS.md) §5.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
@@ -126,9 +129,11 @@ Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross
 - Twelve cross-cutting ADRs in `DECISIONS.md` and 32 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers, one per spec; `data/manual-corpus` and `api/answer-engine` each carry a
   `prerequisites.md` naming what no task can do for itself.
-- The first implemented phase: `web/` scaffolded for `ui/ask-and-source-picker`, with the contract
-  types of `CONTRACTS.md` §1–§4e in `web/src/lib/engine/records.ts` and the §11 contrast floors
-  asserted from design tokens.
+- The first two implemented phases: `web/` scaffolded for `ui/ask-and-source-picker`, with the
+  contract types of `CONTRACTS.md` §1–§4e in `web/src/lib/engine/records.ts`, the §11 contrast
+  floors asserted from design tokens, and the whole engine layer — the nine-operation client, the
+  SSE turn-stream reader, the append-only §4d block parser and the event → Turn reducer with its
+  compile-time outcome and event totality — tested and green.
 
 **What is next**
 
@@ -137,7 +142,7 @@ Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
 - The **task phase is complete** for all four specs, and implementation is under way: the ui
-  ledger's Phase 1 is done, and the other three ledgers are ready to start.
+  ledger's Phases 1 and 2 are done, and the other three ledgers are ready to start.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes

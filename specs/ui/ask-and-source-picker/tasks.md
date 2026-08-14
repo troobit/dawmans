@@ -44,7 +44,7 @@ references:
 
 ## Phase 2: Engine client and the turn stream
 
-- [ ] 5. Write tests for the engine client <!-- id:f9ae014 -->
+- [x] 5. Write tests for the engine client <!-- id:f9ae014 -->
   - The nine operations of api/answer-engine 9.4 mapped to their routes, all relative — no host and no port hard-coded anywhere (Decision 1).
   - No retries: an unasked retry would duplicate a turn or mask the provider-unreachable state 9.6 requires the user to see.
   - The serve-document href is the route plus the fragment `#page=N` and nothing else — appending a zoom, view or text directive disables the jump in at least one browser's viewer (5.5).
@@ -53,13 +53,13 @@ references:
   - Stream: 1
   - Requirements: [5.5](requirements.md#5.5), [5.6](requirements.md#5.6), [9.15](requirements.md#9.15)
 
-- [ ] 6. Implement client.ts <!-- id:f9ae015 -->
+- [x] 6. Implement client.ts <!-- id:f9ae015 -->
   - Stateless typed wrappers returning parsed records; no state, no retries, no fetching from components.
   - Blocked-by: f9ae014 (Write tests for the engine client)
   - Stream: 1
   - Requirements: [5.5](requirements.md#5.5), [5.6](requirements.md#5.6), [9.15](requirements.md#9.15)
 
-- [ ] 7. Write tests for the SSE frame reader <!-- id:f9ae016 -->
+- [x] 7. Write tests for the SSE frame reader <!-- id:f9ae016 -->
   - Frames split across chunk boundaries reassemble; a multi-byte character split across two network chunks never paints as U+FFFD — otherwise indistinguishable from a `degraded` passage (Decision 2).
   - An unknown event name is ignored and never fails the turn; end-of-stream without `done` yields `incomplete`, never a settled turn — a stream truncated mid-event discards the pending event silently (9.14).
   - The `dawmans/turn-stream/*` response header is checked before the body is read; an unknown version refuses the turn naming both versions (9.19). No reconnection and no resumption exist.
@@ -67,13 +67,13 @@ references:
   - Stream: 1
   - Requirements: [4.1](requirements.md#4.1), [9.14](requirements.md#9.14), [9.19](requirements.md#9.19)
 
-- [ ] 8. Implement sse.ts <!-- id:f9ae017 -->
+- [x] 8. Implement sse.ts <!-- id:f9ae017 -->
   - `fetch` + ReadableStream — EventSource cannot POST the question and scope; TextDecoder with `{stream: true}`, split on `\n\n`, yield `{event, data}`.
   - Blocked-by: f9ae016 (Write tests for the SSE frame reader)
   - Stream: 1
   - Requirements: [4.1](requirements.md#4.1), [9.14](requirements.md#9.14), [9.19](requirements.md#9.19)
 
-- [ ] 9. Write tests for the append-only block parser and citation markers <!-- id:f9ae018 -->
+- [x] 9. Write tests for the append-only block parser and citation markers <!-- id:f9ae018 -->
   - A block's type is fixed by its first line within at most 10 characters (the longest prefix is `!conflict `) and never revised across any chunk split — a re-typed block moves painted text, which is the failure 4.2 names (Decision 2).
   - An unknown first line renders its text as a paragraph and never emits nothing (4.4); a `!conflict` arriving with other than two readings is rendered as the conflict it declared itself, never re-typed.
   - `!caveat` renders in reading order, visually distinct, never behind a disclosure; ordered steps are separately identifiable (4.5); backtick key-term spans become discrete elements — the inline form 4.12's key styling builds on.
@@ -82,13 +82,13 @@ references:
   - Stream: 1
   - Requirements: [4.2](requirements.md#4.2), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [5.17](requirements.md#5.17)
 
-- [ ] 10. Implement the block parser <!-- id:f9ae019 -->
+- [x] 10. Implement the block parser <!-- id:f9ae019 -->
   - A small state machine over CONTRACTS §4d's closed set, all decidable at column 0; blocks held in `$state.raw` and replaced by append, never mutated after their text is final.
   - Blocked-by: f9ae018 (Write tests for the append-only block parser and citation markers)
   - Stream: 1
   - Requirements: [4.2](requirements.md#4.2), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [5.17](requirements.md#5.17)
 
-- [ ] 11. Write tests for the turn reducer and outcome totality <!-- id:f9ae01a -->
+- [x] 11. Write tests for the turn reducer and outcome totality <!-- id:f9ae01a -->
   - One rendering path per CONTRACTS §4b event — the consumer-side test §4b itself mandates, since nothing on the wire detects a client that quietly stops rendering `scope_dropped`. A governed event with no path fails here, not in review.
   - Totality over the §6 union: all 17 outcomes map to a renderer as a total function, so a new member fails the type check; an outcome outside the union renders as a broken state carrying `detail` (9.4) — deliberately the opposite of the ignored unknown event.
   - Ordering honoured: `outcome` fixes the renderer before the first word paints; `direct_answer` precedes body (4.3); `done` settles the turn (4.6); `cause` rank is asserted equal to array position (6.6).
@@ -97,7 +97,7 @@ references:
   - Stream: 1
   - Requirements: [3.11](requirements.md#3.11), [4.3](requirements.md#4.3), [4.6](requirements.md#4.6), [5.12](requirements.md#5.12), [5.13](requirements.md#5.13), [6.6](requirements.md#6.6), [9.4](requirements.md#9.4)
 
-- [ ] 12. Implement turn.svelte.ts <!-- id:f9ae01b -->
+- [x] 12. Implement turn.svelte.ts <!-- id:f9ae01b -->
   - The event → Turn reducer, append-only, filling `Partial<AnswerEnvelope>` as events arrive; the citation map keyed by passage_id and the marker order list.
   - Blocked-by: f9ae01a (Write tests for the turn reducer and outcome totality)
   - Stream: 1
@@ -105,7 +105,7 @@ references:
 
 ## Phase 3: Scope, sources and history stores
 
-- [ ] 13. Write tests for the scope store, persistence and decay <!-- id:f9ae01c -->
+- [x] 13. Write tests for the scope store, persistence and decay <!-- id:f9ae01c -->
   - The session boundary is `sessionStorage` presence, not a clock: cleared by a browser restart, survives a reload — exactly 3.6's first clause. The 8-hour clause reads `lastQuestionAt`. Either releases the narrowing into `released` for a one-activation reinstate; a stored scope already equal to all available releases nothing, so the notice never appears spuriously (Decision 4).
   - No stored scope starts with all available sources (3.7); a stored id the engine no longer reports drops silently at load (3.8) — a different subject from 3.11's engine-side prune, which is reported.
   - Scope survives successive questions unchanged (3.4) and reloads within a session (3.5); a change while an answer is on screen touches only the next question (3.9).
