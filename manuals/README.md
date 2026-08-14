@@ -43,6 +43,7 @@ discovers files rather than reading a list.
 | `ableton_live-12_reference-manual_v12_en.pdf` | Ableton / Live 12 | 1009 | ableton.com — Live 12 manual, PDF download from the Help and Support pages |
 | `akai_apc-key-25_user-guide_v1.0_multi.pdf` | Akai / APC Key 25 | 24 | akaipro.com — APC Key 25 product page, Downloads section |
 | `alesis_nitro-max_user-guide_v1.1_en.pdf` | Alesis / Nitro Max | 35 | alesis.com — Nitro Max Kit product page, Downloads section |
+| `focusrite_scarlett-solo-4g_user-guide_v4.0_en.pdf` | Focusrite / Scarlett Solo 4th Gen | 39 | [downloads.focusrite.com](https://downloads.focusrite.com/focusrite/scarlett-4th-gen/scarlett-solo-4th-gen) — Scarlett Solo 4th Gen, User Guide V4, English |
 
 ## Known issues with these documents
 
@@ -67,6 +68,27 @@ rediscover them.
 - Extraction is fast: roughly **0.7 seconds** for approximately **242,000 words**.
 - Its **96MB size is screenshots, not text**. Do not treat file size as a proxy for extraction cost
   or corpus size.
+
+### Focusrite Scarlett Solo 4th Gen user guide
+
+- **39 pages, User Guide Version 4.0, English only.** Title metadata reads
+  `Scarlett Solo 4th Gen User Guide`.
+- **Generation is confirmed against the hardware, not assumed.** Live 12's log on this machine
+  reports `Scarlett Solo 4th Gen`, serial `S11C8GT3404843`. Its `hardware_applicability` can
+  therefore be `confirmed` — the only source in the corpus that can currently claim it.
+- A **2nd Generation** guide was briefly present and was removed: it opens *"Thank you for purchasing
+  this Second Generation Scarlett Solo"* and describes different hardware. It was not merely older —
+  a cited answer from it about the front panel would have been wrong for this rig.
+- **Most of the front panel is physical and self-evident** — gain control and gain halo, Inst, Air,
+  Output, Direct Monitor, headphone output. The manual's value is not the knobs.
+- **What is not self-evident, and why the file earns its place:** `Focusrite Control 2` is mentioned
+  **76 times** — Air *mode* selection between Presence and Harmonic Drive lives there, as does
+  **loopback** (22 mentions), which is not discoverable from the hardware at all.
+- **The word "buffer" appears zero times.** Buffer size is not in this manual, and Live's own manual
+  defers its Audio Settings walkthrough to an in-app tutorial (§17.1). So *"why is there latency when
+  I monitor"* is still only partly answerable from vendor documentation even with this file present —
+  Direct Monitor is covered here, buffer size is covered nowhere. That gap belongs to
+  [`specs/data/symptom-triage`](../specs/data/symptom-triage/requirements.md).
 
 ### Alesis Nitro Max user guide
 
