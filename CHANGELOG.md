@@ -12,6 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Prompt, parser, grounding and the outcome procedure** (`api/answer-engine` phase 5,
+  `dawmans/answer/prompt.py`, `parse.py`, `ground.py`, `outcome.py` and the new
+  `dawmans/triage/terms.py`). `prompt.py` assembles the turn in cache order — the static system
+  prompt as the cache prefix (framing spec, no-uncited-facts rule with the facts-versus-reasoning
+  split, length caps, edition caveat, kind trust split, refusal and out-of-domain directions with
+  2.9's authored-entry carve-out, the no-XML instruction and no "do not think" anywhere), then
+  passages, the metadata-only unselected-source roster, the labelled uncitable state and history
+  blocks and the question — with history bounded oldest-first to 800 tokens at a 10% margin by an
+  injected local tokeniser (Decision 8, no provider SDK call before `stream()`), and the narrowing
+  counter carried into assembly at the limit (7.5). `parse.py` is the incremental line-oriented
+  parser for `dawmans/answer-framing/1`: total over bytes, line 1 validated against the
+  seven-member content enum with the unparsed fallback restricted to the coverage pair, §4d block
+  typing at column 0 with unknown lines degrading to paragraphs, `!conflict` arity reported
+  through `framing` without re-typing, and sigil hoists (`~uncovered`, `?narrow`, `?cause` with
+  rank from emitted order, `@device`, `!suggest` resolved against sources.json — at most 3,
+  absent when none survives). `ground.py` makes 3.6 structural: citations assemble only from the
+  supplied set, unknown markers are stripped and counted, the field copy emits absent as absent
+  on pageless sources, and the two-arm ungrounded rule (fact-shaped tokens via the reused
+  `dawmans.triage.terms` extraction primitives, plus uncited ordered steps) executes the
+  CONTRACTS §8 split. `outcome.py` classifies every turn totally and disjointly: four pre-flight
+  and six in-flight gates in fixed order (cancelled ahead of incomplete, incomplete ahead of
+  every error kind, 401 as `authentication-failed` distinguishable from `missing-credential` by
+  sub-code alone), plus the `required_device` resolver over the gaps report and `required_manual`
+  assembly with named placeholders — absent where the device does not resolve. 107 tests
+  including totality, disjointness, round-trip and non-citability properties.
 - **Narrowing from triage entries** (`api/answer-engine` phase 4, `dawmans/answer/narrow.py`).
   The engine-built entry path of Decision 9: `matched_entry` finds the first supplied passage
   keying the triage sidecar, `expand_entry` takes the entry's first ≤ 4 causes in the author's

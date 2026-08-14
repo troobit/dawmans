@@ -120,7 +120,7 @@ references:
 
 ## Phase 5: Prompt, parser, grounding and the outcome procedure
 
-- [ ] 14. Write tests for prompt assembly and the history budget <!-- id:f3kp014 -->
+- [x] 14. Write tests for prompt assembly and the history budget <!-- id:f3kp014 -->
   - Cache ordering: static system prompt (the cache prefix), then passages, history, question; the assembled prompt carries the framing spec, the no-uncited-facts rule with the facts-versus-reasoning split, the 400-word cap, the 25-word direct-answer instruction, ordered steps for procedures, the edition/add-on caveat direction, the kind trust split, refusal without speculation, and the out-of-domain responsiveness test with 2.9's authored-entry carve-out.
   - The unselected-source roster is metadata only - source_id, display_name, product, kind - so 2.4 holds by construction; suggestions are forbidden outright on out-of-domain.
   - The no-XML instruction is present, and no "do not think" or "do not reason" instruction is - that measurably worsens the tag leak.
@@ -131,13 +131,13 @@ references:
   - Stream: 1
   - Requirements: [1.2](requirements.md#1.2), [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.9](requirements.md#1.9), [1.12](requirements.md#1.12), [1.13](requirements.md#1.13), [2.1](requirements.md#2.1), [2.4](requirements.md#2.4), [2.6](requirements.md#2.6), [2.8](requirements.md#2.8), [2.9](requirements.md#2.9), [7.5](requirements.md#7.5), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7), [8.10](requirements.md#8.10), [10.3](requirements.md#10.3), [10.8](requirements.md#10.8)
 
-- [ ] 15. Implement prompt.py <!-- id:f3kp015 -->
+- [x] 15. Implement prompt.py <!-- id:f3kp015 -->
   - System prompt, framing spec, roster, state and history blocks, and the local token budget.
   - Blocked-by: f3kp014 (Write tests for prompt assembly and the history budget)
   - Stream: 1
   - Requirements: [1.2](requirements.md#1.2), [1.6](requirements.md#1.6), [1.9](requirements.md#1.9), [2.6](requirements.md#2.6), [10.8](requirements.md#10.8)
 
-- [ ] 16. Write tests for the framing parser <!-- id:f3kp016 -->
+- [x] 16. Write tests for the framing parser <!-- id:f3kp016 -->
   - Parser totality property: for any byte string parse.py yields a well-formed envelope, never raises, never emits a partial Citation.
   - Line 1 validated against the seven-member content enum; invalid means the unparsed path - whole stream as body, direct_answer the first sentence, outcome from the coverage signal restricted to answered/refused-not-covered, framing: unparsed on the envelope.
   - Block classification at column 0 from the closed CONTRACTS 4d set; an unknown first line becomes a paragraph, never dropped; !conflict arity is a producer obligation checked and reported through framing - a block already emitted is never re-typed.
@@ -147,13 +147,13 @@ references:
   - Stream: 1
   - Requirements: [1.4](requirements.md#1.4), [1.8](requirements.md#1.8), [1.10](requirements.md#1.10), [1.11](requirements.md#1.11), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.5](requirements.md#2.5), [7.1](requirements.md#7.1)
 
-- [ ] 17. Implement parse.py <!-- id:f3kp017 -->
+- [x] 17. Implement parse.py <!-- id:f3kp017 -->
   - The incremental line-oriented parser for dawmans/answer-framing/1: total over bytes, sigil hoisting, block typing, inline markers.
   - Blocked-by: f3kp016 (Write tests for the framing parser)
   - Stream: 1
   - Requirements: [1.4](requirements.md#1.4), [1.8](requirements.md#1.8), [1.10](requirements.md#1.10), [1.11](requirements.md#1.11), [2.2](requirements.md#2.2), [2.3](requirements.md#2.3), [2.5](requirements.md#2.5), [7.1](requirements.md#7.1)
 
-- [ ] 18. Write tests for grounding and citation assembly <!-- id:f3kp018 -->
+- [x] 18. Write tests for grounding and citation assembly <!-- id:f3kp018 -->
   - Citation round-trip property: for any supplied set and any stream of markers drawn from supplied and unknown, every emitted Citation resolves to a supplied passage and every unknown marker is stripped from the streamed text and counted - 3.6 holds by construction because a Citation is assembled only from supplied.
   - Field copy from Passage and SourceRecord: source_id, display_name, section, page, passage_id, doc_version, hardware_applicability with confirmed/assumed, degraded, has_figures, unbacked, kind and entry_location; pageless-citation property - absent fields are absent, never empty strings, never synthesised.
   - The ungrounded rule, evaluated per block after message_stop: arm (a) fact-shaped tokens using dawmans.triage.terms as the term extractor - reused, never reimplemented; arm (b) an uncited ordered-step block, because an uncited "Click it to re-enable the track" carries no fact-shaped token and is exactly what the user acts on.
@@ -164,13 +164,13 @@ references:
   - Stream: 1
   - Requirements: [3.1](requirements.md#3.1), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.6](requirements.md#3.6), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [8.6](requirements.md#8.6), [10.3](requirements.md#10.3)
 
-- [ ] 19. Implement ground.py and citation assembly <!-- id:f3kp019 -->
+- [x] 19. Implement ground.py and citation assembly <!-- id:f3kp019 -->
   - The supplied dict, marker resolution and stripping, the two-arm ungrounded rule, and the Citation field copy.
   - Blocked-by: f3kp018 (Write tests for grounding and citation assembly)
   - Stream: 1
   - Requirements: [3.1](requirements.md#3.1), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.6](requirements.md#3.6), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8)
 
-- [ ] 20. Write tests for the outcome procedure and required_manual <!-- id:f3kp020 -->
+- [x] 20. Write tests for the outcome procedure and required_manual <!-- id:f3kp020 -->
   - Outcome totality and disjointness properties: for any gate state and any provider transcript exactly one CONTRACTS 6 member, never raised; no engine outcome reachable from a model line and no content outcome from a gate, except the framing-unparsed path restricted to answered and refused-not-covered.
   - Pre-flight gates in fixed order: corpus-empty; unknown-source-id naming the id rather than silently dropping it; no-sources-selected (including a scope emptied by 5.11); provider-unconfigured with reason no-provider-kind, missing-credential or disclosure-unacknowledged.
   - In-flight: cancelled is first in the fixed order - a turn that is both cancelled and has failed after partial output classifies cancelled, never incomplete (the in-flight table's row 5 ahead of row 6); then the streamed-output check precedes every error-kind gate - incomplete precedence property, any provider failure after >= 1 streamed token yields incomplete whatever the failure kind; then unreachable, rate-limited carrying retry_after, the 10 s timeout naming the provider as the stalled component, and provider-error including 401 as authentication-failed - distinguishable from missing-credential by the sub-code, never by the wording in detail.
@@ -180,7 +180,7 @@ references:
   - Stream: 1
   - Requirements: [2.10](requirements.md#2.10), [4.9](requirements.md#4.9), [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [6.6](requirements.md#6.6), [6.7](requirements.md#6.7), [6.9](requirements.md#6.9), [6.10](requirements.md#6.10), [9.9](requirements.md#9.9)
 
-- [ ] 21. Implement outcome.py and required_manual assembly <!-- id:f3kp021 -->
+- [x] 21. Implement outcome.py and required_manual assembly <!-- id:f3kp021 -->
   - The fixed-order gate chain, the seven-member model enum validation, the unparsed-path coverage fallback, and the resolver against gaps.owned_but_undocumented.
   - Blocked-by: f3kp020 (Write tests for the outcome procedure and required_manual)
   - Stream: 1

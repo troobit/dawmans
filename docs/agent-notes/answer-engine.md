@@ -1,7 +1,8 @@
 # Answer engine (`src/dawmans/answer/`)
 
 Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
-corpus view), 3 (retrieval and scoping) and 4 (narrowing from triage entries) are done.
+corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries) and 5 (prompt, parser,
+grounding, outcome procedure) are done.
 
 ## Package setup
 
@@ -118,3 +119,70 @@ corpus view), 3 (retrieval and scoping) and 4 (narrowing from triage entries) ar
 - Fix expansion applies `in_device_scope` for mask parity, but it is a no-op in practice:
   only sidecar-keyed (authored) passages declare devices, and fix pointers target vendor
   manuals — untestable until an authored passage can be a fix target.
+
+## Prompt assembly (`prompt.py`)
+
+- `SYSTEM_PROMPT` is one static module constant — the cache prefix; `assemble()` returns it by
+  identity (tests assert `is`), so any per-turn variation must go in the user half. Order there:
+  passages → roster → state → history → question; only passages-before-history-before-question is
+  contractual (the Anthropic cache layout).
+- The unselected-source roster is built from a fixed 4-field allowlist (`_ROSTER_FIELDS`), so a
+  record arriving with `text` on it sheds it — 2.4 by construction, tested with a sentinel.
+- History budget (Decision 8): `bounded_history` keeps newest-first within 800 × (1 − 10%) = 720
+  tokens, counted by an injected `count_tokens` callable (the resident BGE tokeniser in prod, word
+  count in tests). A single turn over the budget is dropped, not truncated.
+- State enters via duck-typed `StateSnapshotLike` (SimpleNamespace in tests) — no import of the
+  phase-6 `state/` package, which keeps stream 1 and stream 2 independent. Staleness direction
+  (8.7) is emitted when any value is `saved-file` or older than 60 s.
+- `narrowing_count >= 2` appends the terminal direction (forbids `?narrow`, directs
+  `ranked-causes`) — the only mechanism 7.5 has, since the outcome is model-chosen.
+
+## Framing parser (`parse.py`)
+
+- `FramingParser` is a line-oriented incremental class (feed/close/result); `parse()` drives it
+  total-over-bytes (decode `errors="replace"`). Property-tested with arbitrary binary.
+- `CONTENT_OUTCOMES` (the seven-member line-1 enum) lives here; `outcome.py` imports it — that
+  direction avoids a cycle.
+- The unparsed path (invalid line 1) classifies §4d blocks but hoists **nothing**: a hoisted
+  `?narrow` on a coverage-derived `answered` would put `narrowing` on an outcome that forbids it.
+  Sigil lines there degrade to paragraphs (§4b rule 2).
+- `framing: "unparsed"` has two producers: the fallback path, and a `!conflict` arity violation on
+  an otherwise-parsed stream (the model's outcome stands in that case). Blocks are never re-typed.
+- Blocks carry `markers` (all ids, in order) with marker text left inline; `Reading`s inside
+  `Conflict` carry their own. `?cause` is the exception: markers are hoisted into `cites[]` and
+  stripped from statement/check, because a `Cause` is a record, not streamed prose.
+- `!suggest` resolution: dedupe by emitted order, drop ids absent from `sources`, cap 3 **after**
+  dropping, `None` (absent) when nothing survives.
+
+## Grounding (`ground.py`, `dawmans/triage/terms.py`)
+
+- `dawmans/triage/terms.py` was created here (symptom-triage has landed no code) holding only the
+  2.6 extraction primitives — `capitalised_runs`, `numeric_literals`. Policy (device discards,
+  sentence-start rule, containment) stays with the future triage loader. `ground.terms is terms`
+  is asserted so the reuse can't silently become a reimplementation. `test_no_pymupdf` picks the
+  package up automatically.
+- `ground_turn` scans **only** output text (direct_answer + blocks) against `supplied` — history
+  and state non-citability are structural, not filtered. Unknown markers are stripped and counted;
+  resolved ones stay inline. Citations dedupe in first-appearance order.
+- `build_citation` is a plain-dict field copy (`page` = `page_start`, `hardware_applicability` =
+  the source's `status` string). `unbacked_for_turn=True` forces the mark without touching the
+  passage record — the 7.6/Decision-10 per-turn reading.
+- Ungrounded arms: (a) fact-shaped over marker-stripped text — 2+-token capitalised runs, numeric
+  literals, menu paths (`>`/`→`, ground's own regex; not a triage class); (b) `OrderedStep` only —
+  bullets deliberately excluded. The numeric regex treats any trailing word as a unit ("2 causes"
+  matches); fine for presence-testing, would need a unit lexicon for containment.
+
+## Outcome procedure (`outcome.py`)
+
+- Two gate chains over frozen input records (`GateState`, `Flight`) so hypothesis can attack
+  totality/disjointness directly; `classify()` composes pre-flight → in-flight → line-1 enum →
+  coverage fallback (`answered`/`refused-not-covered`, the single overlap).
+- In-flight order is load-bearing and tested: `cancelled` first, then `streamed` (any failure
+  after ≥1 token ⇒ `incomplete`, whatever the kind), then unreachable / rate-limited (unrounded
+  `retry_after`, absent stays absent) / timeout (detail names the provider) / auth ⇒
+  `provider-error`+`authentication-failed` / error ⇒ `provider-rejected`.
+- `resolve_device` matches casefolded against gap ids and display names, both member shapes
+  (bare string or `{device, ...}`, same reading as `scope.py`). `required_manual_for` keys
+  presence on **resolution through the report**, not on the name containing `/` — a free-form
+  `roland/tr-8s` yields no filename. Placeholders are always `(doctype, version, lang)`: a gap
+  device is by definition one the engine has never seen a document for.
