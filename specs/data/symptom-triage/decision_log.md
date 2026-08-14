@@ -352,3 +352,74 @@ fix, the likelier slip, still rejects under 1.2 and never reaches this path.
   rejects for a missing check.
 
 ---
+
+## Decision 7: Only free-text keyed values continue onto the next line
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+The grammar of [`design.md`](design.md) §Entry grammar originally gave one continuation rule for
+every keyed line: a value runs until a blank line, a heading or another keyed line. Implementing the
+parser showed what that costs on the two keys whose value is not free text. An author who writes
+
+```markdown
+## The buffer size is too high for tracking
+check: latency is audible when playing in
+fix: ableton/live-12 §1.2 "Audio Preferences"
+Raising it again after tracking is fine.
+```
+
+has the trailing note folded into the pointer, which then addresses nothing. The cause is rejected
+under `cause-missing-fix`, or — once the resolver exists — under 2.2, and the message names a
+pointer the author never typed. The same happens to a preamble line written under an `also:` list,
+where it silently becomes part of the last alternative phrasing.
+
+### Decision
+
+`check:` and `why:` continue until a blank line, a heading or another keyed line. `fix:`,
+`undocumented:` and `also:` are complete on their own line; a following prose line is prose, retained
+in the preamble or in the cause's notes.
+
+### Rationale
+
+The split falls out of what the values are. `check:` and `why:` are sentences the author writes at
+speed and wraps wherever the editor wraps them, so continuation is what they mean. The other three
+each have a grammar that ends at the line: a pointer is one of Decision 3's three forms, an
+`undocumented:` value is a single device id, and `also:` is a `;`-separated list whose separator is
+already explicit. Nothing is gained by letting them run on, and what is lost is exactly the case
+Decision 1 exists to prevent — a typing habit costing a parse failure rather than a flag.
+
+It also keeps the rejection honest. Under the single rule the reported reason is about the pointer,
+so the message points the author at a line that is correct, and the line that caused it is the one
+not mentioned.
+
+### Alternatives Considered
+
+- **Keep one continuation rule for every key**: One sentence of grammar, nothing to remember -
+  Rejected because it makes an ordinary note under a `fix:` line reject the entry, with a message
+  naming the wrong line. This was found by the cause-conservation property, not by an example.
+- **End every value at its own line, including `check:`**: Simpler still, and uniform the other way -
+  Rejected because a check is the entry's one substantial sentence and is the value most likely to
+  wrap; truncating it at the first newline would drop half of what the author wrote, which 1.3's
+  "retained, never dropped" forbids.
+- **Require a blank line before any prose**: Uniform rule, author-enforced - Rejected because it is
+  an invisible whitespace requirement in a format whose premise is that the body needs no syntax,
+  and its failure mode is silent.
+
+### Consequences
+
+**Positive:**
+- A note written under a fix pointer costs nothing, which is how the format is actually used.
+- Pointer parsing sees exactly one line, so its grammar and its error messages stay local.
+- `also:` keeps its `;` separator as the only way to add a phrasing, so the phrasing list cannot
+  grow by accident.
+
+**Negative:**
+- The grammar now has two continuation rules rather than one, and which key gets which is a fact to
+  look up rather than derive.
+- A genuinely long `fix:` line cannot be wrapped, so an unusually long section title has to sit on
+  one line.
+
+---

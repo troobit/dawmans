@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 1 — the entry model and the entry grammar.** `dawmans.triage.model`
+  holds the frozen `Entry`, `Cause`, `DeviceRef`, `Pointer` and `Unresolved` records of the design's
+  Components and Interfaces, together with the closed rejection and flag vocabularies of its Error
+  Handling section. `dawmans.triage.parse` reads an entry file into an `Entry` and produces the
+  canonical rendering: strict about the frontmatter, forgiving in the body, and **total** — every
+  byte string yields an entry or a rejection naming the file, and never a half-built entry.
+  `dawmans.triage.pointers` carries the fix-pointer grammar the parser needs; its `SectionIndex` and
+  resolution are Phase 2.
+- **The Python package, cut to what Phase 1 needs.** `pyproject.toml` with a `src/` layout, uv for
+  dependencies, and pytest + hypothesis + ruff for development; `make test`, `make lint` and
+  `make format` replace three of the unconfigured targets. The full scaffold — the whole module
+  tree, `fetch-model`, `bench`, and the PyMuPDF confinement rule — remains `data/manual-corpus`
+  task 1.
+
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
   itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite
@@ -25,6 +39,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Keyed-line continuation now splits by value kind** (`data/symptom-triage` Decision 7). `check:`
+  and `why:` are free text and continue until a blank line, a heading or another keyed line;
+  `fix:`, `undocumented:` and `also:` are complete on their own line. Under the single rule the
+  grammar previously carried, an ordinary note written under a fix pointer was folded into the
+  pointer, which then addressed nothing and rejected the cause with a message naming a line the
+  author had written correctly. Found by the cause-conservation property, not by an example.
+- **Cause conservation is stated over the total H2 count**, not over the H2s that were not the
+  author's closing statement. Decision 6 turns on the parser being unable to tell a genuine closing
+  statement from a demoted cause, which is why it flags every inferred one — so the identity that
+  actually holds, and the one that makes 1.5 auditable, is causes plus flags equals sections.
+  Corrected in the design's Testing Strategy and in the task ledger.
 - **The last corpus gap is closed, and four mechanisms went dormant with it** (DECISIONS Decision
   12). The Focusrite Scarlett Solo 4th Gen guide is ingested, so every device in the rig is
   documented and the owned-but-undocumented report is empty. Nine files still said otherwise:

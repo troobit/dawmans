@@ -10,7 +10,7 @@ references:
 
 ## Phase 1: Entry model and grammar
 
-- [ ] 1. Define the triage entry model types <!-- id:f3stq01 -->
+- [x] 1. Define the triage entry model types <!-- id:f3stq01 -->
   - dawmans/triage/: frozen dataclasses Entry, Cause, DeviceRef, Pointer, Unresolved - the design's Components and Interfaces section verbatim, including Unresolved's closed reason literal and Entry's source_file/line (the two halves of CONTRACTS 2 entry_location).
   - Everything downstream builds against SourceLoader, Discovered, LoadResult, Region, Unit and UnitFlags from dawmans/corpus/loader.py - manual-corpus owns them and nothing here redefines them.
   - Types only - no behaviour, so no preceding test task.
@@ -18,17 +18,18 @@ references:
   - Requirements: [1.1](requirements.md#1.1), [1.2](requirements.md#1.2)
   - References: specs/data/manual-corpus/design.md
 
-- [ ] 2. Write tests for the entry grammar <!-- id:f3stq02 -->
+- [x] 2. Write tests for the entry grammar <!-- id:f3stq02 -->
   - BOM stripped before the frontmatter check; `---` fence required at byte 0; `devices` required, a YAML list, non-empty - frontmatter-missing/-malformed, no-devices and devices-not-a-list each reject, and `devices: ableton/live-12` (a string that iterates as characters) is the devices-not-a-list case.
   - Exactly one H1 is the symptom; `also:` lines split on `;` into phrasings; other preamble prose is retained, never dropped. Keyed lines match case-insensitively after stripping `-`, `*`, `>`, `#`, `**` - `**Check:**`, `- check :` and `CHECK:` are one line - and the emitted text carries the normalised marker.
   - Causes are the H2s in document order; exactly one `check:` per cause; one or more `fix:` lines XOR exactly one `undocumented:` line - both on one cause is cause-fix-and-undocumented; outside 2-6 causes rejects (too-few/too-many), with the closing statement excluded from the count.
   - Closing statement is the final H2 with neither a check nor a fix (Decision 6 - position, no reserved title), and a demotion always emits closing-statement-inferred naming the section: three_causes_last_demoted.md is the fixture. unknown-frontmatter-key flags, not fatal.
-  - Property - total parsing: any byte string returns an Entry or a rejection naming the file; never raises, never a half-built entry. Property - cause conservation: causes emitted plus closing-statement-inferred flags equals the H2s that were not the author's closing statement.
+  - Property - total parsing: any byte string returns an Entry or a rejection naming the file; never raises, never a half-built entry. Property - cause conservation: causes emitted plus closing-statement-inferred flags equals the total H2 count - stated over the total, not over the H2s that were not the author's closing statement, because Decision 6 turns on the parser being unable to tell those apart and therefore flagging every inferred one.
+  - Keyed-line continuation splits by value kind (Decision 7): check: and why: continue until a blank line, a heading or another keyed line; fix:, undocumented: and also: end at their own line, so a note written under a pointer is retained as a note rather than folded into the pointer.
   - Blocked-by: f3stq01 (Define the triage entry model types)
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.2](requirements.md#1.2), [1.3](requirements.md#1.3), [1.4](requirements.md#1.4), [1.7](requirements.md#1.7), [2.3](requirements.md#2.3), [4.1](requirements.md#4.1), [5.2](requirements.md#5.2)
 
-- [ ] 3. Implement triage/parse.py <!-- id:f3stq03 -->
+- [x] 3. Implement triage/parse.py <!-- id:f3stq03 -->
   - Entry file to Entry plus the canonical rendering; strict only about frontmatter, forgiving in the body (Decision 1). No hand-computed value is ever demanded of the author (1.7).
   - Blocked-by: f3stq02 (Write tests for the entry grammar)
   - Stream: 1

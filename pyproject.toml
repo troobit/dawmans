@@ -1,0 +1,35 @@
+[project]
+name = "dawmans"
+version = "0.0.0"
+description = "Grounded answers for a home studio, from the manuals you already own."
+requires-python = ">=3.12"
+dependencies = [
+    "pyyaml>=6.0",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dawmans"]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+# The specs and notes carry illustrative Python in fenced blocks. They are prose,
+# and reformatting them would rewrite the design under the implementation.
+extend-exclude = ["specs", "docs", "manuals"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]

@@ -120,9 +120,13 @@ key and is admissible only for a rig device with no ingested source — a state 
 | closing statement | the final H2 carrying neither `check:` nor a fix line. Not a cause; excluded from the 2–6 count (1.4) |
 
 A keyed line is matched case-insensitively after stripping leading `-`, `*`, `>`, `#` and `**`, so
-`**Check:**`, `- check :` and `CHECK:` are one line; a value continues until a blank line, a heading
-or another keyed line. The emitted text carries the **normalised** marker (`check:`), not the
-author's, which is what makes marker style invisible to `passage_id` (§Identity).
+`**Check:**`, `- check :` and `CHECK:` are one line. A **free-text** value — `check:` and `why:` —
+continues until a blank line, a heading or another keyed line, because those wrap as the author
+types them. A **`fix:`, `undocumented:` or `also:`** value is complete on its own line and never
+continues ([Decision 7](decision_log.md)): each has its own grammar that ends at the line, so prose
+written underneath one is prose and is retained as such. The emitted text carries the **normalised**
+marker (`check:`), not the author's, which is what makes marker style invisible to `passage_id`
+(§Identity).
 
 Position, not vocabulary, identifies the closing statement, so there is no reserved title to
 remember ([Decision 6](decision_log.md)). The cost: a final section meant as a cause that lost
@@ -684,7 +688,7 @@ text — the reverse direction cannot state what the expected parse is.
 | Property | Guarantee | Criteria |
 |---|---|---|
 | Order preservation | for any entry, the emitted causes are the declared causes, in order, unmerged and undeduplicated | 1.5 |
-| Cause conservation | the number of causes emitted plus the number of `closing-statement-inferred` flags equals the number of H2s that were not the author's closing statement | 1.5 |
+| Cause conservation | the number of causes emitted plus the number of `closing-statement-inferred` flags equals the **total** number of H2s, so no section ever leaves the parse unaccounted for. It is stated over the total rather than over the H2s that were not the author's closing statement because the parser cannot tell those apart — that is the whole of Decision 6, which is why it flags every inferred closing statement | 1.5 |
 | Total parsing | for **any** byte string, the parser returns an `Entry` or a rejection naming the file; it never raises and never returns a half-built entry | 5.2 |
 | Cosmetic invariance of `passage_id` | perturbing marker style, blank lines, key casing, line endings, frontmatter key order and pointer targets leaves the ID unchanged | 3.9, 8.2 |
 | `passage_id` sensitivity | any change to symptom, phrasings, preamble, cause statement, check or notes changes the ID | 3.9 |
