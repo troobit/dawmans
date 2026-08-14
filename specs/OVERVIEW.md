@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-14 · **Specs:** 4 · **Anchored acceptance criteria:** 408 · **ADRs:** 30 per-spec + 11 cross-cutting
+**Generated:** 2026-08-14 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 32 per-spec + 12 cross-cutting · **Task ledgers:** 1 of 4
 
 ---
 
@@ -15,7 +15,8 @@ sources** — the vendor manuals for their gear plus an authored symptom-triage 
 themselves — with every factual claim cited to a section and a page, and with NotebookLM-style
 per-source scoping so the user chooses which sources may ground a given answer. It is built for one
 person, on one machine, glancing at a second screen mid-session: the rig is **Ableton Live 12
-Standard, an Akai APC Key 25 mk2, a Focusrite Scarlett Solo and an Alesis Nitro Max, on macOS**. It
+Standard, an Akai APC Key 25 mk2, a Focusrite Scarlett Solo 4th Gen and an Alesis Nitro Max, on
+macOS** — all four now documented by an ingested manual. It
 answers from the manual corpus only; session awareness sits behind a defined but unbuilt
 `StateSource` seam (DECISIONS Decision 4, refined by Decision 8).
 
@@ -48,12 +49,13 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 ## Specs
 
-All four are at **requirements and design complete, tasks not started**. Each design has been
-reviewed and repaired; none has a `tasks.md` ledger yet, so nothing is ready for implementation.
+All four are at **requirements and design complete**. Each design has been reviewed and repaired.
+One — `data/manual-corpus` — now carries a `tasks.md` ledger and a `prerequisites.md`, so it is the
+only spec ready for implementation; the other three still have no ledger.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
-| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ⬜ | 83 |
+| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ⬜ | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ | 154 |
@@ -66,11 +68,14 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/data/manual-corpus/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs).
-- **Missing:** `tasks.md`.
-- 12 requirement sections, 83 anchored criteria. Owns `SourceRecord` and `Passage` from
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (9 ADRs), `tasks.md`,
+  `prerequisites.md`. The only spec with a complete file set.
+- 12 requirement sections, 84 anchored criteria. Owns `SourceRecord` and `Passage` from
   [`CONTRACTS.md`](CONTRACTS.md) §1–§2, and publishes the filename grammar two other specs now
-  reconstruct (2.7). Reference corpus: roughly 1068 pages across three manuals.
+  reconstruct (2.7). Reference corpus: roughly 1107 pages across four manuals.
+- **Ledger:** 45 tasks over 8 phases, test-then-implement throughout, two work streams, none
+  started. `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
+  `make fetch-model` once, and declare the Focusrite applicability mapping 11.7 makes mandatory.
 - Explicit non-goals include OCR, image understanding, non-English content, automatic manual
   acquisition, and inferring hardware applicability from a document's contents.
 
@@ -101,9 +106,9 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
   full, dim room) outranks feature richness in any trade-off.
 
-Every spec now carries a `decision_log.md` — 30 per-spec ADRs against the 11 cross-cutting ones in
-[`DECISIONS.md`](DECISIONS.md). No spec carries a `tasks.md`. There are no `specs/bugfixes/` folders
-and no `prerequisites.md` or `smolspec.md` files.
+Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross-cutting ones in
+[`DECISIONS.md`](DECISIONS.md). One spec carries a `tasks.md` and a `prerequisites.md`; the other
+three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
 
 ---
 
@@ -115,7 +120,9 @@ and no `prerequisites.md` or `smolspec.md` files.
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Eleven cross-cutting ADRs in `DECISIONS.md` and 30 per-spec ADRs, all *accepted*.
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 32 per-spec ADRs, all *accepted*.
+- One `tasks.md` ledger, for `data/manual-corpus`, with the `prerequisites.md` naming what no task
+  can do for itself.
 
 **What is next**
 
@@ -123,8 +130,13 @@ and no `prerequisites.md` or `smolspec.md` files.
   and §6a, and rewriting §4, §6 and §7 — and reconciled all four specs against it in the same pass.
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
-- The **task phase** for each of the four specs (`/starwave-tasks`), each behind its own approval
-  gate. Nothing is ready for implementation.
+- The **task phase** for the remaining three specs (`/starwave-tasks`), each behind its own approval
+  gate. `data/manual-corpus` has its ledger and is implementable; the other three are not.
+- **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
+  guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
+  empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes
+  and the picker's known-gaps group. All four stay implemented and are tested against a fixture rig;
+  the specs now say so where they used to name the Scarlett.
 - **One contract defect remains and is not one of the six.** `CONTRACTS.md` §7 allots the concurrent
   retrieval-and-state stage retrieval's 50 ms, while `api/answer-engine` bounds that gather by the
   100 ms state timeout — the longest member. It composes today only because the null state source
@@ -139,7 +151,8 @@ and no `prerequisites.md` or `smolspec.md` files.
 |---|---|
 | `platform` has no spec | Decision 1 gives it provider key configuration, the app shell, and the build. Nothing owns them today. |
 | Wrong Akai manual ingested | `akai_apc-key-25_user-guide_v1.0_multi.pdf` documents the **original** APC Key 25; the rig has the **mk2**, which differs in pads and shift layer (Decision 9). Mitigated by declared `hardware_applicability` shown inline on citations; the real fix is obtaining the mk2 guide from akaipro.com. |
-| No Focusrite Scarlett Solo manual | The interface is owned but undocumented — the standing example of the *owned-but-undocumented* report required by [`CONTRACTS.md`](CONTRACTS.md) §5. |
+| No live owned-but-undocumented case | Every rig device is documented since the Scarlett Solo 4th Gen guide was ingested, so that report is empty and four mechanisms reading from it are dormant (Decision 12). They stay specified and are exercised against a fixture rig; the risk is untested-in-anger code, not a missing gap. |
+| Scarlett applicability must be declared by hand | `focusrite_scarlett-solo-4g_…` yields source id `focusrite/scarlett-solo-4g` while `rig.yaml` declares `focusrite/scarlett-solo`. Omit the `source_applicability` mapping and the manual is present while its device reports as undocumented. `data/manual-corpus` 11.7 names the omission in the run report; nothing prevents it. |
 | Triage starter entries unwritten | `data/symptom-triage` §7 specifies five starter entries (no sound from a track, a track distorting, monitoring latency, drum pad triggers the wrong sound, controller does nothing). None are authored yet, so the diagnostic questions the source exists to answer still refuse. |
 
 **Contract defects.** Each was found from both ends of its seam — named in the design of the spec
@@ -155,7 +168,7 @@ that the reconciliation was owed.
 | Open-at-source is unbuildable as specified | `data/symptom-triage` → `api/answer-engine` → `ui/ask-and-source-picker` | §3a: engine-mediated, never `file://`. A vendor manual is served inline by **one** new operation and opened at `#page=N` and nothing else; an authored entry reuses `GET /passages/{id}`, which already existed, plus the new `entry_location` on §2 and §3 — which is symptom-triage's `source_file` and `line` finally acquiring a consumer. No editor launcher. The UI's eight-operation assumption was the defect and now names the operation list. |
 | `body` block types ungoverned | `api/answer-engine` ↔ `ui/ask-and-source-picker` | §4d names the closed set — heading, ordered step, bullet, paragraph, `!caveat`, `!conflict` — **and the two inline forms**, the citation marker and the key-term span, so "key terms" survives as a governed structure. `!suggest` left `body` entirely for `suggested_sources[]`, an addressable value for UI 7.4. An unknown block keeps its text and loses its wrapper. |
 | No SSE event set is governed | `api/answer-engine` ↔ `ui/ask-and-source-picker` | §4b: sixteen events, each carrying a named §3/§4 field except `done`, with ordering, a version token, the three mechanics SSE does not supply, and both halves of the unknown-member rule. `scope_dropped` discharges into new UI 3.11 and `framing` into UI 9.3. §4b also states why UI 3.8 and answer-engine 5.11 were never in conflict. |
-| `no-manual-for-device` never produces the filename | `api/answer-engine` ↔ `ui/ask-and-source-picker` | §4e `required_manual`: the assembled `filename` with named placeholders written **inside the string**, plus `placeholders[]` so the surface can say which parts the user supplies without splitting a human-facing value. answer-engine 2.10 and UI 7.7 amended. **Residual:** the engine cannot know the doctype, version or language of a document it has never seen, so 7.7 no longer demands an *exact* filename, and `required_manual` is absent altogether where the device does not resolve to a canonical id. |
+| `no-manual-for-device` never produces the filename | `api/answer-engine` ↔ `ui/ask-and-source-picker` | §4e `required_manual`: the assembled `filename` with named placeholders written **inside the string**, plus `placeholders[]` so the surface can say which parts the user supplies without splitting a human-facing value. answer-engine 2.10 and UI 7.7 amended. **Residual:** the engine cannot know the doctype, version or language of a document it has never seen, so 7.7 no longer demands an *exact* filename, and `required_manual` is absent altogether where the device does not resolve to a canonical id. **And that is now every case**: the only resolver is the owned-but-undocumented report, which went empty days after this closed (Decision 12). The field has never been emitted, so this seam is governed but unverified against a real payload. |
 
 **Also closed, earlier and without an amendment.** *Triage sidecar written outside the view*
 (`data/manual-corpus` → `api/answer-engine`) was the one blocking item here and is settled:

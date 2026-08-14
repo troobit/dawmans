@@ -407,12 +407,18 @@ citation never sends me looking for a control my unit does not have.
    `confirmed` or `assumed`.
 2. <a name="11.2"></a>WHEN a source's applicability is not declared, the system SHALL record it as
    `assumed` for the product named in its filename, and SHALL NOT record any applicability as
-   `confirmed` by default — an undeclared source is unverified, not verified.
+   `confirmed` by default — an undeclared source is unverified, not verified. The product in a
+   filename may carry a hardware generation marker the rig inventory's device id does not, so this
+   default is a fallback and not a substitute for a declaration ([11.7](#11.7)).
 3. <a name="11.3"></a>The system SHALL hold a declared **rig inventory** of the hardware the studio
    owner owns, separately from the corpus inventory of §9, and SHALL NOT derive it from the
    contents of `manuals/` — what is documented is not evidence of what is owned.
 4. <a name="11.4"></a>The system SHALL report every **owned-but-undocumented** device: an item in
-   the rig inventory for which no source is indexed. Today that is the Focusrite Scarlett Solo.
+   the rig inventory for which no source is indexed. **Today this report is empty** — every device
+   in the rig inventory has an indexed source since the Focusrite Scarlett Solo 4th Gen guide was
+   obtained. An empty report is the expected steady state of a complete corpus, not evidence the
+   check did not run: the system SHALL emit the report whether or not it names anything, and SHALL
+   NOT omit the member from `gaps.json` when it is empty.
 5. <a name="11.5"></a>The system SHALL report every **documented-but-unconfirmed** source: an
    indexed source whose applicability is `assumed` for a device in the rig inventory, or whose
    declared revision differs from the revision owned. Today that is the Akai APC Key 25 guide,
@@ -421,6 +427,15 @@ citation never sends me looking for a control my unit does not have.
 6. <a name="11.6"></a>The system SHALL publish each source's `hardware_applicability` and both gap
    reports to `api/answer-engine` and `ui/ask-and-source-picker` alongside the corpus inventory,
    so that a citation drawn from an unconfirmed source can be marked inline (CONTRACTS §3).
+7. <a name="11.7"></a>The system SHALL name, in the ingestion run report, every indexed
+   `vendor-manual` source whose resolved applicability `device` is not in the rig inventory. Holding
+   a manual for gear the owner does not own is legitimate and this SHALL NOT be an error; the line
+   exists because it is the only signal separating that case from an **undeclared generation
+   marker**. `focusrite_scarlett-solo-4g_…` defaults under [11.2](#11.2) to device
+   `focusrite/scarlett-solo-4g`, while the rig declares `focusrite/scarlett-solo` — so the source
+   silently misses its device and the device is falsely reported under [11.4](#11.4), with nothing
+   naming the cause. WHERE a filename's product carries a generation marker the rig device id does
+   not, `source_applicability` SHALL declare the mapping (`DECISIONS.md` Decision 2).
 
 ## 12. Source Kinds
 

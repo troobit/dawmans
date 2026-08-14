@@ -30,11 +30,16 @@ picker is derived from `<vendor>/<product>`. Renaming a file changes what the us
 name right on download. Full reasoning is in [`specs/DECISIONS.md`](../specs/DECISIONS.md)
 Decision 2.
 
-**Adding a manual.** Downloading the Focusrite Scarlett Solo 4th Gen user guide, version 3, English,
-gives `scarlett-solo-4th-gen-user-guide.pdf` from the vendor. Rename it to
-`focusrite_scarlett-solo-4g_user-guide_v3_en.pdf`, drop it in this directory, add a row to the table
-below, and re-run ingestion — no code change and no manifest edit is needed, because ingestion
+**Adding a manual.** Downloading the Focusrite Scarlett Solo 4th Gen user guide, version 4.0,
+English, gives `scarlett-solo-4th-gen-user-guide.pdf` from the vendor. Rename it to
+`focusrite_scarlett-solo-4g_user-guide_v4.0_en.pdf`, drop it in this directory, add a row to the
+table below, and re-run ingestion — no code change and no manifest edit is needed, because ingestion
 discovers files rather than reading a list.
+
+One more step where the product carries a generation marker and the rig's device id does not, as
+here (`scarlett-solo-4g` against `scarlett-solo`): **declare the mapping in `rig.yaml`'s
+`source_applicability`.** Without it the manual is ingested and its device is still reported as
+having no documentation — see `specs/data/manual-corpus/requirements.md` 11.7.
 
 ## Expected files
 

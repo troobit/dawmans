@@ -10,8 +10,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
+  throughout, two work streams. `prerequisites.md` records the three things no task can do for
+  itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite
+  applicability mapping.
+- **`data/manual-corpus` 11.7 — indexed-but-not-owned.** The ingestion run report names every
+  vendor-manual source whose resolved applicability device is not in the rig inventory. Not an
+  error: holding a manual for gear you do not own is legitimate. It exists because it is the only
+  signal separating that from an **undeclared generation marker**, which puts the device on
+  owned-but-undocumented and the source on this line at the same time. That pairing is the
+  diagnosis. Recorded as `data/manual-corpus` Decision 9.
+
 ### Changed
 
+- **The last corpus gap is closed, and four mechanisms went dormant with it** (DECISIONS Decision
+  12). The Focusrite Scarlett Solo 4th Gen guide is ingested, so every device in the rig is
+  documented and the owned-but-undocumented report is empty. Nine files still said otherwise:
+  - `data/manual-corpus` 11.4, `api/answer-engine` 2.10 / 5.12 / 9.6, `data/symptom-triage`
+    2.3–2.4 and `CONTRACTS.md` §2 / §5 each named the Scarlett as the standing undocumented case.
+    All four mechanisms stay implemented and are now exercised against a **fixture rig** declaring
+    a device with no indexed source; an empty report is emitted as an empty member, never omitted.
+  - `required_manual` (§4e) is the sharpest case: its canonical id resolves *only* through that
+    report, so the field Decision 11 added to close defect 6 has never been emitted. Governed,
+    implemented, unverified against a real payload — and reachable again the moment a device is
+    declared ahead of its manual.
+  - `symptom-triage`'s worked example illustrated an unbacked cause with "check DIRECT MONITOR",
+    a control the newly ingested guide documents. That cause moves from the unbacked side of the
+    rule to the backed side, and the payload example, scope table and fixture list move with it.
+- **DECISIONS Decision 2 resolved against itself.** It said `product` "carries the generation where
+  that distinguishes the hardware" and then gave `apc-key-25` — whose mk1 and mk2 differ exactly
+  there — as an example. The rule now follows the *vendor*: the marker appears where the vendor
+  sells it as part of the name (`scarlett-solo-4g`) and not otherwise (`apc-key-25`). Putting the
+  generation in the id instead was rejected because it breaks Decision 9: an mk1 guide and an mk2
+  device would hold different ids, never meet, and documented-but-unconfirmed could not fire on the
+  mismatch it exists to catch.
+- The consequence is that `<vendor>/<product>` is **not reliably the rig's device id**. The gap
+  reports already joined on a declared `source_applicability.device` rather than on the id, so this
+  works — but the 11.2 default does not, and an undeclared Focusrite resolves to a device no rig
+  entry holds. Declaring the mapping is now mandatory, and 11.7 catches the omission.
+- `manuals/README.md`: the "adding a manual" walkthrough said version 3 where the table says v4.0,
+  and omitted the `rig.yaml` step that a generation-marked filename requires.
+- `prerequisites.md` listed three PDFs and the Alesis at v1.0 where the tracked record says v1.1.
 - **`specs/CONTRACTS.md` amended to close all six open cross-spec defects** (DECISIONS
   Decision 11). Each had been found from both ends of its seam. New governing sections:
   - §3a **Open at source** — the action is mediated by the engine, never by the browser's

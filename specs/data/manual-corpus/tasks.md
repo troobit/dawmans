@@ -348,20 +348,23 @@ references:
   - rig.yaml is hand-maintained and committed, with device ids in the same <vendor>/<product> shape as source_id so matching is exact and never fuzzy; the rig inventory is never derived from manuals/ - what is documented is not evidence of what is owned.
   - An undeclared source is `assumed` for the product named in its filename; nothing is ever recorded as `confirmed` by default, and applicability is never inferred from content.
   - Both reports compute over source_applicability.device, not over source_id - a manual can document a device whose id is not its own product, and comparing against source IDs silently ignores it.
-  - owned-but-undocumented excludes authored-triage sources: a triage entry mentioning the Scarlett Solo must not make it look documented.
+  - owned-but-undocumented excludes authored-triage sources: a triage entry naming a device must not make that device look documented.
   - documented-but-unconfirmed is restricted to devices in the rig inventory - without that qualifier every undeclared source is reported, including manuals for gear the owner does not hold, and the report stops meaning anything. Revision comparison is casefold-and-strip.
-  - Today the reports must name focusrite/scarlett-solo and akai/apc-key-25 respectively.
+  - Against the real rig: owned-but-undocumented is EMPTY and documented-but-unconfirmed names akai/apc-key-25. Assert the empty report is still emitted as an empty member of gaps.json, never omitted (11.4) - a consumer distinguishing absent from empty breaks on the day it fills.
+  - The non-empty owned-but-undocumented case is asserted against a fixture rig declaring a device with no indexed source, since the real corpus can no longer produce it.
+  - indexed-but-not-owned (11.7): a source whose resolved applicability device is not in the rig inventory is named in the run report and never in gaps.json. Assert the diagnostic pairing - drop the Scarlett's source_applicability declaration and BOTH focusrite/scarlett-solo (owned-but-undocumented) and focusrite/scarlett-solo-4g (indexed-but-not-owned) appear, which is the only signal separating a missing declaration from a real gap.
   - The authored source's source-level applicability is fixed at `assumed` and nothing in rig.yaml sets it.
   - Blocked-by: e7lsx1v (Implement records.py and version.py)
   - Stream: 2
-  - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6)
+  - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6), [11.7](requirements.md#11.7)
 
 - [ ] 40. Implement corpus/rig.py and gaps.json <!-- id:e7lsx2w -->
-  - Also author the initial rig.yaml at the repository root with the three declared devices and Live's confirmed applicability, per the design's worked example.
-  - gaps.json is written into the view before the manifest rename.
+  - Also author the initial rig.yaml at the repository root with the four declared devices and both source_applicability entries - Live's confirmed applicability and the Focusrite mapping - per the design's worked example.
+  - The Focusrite mapping is mandatory, not optional (11.7): focusrite/scarlett-solo-4g -> device focusrite/scarlett-solo, revision 4th-gen, status confirmed. Omit it and the manual is present while its device reports as undocumented.
+  - gaps.json is written into the view before the manifest rename, with both members always present even when empty.
   - Blocked-by: e7lsx2v (Write tests for the rig inventory and the two gap reports)
   - Stream: 2
-  - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6)
+  - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6), [11.7](requirements.md#11.7)
 
 - [ ] 41. Write tests for the per-run report and the per-source audits <!-- id:e7lsx2x -->
   - Per-run report lists every source as ingested, skipped as unchanged, or rejected with its reason; filename-invalid additionally reports the expected pattern.
@@ -370,15 +373,16 @@ references:
   - The audit at index/audits/<slug>.json is written as each source finishes, whether it committed a shard or was rejected, and carries the English ranges, glyph counts, anchor quality and the rejection reason.
   - The 9.1 inventory reports every SourceRecord field from the CONTRACTS 1 table, reporting a field that table marks not applicable as not applicable rather than inventing a value, and adds no field of its own.
   - 9.5 anomalies are reported per store, in both directions.
+  - The indexed-but-not-owned line (11.7) renders from the value rig.py supplies, and is never an error and never in gaps.json. A stub value is enough here - report.py renders it, it does not compute it.
   - Blocked-by: e7lsx20 (Implement store scanning, fingerprinting and removal)
   - Stream: 1
-  - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5)
+  - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5), [11.7](requirements.md#11.7)
 
 - [ ] 42. Implement report.py <!-- id:e7lsx2y -->
   - The per-run report and the per-source ingestion audits; a reused shard's audit is not rewritten, because it describes the run that produced the shard.
   - Blocked-by: e7lsx2x (Write tests for the per-run report and the per-source audits)
   - Stream: 1
-  - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5)
+  - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5), [11.7](requirements.md#11.7)
 
 - [ ] 43. Write end-to-end tests for a full ingestion run <!-- id:e7lsx2z -->
   - Over a synthetic corpus with a stub TriageLoader standing in for data/symptom-triage: both kinds converge before chunking and are chunked, embedded, sharded and inventoried by the same code, which is what makes 12.2 structural rather than a set of kind branches.

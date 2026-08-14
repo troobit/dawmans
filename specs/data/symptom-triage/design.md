@@ -68,7 +68,7 @@ Filenames and directory names carry no meaning: not identity (1.8), not scope, n
 triage/no-sound-from-track.md
 
 ---
-devices: [ableton/live-12]
+devices: [ableton/live-12, focusrite/scarlett-solo]
 ---
 
 # No sound from a track
@@ -86,7 +86,7 @@ fix: ableton/live-12 §16.5
 
 ## Direct monitoring is on at the interface
 check: the DIRECT MONITOR button is lit
-undocumented: focusrite/scarlett-solo
+fix: focusrite/scarlett-solo-4g §<the section covering DIRECT MONITOR>
 
 ## The buffer size is too high for tracking
 check: latency is audible when playing in, but the recording lines up on playback
@@ -95,6 +95,16 @@ fix: ableton/live-12 §1.2 "Audio Preferences"
 ## Otherwise
 Check the master track before assuming this track is at fault.
 ```
+
+Two things in that example are worth reading twice. **`devices` names rig device ids and `fix:`
+names source ids, and for the Focusrite the two differ** — `focusrite/scarlett-solo` against
+`focusrite/scarlett-solo-4g`, because the vendor sells the generation as part of the product name
+and the rig does not (`DECISIONS.md` Decision 2). Neither is a typo for the other and the author
+writes both. **The direct-monitoring cause carries a `fix:`, not an `undocumented:`**, because the
+Scarlett Solo 4th Gen guide is ingested; its section number is the author's to fill, and 2.2 rejects
+the whole entry at first ingest if the pointer does not resolve. `undocumented:` is the alternative
+key and is admissible only for a rig device with no ingested source — a state no device is in today
+(2.3), so it appears in no starter entry.
 
 | Construct | Rule |
 |---|---|
@@ -283,7 +293,7 @@ Frontmatter `devices` → validated → published per `passage_id` in the sideca
 | Declared device | Result |
 |---|---|
 | in `rig.yaml` and indexed as a `vendor-manual` | scoped normally |
-| in `rig.yaml`, no indexed source (`focusrite/scarlett-solo`) | scoped, and reported as applying to an undocumented device (4.4) |
+| in `rig.yaml`, no indexed source — **no device today** | scoped, and reported as applying to an undocumented device (4.4) |
 | indexed as a `vendor-manual`, not in `rig.yaml` | scoped normally, no flag |
 | in neither, and the entry declares at least one device that *is* recognised | flag naming the declaration (4.5); the entry still ingests |
 | in neither, and **every** declared device is unrecognised | rejection (`all-devices-unrecognised`) |
@@ -306,9 +316,11 @@ Revision comparison is **exact after casefolding and stripping non-alphanumerics
 so correcting a declaration is a copy rather than a guess.
 
 `api/answer-engine` 5.12 puts every owned-but-undocumented rig device into the turn's device scope
-unconditionally, so a `focusrite/scarlett-solo` entry survives 5.13's filter although no Focusrite
-source can be selected. That is why 2.3's allowance and 4.4's report suffice, and no pseudo-source
-is registered for undocumented gear.
+unconditionally, so an entry for such a device survives 5.13's filter although no source for it can
+be selected. That is why 2.3's allowance and 4.4's report suffice, and no pseudo-source is
+registered for undocumented gear. The set is empty today — this was written of the Scarlett Solo,
+whose guide has since been ingested — and the argument is unchanged: it is what keeps an entry
+reachable in the window between declaring a device and obtaining its manual.
 
 ### Reject versus flag, with no memory
 
@@ -521,14 +533,20 @@ the revision guarantee does not rest on that fact.
       "undocumented_device": null, "flags": []},
      {"statement": "Direct monitoring is on at the interface",
       "check": "the DIRECT MONITOR switch is pushed in",
-      "fix": [], "undocumented_device": "focusrite/scarlett-solo",
-      "flags": ["unbacked-cause"]}]}],
- "report": {"entries": 5, "rejected": 0, "flagged": 1,
-            "pointers": {"checked": 14, "resolved": 13, "unresolved": 0, "without_pointer": 1},
-            "rejections": [], "flags": [{"entry": "No sound from a track", "cause": 3,
-                                         "reason": "unbacked-cause",
-                                         "detail": "focusrite/scarlett-solo has no ingested source"}]}}
+      "fix": [{"source_id": "focusrite/scarlett-solo-4g", "section": "…",
+               "passage_ids": ["focusrite/scarlett-solo-4g#9ae0…"]}],
+      "undocumented_device": null, "flags": []}]}],
+ "report": {"entries": 5, "rejected": 0, "flagged": 0,
+            "pointers": {"checked": 14, "resolved": 14, "unresolved": 0, "without_pointer": 0},
+            "rejections": [], "flags": []}}
 ```
+
+Every cause in the starter set is backed, so this payload shows no `unbacked-cause`. The shape it
+takes when one is not — the state 2.3 admits and no device is in today — is
+`"fix": [], "undocumented_device": "<rig device id>", "flags": ["unbacked-cause"]`, with a matching
+`report.flags` row whose `detail` reads `<rig device id> has no ingested source`, `flagged`
+incremented and `without_pointer` counting it. That path is exercised against a fixture rig, since
+the live one cannot produce it.
 
 `devices` here is the input to the 5.13 predicate; `causes` in order is the input to
 `api/answer-engine` 7.2 and 7.6, which need the ranked list with its checks and fix citations, not
@@ -689,7 +707,8 @@ false-negative rate as if it were a contract.
 
 | Fixture | Asserts |
 |---|---|
-| `triage/*.md`, the five starter entries (7.2–7.6) | product content that doubles as the grammar's worked examples; every fix cites a vendor passage except the Scarlett cause (7.8) |
+| `triage/*.md`, the five starter entries (7.2–7.6) | product content that doubles as the grammar's worked examples. Every fix cites a vendor passage with no exception (7.8): 2.3's carve-out admits no device now that all four manuals are ingested, so the direct-monitoring cause points into the Scarlett guide like any other |
+| `scarlett_sections.json` — the sections the direct-monitoring cause points at | the same offline pointer resolution as `live_sections.json`, for the manual that closed the last corpus gap |
 | `live_sections.json` — section numbers, titles and text slices for the ~15 sections the starter set points at, extracted once from the real index and committed | pointer resolution and the term check run in CI with `manuals/` absent, exactly as the corpus's extraction snapshots do; includes the section printing `0 dB` that 7.3's cause depends on |
 | `apc_sections.json` — unnumbered regions | the title form resolves where no section number exists |
 | `split_section.json` — one section chunked into three | a pointer resolves to all three, and the term check sees their concatenation |

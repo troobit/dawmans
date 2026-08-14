@@ -589,13 +589,26 @@ devices:
   - id: akai/apc-key-25
     display_name: Akai APC Key 25 mk2
     revision: mk2
+  - id: alesis/nitro-max
+    display_name: Alesis Nitro Max
+                                 # revision omitted: no revision marker is declared for this unit
   - id: focusrite/scarlett-solo
-    display_name: Focusrite Scarlett Solo
+    display_name: Focusrite Scarlett Solo 4th Gen
     revision: 4th-gen
 
 source_applicability:            # optional; absent ⇒ assumed for the filename's product (11.2)
   ableton/live-12: {device: ableton/live-12, revision: "12 Standard", status: confirmed}
+  focusrite/scarlett-solo-4g:    # required, not optional — see below
+    {device: focusrite/scarlett-solo, revision: 4th-gen, status: confirmed}
 ```
+
+The Focusrite entry is the worked case for 11.7. Its filename product carries the generation
+(`scarlett-solo-4g`) and the rig device id does not (`scarlett-solo`), so 11.2's default would
+resolve it to a device that does not exist in the inventory: the source would miss its device and
+the device would be reported owned-but-undocumented although its manual is sitting in `manuals/`.
+The declaration is what makes them meet. `status: confirmed` is legitimate here and nowhere else in
+the corpus — the generation was checked against Live's own log on this machine, not inferred from
+the document.
 
 `rig.yaml`'s `display_name` names the *device the owner holds* and appears only in the two gap
 reports. The `SourceRecord.display_name` names the *document* and is derived from the filename;
@@ -614,6 +627,7 @@ this spec neither reads nor derives them.
 |---|---|
 | owned-but-undocumented (11.4) | rig device ids − `{a.device for a in source_applicability of indexed vendor-manual sources}` |
 | documented-but-unconfirmed (11.5) | indexed sources whose applicability `device` **is in the rig inventory** and whose `status == assumed`, or whose declared revision differs from that device's revision under casefold-and-strip comparison |
+| indexed-but-not-owned (11.7) | indexed vendor-manual sources whose applicability `device` is **not** in the rig inventory — run report only, never `gaps.json` |
 
 Both compute over `source_applicability.device`, not over `source_id`. A manual can document a
 device whose id is not its own product — the mapping exists precisely for that — and comparing
@@ -621,10 +635,22 @@ against source IDs silently ignores it. The second report is restricted to devic
 inventory because that is 11.5's own qualifier: without it, every undeclared source is reported,
 including manuals for gear the owner does not hold, and the report stops meaning anything.
 
-An `authored-triage` source is excluded from the first computation: a triage entry that mentions the
-Scarlett Solo must not make it look documented, which is the case CONTRACTS §5 and
-`api/answer-engine` 9.6 both depend on. Today the reports name `focusrite/scarlett-solo` and
-`akai/apc-key-25` respectively.
+The third is the complement of the first over the same key, and is why they are computed together:
+a source whose generation marker was left undeclared appears on **both** — its device under
+owned-but-undocumented, itself under indexed-but-not-owned — and that pairing is the only thing on
+either report that distinguishes a missing declaration from a genuine gap. It stays in the run
+report and out of `gaps.json` because a manual for gear the owner does not hold is not a gap in the
+rig, and CONTRACTS §5 governs two reports, not three.
+
+An `authored-triage` source is excluded from the first computation: a triage entry that names a
+device must not make that device look documented, which is the case CONTRACTS §5 and
+`api/answer-engine` 9.6 both depend on. The exclusion has no live instance today and is still
+load-bearing — it is what keeps the report honest the moment a device is added to `rig.yaml` ahead
+of its manual.
+
+**Today, with all four manuals present: the first report is empty, the second names
+`akai/apc-key-25`, and the third is empty.** The first being empty is the corpus being complete
+(11.4), not the check failing to run.
 
 Both reports are published as `views/<hex>/gaps.json` (11.6), part of the read contract below.
 

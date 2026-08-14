@@ -83,7 +83,7 @@ unnumbered document. No criterion may reject a source for lacking them.
 | `text` | corpus | |
 | `degraded` | corpus | Contains characters that could not be repaired. **Must be consumed** — §3 and §4. |
 | `has_figures` | corpus | The section contains figures, with their page. **Must be consumed** — §3. |
-| `unbacked` | triage | An authored cause that rests on no vendor-manual passage — either none was ever given (a device with no ingested manual, such as the Scarlett Solo) or the pointer has since stopped resolving. **Must be consumed** — §3. |
+| `unbacked` | triage | An authored cause that rests on no vendor-manual passage — either none was ever given (a device with no ingested manual) or the pointer has since stopped resolving. The first arm has no instance today, every rig device being documented; the second is live and permanent, since a manual can be replaced under a stable pointer. **Must be consumed** — §3. |
 | `entry_location` | triage | Where the entry is written: one opaque display string `<path>:<line>`, the path relative to the repository root and the line the entry's symptom heading sits on. `authored-triage` only; absent on a `vendor-manual`, which has a page instead. **Must be consumed** — §3 and §3a, where it is the open-at-source target for a source that has no page. |
 
 **`entry_location` SHALL NOT contribute to `passage_id`.** The author moves entries between files and
@@ -385,7 +385,7 @@ never as a fact the consumer must read out of the answer's prose.
 
 | Field | Notes |
 |---|---|
-| `filename` | The complete name to add to `manuals/`, in `DECISIONS.md` Decision 2's grammar `<vendor>_<product>_<doctype>_v<version>_<lang>.pdf`, assembled by the engine and copyable in one activation. Any field the engine cannot know is written as its **named placeholder inside the string itself** — `focusrite_scarlett-solo_<doctype>_v<version>_<lang>.pdf` — so a partly-known name is still one copy, and its gaps are visible in the same glance. |
+| `filename` | The complete name to add to `manuals/`, in `DECISIONS.md` Decision 2's grammar `<vendor>_<product>_<doctype>_v<version>_<lang>.pdf`, assembled by the engine and copyable in one activation. Any field the engine cannot know is written as its **named placeholder inside the string itself** — for a device newly declared in the rig ahead of its manual, `focusrite_scarlett-2i2_<doctype>_v<version>_<lang>.pdf` — so a partly-known name is still one copy, and its gaps are visible in the same glance. The example is hypothetical by necessity: see the note under §5. |
 | `placeholders[]` | The names of the fields left as placeholders, empty where the engine assembled a complete name. This is how the consumer says *which* parts the user must supply from the document they obtain, without splitting a human-facing string on underscores — a split that would break on the `<version>` field's deliberate full-stop exception. |
 
 `required_manual` is present **exactly where `required_device` resolves to a canonical
@@ -394,6 +394,14 @@ can stand in for, and a name that is placeholder all the way down is not copyabl
 the consumer names the convention and the device instead, and synthesises nothing — a wrong filename
 is worse than none, because `data/manual-corpus` 2.5 rejects it at ingest for not matching the
 pattern and the user learns only from the rejection.
+
+**`required_manual` is dormant today, and both sides SHALL still implement it.** A device resolves
+to a canonical id only through the owned-but-undocumented report (`api/answer-engine` design,
+`required_device`), and that report is empty now that every rig device is documented — so
+`no-manual-for-device` still fires for gear outside the rig, but always with a free-form
+`required_device` and no `required_manual`. The field becomes reachable again the moment a device is
+added to `rig.yaml` ahead of its manual, which is the ordinary way hardware arrives. Neither side may
+treat it as absent by construction: this is an empty set, not a removed member.
 
 **A residual, stated rather than papered over.** Where the engine has never seen the document it
 cannot know its doctype, version or language, so `filename` carries placeholders and 7.7's "exact
@@ -410,7 +418,16 @@ mode, and it is worse than a refusal because the citation *increases* the user's
 
 Therefore: the system SHALL hold a declared rig inventory — the hardware the user owns — separately
 from the corpus inventory of what is indexed. It SHALL be able to report **owned-but-undocumented**
-(the Scarlett Solo today) and **documented-but-unconfirmed** (the APC guide today).
+and **documented-but-unconfirmed**.
+
+**Only the second has an instance today.** Obtaining the Focusrite Scarlett Solo 4th Gen guide —
+the generation confirmed against Live's own log on this machine, not inferred — closed the
+owned-but-undocumented gap, and the APC guide remains documented-but-unconfirmed. Every mechanism
+resting on the first is therefore **dormant, not deleted**: `required_manual` (§4e), `unbacked`'s
+no-manual arm (§2), the engine's device scope and the picker's known-gaps list all keep their
+behaviour and are exercised against a declared device with no indexed source, which is what the next
+piece of gear will be before its PDF is downloaded. A consumer that hardcodes the empty case is a
+defect against this section.
 
 ## 6. Outcome taxonomy
 

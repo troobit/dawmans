@@ -670,3 +670,72 @@ gets a well-formed JSON document rather than an error. That is the same failure 
 §English selection, §Glyph repair, §Incremental behaviour, §Testing Strategy.
 `data/symptom-triage` §The sidecar and its dependency table — the request is discharged, not dropped.
 `api/answer-engine` §What the engine reads — the blocking-prerequisite paragraph is removed.
+
+---
+
+## Decision 9: The rig join runs through a declared mapping, not through the source ID
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+The two gap reports of §11 compare what is owned against what is indexed. Both sides use the
+`<vendor>/<product>` shape, which invites the assumption that they can be joined on the source ID
+directly. They cannot. `DECISIONS.md` Decision 2 has the filename's `product` follow the vendor on
+generation markers, so the corpus holds `focusrite/scarlett-solo-4g` while `rig.yaml` declares the
+device as `focusrite/scarlett-solo`. The same product, two identifiers.
+
+The design already computed both reports over a source's declared `source_applicability.device`
+rather than over its source ID, which is the right join and handles this exactly. The hazard is the
+*default*: 11.2 records an undeclared source as `assumed` for the product named in its filename. For
+the Focusrite that resolves to a device id no rig entry holds, so the source silently misses the
+device, and the device — whose manual is sitting in `manuals/` — is reported as owned-but-undocumented
+with nothing naming the cause.
+
+### Decision
+
+Where a filename's `product` carries a generation marker the rig's device id does not, the
+`source_applicability` declaration mapping the two is **mandatory**. 11.7 backs it with a check: the
+ingestion run report names every indexed `vendor-manual` source whose resolved applicability device
+is not in the rig inventory. The line is informational, never an error, and never appears in
+`gaps.json`.
+
+### Rationale
+
+Making the declaration mandatory rather than inferring the relationship keeps the system out of the
+business of guessing which suffixes are generation markers. `-4g`, `-mk2`, `-gen4`, `-mkii` and
+`-4th-gen` are all in circulation, the list is open, and a wrong guess would join two genuinely
+different products — the failure Decision 9 in `DECISIONS.md` exists to prevent, arrived at from the
+other direction.
+
+The report line is what makes the mandate enforceable without inventing an error condition. A manual
+for gear the owner does not hold is perfectly legitimate and must not fail a run, so the same
+observation cannot be a rejection. What it can be is a *pairing*: an undeclared generation marker
+puts the device on owned-but-undocumented and the source on indexed-but-not-owned at the same time,
+and that pair appears together only in this one case. A genuine gap produces the first alone; a
+genuinely unowned manual produces the second alone.
+
+Keeping the line out of `gaps.json` follows `CONTRACTS.md` §5, which governs two reports. A manual
+for unowned gear is not a gap in the rig, the engine has no consumer for it, and adding a third
+member to a published payload to carry an ingestion-time diagnostic would oblige two other specs to
+render something neither has a use for.
+
+### Alternatives Considered
+
+- **Join on source ID and forbid generation markers in `product`**: Rename the file to `focusrite_scarlett-solo_user-guide_v4.0_en.pdf` so the two inventories share one identifier - Rejected because it breaks the revision comparison that `DECISIONS.md` Decision 9 rests on. If the generation is in the ID, an mk1 guide and an mk2 device hold different IDs, never meet, and documented-but-unconfirmed cannot fire on the mismatch it exists to catch. It also asks the transcriber to decide what counts as a generation, which Decision 2 rejected on its own grounds.
+- **Infer the mapping by stripping known generation suffixes**: Match `scarlett-solo-4g` to `scarlett-solo` automatically with a suffix table - Rejected because the suffix list is open and the failure is silent and wrong: two distinct products that happen to share a prefix would be joined, and a joined pair reports as documented when it is not.
+- **Reject a source whose applicability device is not in the rig**: Treat the unmatched case as a hard error at ingest - Rejected because holding a manual for gear the owner does not own is legitimate — a borrowed unit, a device sold on, a manual obtained ahead of the hardware — and a run that fails on it would force a rig entry for a device the user does not have.
+- **Publish the third report in `gaps.json` alongside the other two**: Give consumers the full picture in one payload - Rejected because `CONTRACTS.md` §5 governs two reports with named consumers, and this one has none. It is an ingestion-time diagnostic for whoever maintains `rig.yaml`, and that reader is looking at the run report already.
+
+### Consequences
+
+**Positive:**
+- The one silent failure in the rig join is now named at the point where it can be fixed.
+- The pairing across two reports identifies the cause, not just the symptom, without any new error state.
+- No suffix table, no inference, nothing to keep current as vendors invent new generation markers.
+
+**Negative:**
+- A hand-written declaration is still required, so the omission this guards against remains possible — the report names it after the fact rather than preventing it.
+- A third report is a third thing to compute and test, for a condition that is legitimate more often than it is a mistake.
+- The run report grows a line most runs will render empty, which is one more thing to read past.

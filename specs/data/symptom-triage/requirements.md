@@ -114,13 +114,20 @@ gets cited back to me as fact.
    and continue ingesting the remaining entries. Rejection is correct here and flagging is not: the
    author is present, and an entry that has never resolved has never been verified by anyone.
 3. <a name="2.3"></a>The system SHALL permit a cause with no fix pointer **only** where the cause
-   names a device that is in the rig inventory and has no ingested source (today, the Focusrite
-   Scarlett Solo), and SHALL require such a cause to declare that device explicitly.
+   names a device that is in the rig inventory and has no ingested source, and SHALL require such a
+   cause to declare that device explicitly. **No device satisfies this today** — every rig device is
+   documented since the Focusrite Scarlett Solo 4th Gen guide was obtained — so the permission
+   currently admits nothing and every cause needs a pointer. The rule is not thereby dead: it admits
+   the next device declared in the rig ahead of its manual, and it is the only thing that lets an
+   entry be written for that device before the PDF arrives.
 4. <a name="2.4"></a>WHEN a cause is permitted under [2.3](#2.3), the system SHALL set `unbacked`
    (CONTRACTS §2) on every passage carrying that cause, so that a citation drawn from it is marked
-   as resting on no vendor manual ([§3](#3-citation-and-provenance)). "Check DIRECT MONITOR on the
-   interface" is a legitimate triage step for hardware whose manual the corpus does not hold;
-   presenting it as documented is not. WHERE a passage carries several causes ([3.3](#3.3)) and only
+   as resting on no vendor manual ([§3](#3-citation-and-provenance)). A step such as "check the
+   direct-monitor switch on the interface" is legitimate triage for hardware whose manual the corpus
+   does not hold; presenting it as documented is not. That particular step is **no longer** an
+   example of one: DIRECT MONITOR is documented in the ingested Scarlett Solo 4th Gen guide, so a
+   cause naming it now needs a fix pointer under [2.2](#2.2) and is rejected without one — the
+   worked case has moved from the unbacked side of this rule to the backed side. WHERE a passage carries several causes ([3.3](#3.3)) and only
    some of them are unbacked, the system SHALL still set the flag and SHALL name the unbacked cause
    in the coverage report ([6.4](#6.4)): over-marking a passage costs the user a caveat, whereas
    under-marking presents an uncited step as documented.

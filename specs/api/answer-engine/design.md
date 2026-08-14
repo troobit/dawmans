@@ -519,6 +519,13 @@ entry in `gaps.owned_but_undocumented`, the engine substitutes the canonical `<v
 and the rig display name; otherwise the free-form name is carried through. 2.10 names a device, not
 a source id, so an unmatched name is valid output, not an error.
 
+That report is the **only** resolver, and it is empty today (`data/manual-corpus` 11.4), so every
+`required_device` currently carried is free-form and `required_manual` is currently unreachable.
+Both stay implemented and both are tested against a fixture rig: an empty set here is the corpus
+being complete, and it refills the first time a device is declared ahead of its manual. Resolving
+against the corpus inventory instead would not help — a device with an indexed source is not a
+device with no manual — so there is no second resolver to add.
+
 **The filename travels with it, as its own field.** CONTRACTS §6 defines `no-manual-for-device` as
 naming "the device **and the filename** to add", and UI 7.7 renders it copyable in one activation.
 The UI cannot synthesise it: the grammar needs `doctype`, `version` and `lang`, none of which a
@@ -1025,7 +1032,7 @@ specific criterion this design rests on:
 | Symptom-shaped questions with a matching triage entry | ≥6 | 7.2 and 2.8's "entry outranks topically-similar device documentation" |
 | Uncovered questions | ≥4 | Expected `refused-not-covered` |
 | Technique questions no manual covers | ≥4 | Expected `out-of-domain`, and 2.9's carve-out when an entry exists |
-| Scarlett Solo questions | ≥2 | `no-manual-for-device` and 5.12's undocumented-device inclusion |
+| Questions about gear with no ingested manual | ≥2 | `no-manual-for-device` and 5.12's undocumented-device inclusion. Every rig device is documented, so these run against a fixture `rig.yaml` declaring a device whose manual is absent — the live corpus cannot produce the case |
 
 Labels are gold `(source_id, section_number)` pairs, **not** `passage_id` — a re-chunk changes every
 `passage_id` and would invalidate the whole set, while section identity survives it. The last three

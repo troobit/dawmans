@@ -96,8 +96,19 @@ Manual filenames follow:
 
 Fields are separated by underscores. Every field except `<version>` is lowercase kebab-case: lowercase
 letters, digits, and hyphens only. `lang` is an ISO 639-1 code, or `multi` for a multilingual document.
-`product` carries the generation or model where that distinguishes the hardware (`live-12`,
-`apc-key-25`, `scarlett-solo-4g`).
+`product` carries the generation or model where the vendor sells it as part of the product's name
+(`live-12`, `scarlett-solo-4g`) and omits it where the vendor does not (`apc-key-25`, whose mk1 and
+mk2 ship under one name). The rule follows the vendor because the filename is transcribed from the
+document in hand, and a rule that asks the transcriber to *decide* what counts as a generation gets
+decided differently twice.
+
+The consequence is that `<vendor>/<product>` is **not reliably the rig's device id** — the corpus
+holds `focusrite/scarlett-solo-4g` for a rig that declares `focusrite/scarlett-solo`. That is
+tolerable and is not left to chance: the gap reports match on a source's declared
+`source_applicability.device` rather than on its source ID, and where a filename's product carries a
+generation marker the rig id does not, declaring that mapping is **mandatory**, not optional
+(`data/manual-corpus` [11.7](data/manual-corpus/requirements.md#11.7)). Left undeclared, the manual
+is present and its device is reported as having none.
 
 `<version>` is an explicit exception with its own grammar: a literal `v` followed by one or more
 groups of digits separated by full stops — `v12`, `v1.0`, `v1.1`. The full stop is deliberate and is
@@ -111,11 +122,12 @@ from its own content, independent of any filename — see
 [`data/manual-corpus`](data/manual-corpus/requirements.md#12.5) 12.5 and
 [`CONTRACTS.md`](CONTRACTS.md) §1.
 
-The current three files are:
+The current four files are:
 
 - `ableton_live-12_reference-manual_v12_en.pdf`
 - `akai_apc-key-25_user-guide_v1.0_multi.pdf`
 - `alesis_nitro-max_user-guide_v1.1_en.pdf`
+- `focusrite_scarlett-solo-4g_user-guide_v4.0_en.pdf`
 
 ### Rationale
 
@@ -145,7 +157,8 @@ correct citation.
 - Vendor-supplied filenames must be renamed by hand on download, which is a step that can be forgotten.
 - A version bump changes the filename, so the corpus must handle the old and new file being distinct entries.
 - The convention has no enforcement yet; a badly named file is caught only by whatever validation ingestion chooses to do.
-- The convention now carries an exception rather than one uniform rule, so it is marginally harder to validate: `<version>` needs its own pattern, and a single kebab-case regex across all fields would wrongly reject two of the three current manuals.
+- The convention now carries an exception rather than one uniform rule, so it is marginally harder to validate: `<version>` needs its own pattern, and a single kebab-case regex across all fields would wrongly reject two of the four current manuals.
+- Following the vendor on generation markers means the derived source ID sometimes matches the rig's device id and sometimes does not, so the two inventories cannot be joined on ID alone. The join runs through a declared mapping instead, and an omitted declaration fails in the confusing direction — a manual that is present reads as missing.
 
 ---
 
@@ -474,7 +487,7 @@ becomes implementable as written without relaxing the no-general-knowledge rule.
 
 **Positive:**
 - The narrowing flow in the engine spec becomes implementable as written, rather than requiring conditions no passage contains.
-- The missing Focusrite Scarlett Solo interface knowledge can be covered without possessing that manual at all, since a triage entry describes what to check rather than quoting a document.
+- Knowledge for hardware whose manual is absent can be covered without possessing that manual at all, since a triage entry describes what to check rather than quoting a document. This was written of the Focusrite Scarlett Solo, whose 4th Gen guide has since been obtained; the property is the general one and does not depend on that gap.
 - Every factual claim remains cited, so the grounding guarantee is unchanged in kind — only the set of sources grows.
 
 **Negative:**
@@ -625,7 +638,7 @@ useful afterwards for the next manual whose revision is uncertain.
 
 **Positive:**
 - The worst failure mode becomes visible to the user at the point of citation, rather than silently.
-- Reporting owned-but-undocumented hardware names the real gap in the corpus — the Scarlett Solo today — instead of leaving it to be discovered by a failed question.
+- Reporting owned-but-undocumented hardware names a real gap in the corpus instead of leaving it to be discovered by a failed question. It did exactly that for the Scarlett Solo, and the gap has since been closed by obtaining the 4th Gen guide — so the report is empty today, which is the outcome it exists to produce rather than a sign it has stopped working.
 - The flag generalises: every future manual is either confirmed against the owned hardware or explicitly is not.
 
 **Negative:**
@@ -901,5 +914,94 @@ all four specs against it: `api/answer-engine` 1.4, 1.10, 1.12, 2.3, 2.5, 2.9, 2
 Assumptions; `data/manual-corpus` 2.7 (new) and 12.6; `data/symptom-triage` 1.5 and 3.5. The
 "Requirements defects to reconcile" sections of both designs are discharged in place, with what
 closed each item rather than by deletion.
+
+---
+
+## Decision 12: Closing the last corpus gap makes four mechanisms dormant, and they stay
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+The Focusrite Scarlett Solo was the project's standing example of **owned-but-undocumented**
+hardware: declared in the rig, described by no ingested manual. Four separate mechanisms were
+specified around it — `data/manual-corpus` 11.4's report, `api/answer-engine` 5.12's device scope and
+2.10's `required_manual`, `data/symptom-triage` 2.3–2.4's `unbacked` causes, and the picker's
+known-gaps list — and each cited it by name.
+
+Obtaining the Scarlett Solo 4th Gen user guide closed that gap. Every device in the rig is now
+documented, so the owned-but-undocumented report is empty, and with it every mechanism that reads
+from it. `required_manual` is the sharpest case: it resolves a canonical `<vendor>/<product>` id
+*only* through that report, so the field Decision 11 added to close a contract defect became
+unreachable within a day of landing.
+
+The specs had not noticed. Nine files still named the Scarlett as undocumented, `symptom-triage`
+illustrated an unbacked cause with "check DIRECT MONITOR" — a control the newly ingested guide
+documents — and the freshly written task ledger encoded the stale expectation into the tests for
+task 39.
+
+### Decision
+
+The mechanisms stay, whole and implemented, and the specs state that each is **dormant rather than
+deleted**. An empty owned-but-undocumented report SHALL be emitted as an empty member rather than
+omitted, and no consumer may treat the empty case as absence. Where a mechanism can no longer be
+exercised against the real corpus, it is tested against a fixture rig declaring a device with no
+indexed source. Every worked example that named the Scarlett as undocumented is rewritten, and the
+direct-monitoring triage cause moves from the unbacked side of the rule to the backed side.
+
+Separately, `data/manual-corpus` gains 11.7: an indexed vendor-manual source whose resolved
+applicability device is not in the rig inventory is named in the ingestion run report.
+
+### Rationale
+
+A gap closing is the system working, not a requirement expiring. The next piece of gear will sit in
+`rig.yaml` without a manual for as long as its download takes, and that window is exactly what these
+mechanisms exist for — deleting them would mean rebuilding them on the next purchase, and the parts
+most likely to rot are the ones no test covers.
+
+Saying so explicitly is the load-bearing half. An empty set and an absent field are indistinguishable
+to a consumer that never sees the full case, so an implementer meeting these specs today would
+reasonably conclude `required_manual` is theoretical and hardcode it away. Naming the dormancy, and
+fixing it with a fixture rig rather than a live gap, keeps the code paths exercised while the corpus
+is complete.
+
+11.7 exists because the same event exposed a silent failure. The filename grammar follows the vendor
+on generation markers (Decision 2), so `focusrite/scarlett-solo-4g` is the source id while the rig
+declares `focusrite/scarlett-solo`. The gap reports match on a declared `source_applicability.device`
+rather than on the id, which handles it — but only if the declaration is written. Left undeclared,
+11.2's default resolves the source to a device that does not exist in the inventory: the manual is
+present, and its device is reported as having none. The new report line is what distinguishes that
+from a genuine gap, because the misdeclared source shows up on both reports at once.
+
+### Alternatives Considered
+
+- **Delete the dormant mechanisms and restore them when a gap reappears**: Carry no unreachable code or criteria - Rejected because the gap reappears on the next hardware purchase, and the deleted work would be rebuilt from memory rather than from a spec. It also inverts the product's own argument: the reports exist so a gap is *reported* rather than discovered by a failed question, which requires them to be running before the gap exists.
+- **Find a replacement instance to keep every mechanism live**: Nominate some other owned-but-undocumented item, such as the Mac itself, so no criterion loses its example - Rejected because it means inventing a gap to justify a mechanism. `rig.yaml` would gain an entry that exists for the tests rather than for the user, and the report would name something nobody intends to obtain a manual for.
+- **Resolve the canonical device id from the corpus inventory as well as the gap report**: Give `required_manual` a second resolver so it stays reachable - Rejected because it cannot work: a device with an indexed source is not a device with no manual, so the second resolver would never fire on the outcome that needs it.
+- **Put the generation marker in the rig device id instead**: Make `focusrite/scarlett-solo-4g` the id on both sides so the two inventories join on id alone - Rejected because it breaks Decision 9's mechanism. A mk1 guide and an mk2 device would then hold different ids and never meet, so documented-but-unconfirmed could not fire on the revision mismatch it exists to catch, and the wrong-hardware citation - the product's worst failure mode - would go unflagged.
+
+### Consequences
+
+**Positive:**
+- The corpus covers every device in the rig; a question about the audio interface is now answerable from Focusrite's own documentation rather than refused.
+- The wrong-hardware failure mode has one remaining instance (the APC guide) instead of two open gaps.
+- 11.7 turns a silent misconfiguration into a named line in the run report, and the diagnostic pairing across two reports says which of the two things went wrong.
+- The specs stop asserting a fact about the corpus that stopped being true, which is the class of drift `PROCESS.md` §1 calls a defect in one document or the other.
+
+**Negative:**
+- Four mechanisms are now specified, implemented and tested with no live instance, which is exactly the shape of code that rots unnoticed.
+- Their tests depend on a fixture rig, so a divergence between fixture and real `rig.yaml` will not be caught by them.
+- The declaration 11.7 mandates is hand-written, so the failure it guards against can still be introduced by omitting it — the report names the symptom, it does not prevent the cause.
+- `required_manual`, added by Decision 11 to close a cross-spec defect, has never once been emitted, so the seam it governs is unverified against a real payload.
+
+### Impact
+
+`CONTRACTS.md` §2, §4e and §5; `DECISIONS.md` Decisions 2, 7 and 9; `data/manual-corpus`
+requirements 11.2, 11.4 and new 11.7, its design's rig inventory and report computations, its
+`prerequisites.md` and tasks 39–42; `api/answer-engine` requirements 2.10, 5.12, 9.6 and its
+Assumptions, and its design's `required_device` resolution and evaluation set; `data/symptom-triage`
+requirements 2.3–2.4 and its design's entry grammar, payload example, scope table and fixtures;
+`manuals/README.md`.
 
 ---

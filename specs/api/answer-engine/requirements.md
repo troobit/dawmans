@@ -176,8 +176,8 @@ confident answer that is wrong — a wrong answer about gain staging costs me mo
     WHERE the device does not resolve to a canonical id, `required_manual` SHALL be absent and the
     system SHALL NOT synthesise a name that is placeholder in the vendor and product positions.
     An `authored-triage` entry may legitimately cover a device whose manual is absent — an entry may
-    direct the user to check DIRECT MONITOR on the Focusrite Scarlett Solo without quoting
-    Focusrite — and WHERE such an entry answers the question, the system SHALL answer from it and
+    direct the user to check a switch on an interface without quoting its vendor — and WHERE such an
+    entry answers the question, the system SHALL answer from it and
     SHALL NOT return no-manual-for-device. WHERE the entry narrows the question but the remaining
     fix needs the absent manual, the system SHALL answer what the entry supports and name the
     uncovered part per [2.2](#2.2).
@@ -349,8 +349,11 @@ can exclude noise from the 1009-page Live manual when the question is really abo
 12. <a name="5.12"></a>The system SHALL derive a **device scope** for each turn from the selected
     source IDs: the devices and software the selected sources document, together with every
     owned-but-undocumented device in the rig inventory ([9.6](#9.6)). The undocumented devices are
-    included deliberately — a triage passage naming DIRECT MONITOR on the Focusrite Scarlett Solo
-    must stay reachable although no Focusrite source is selectable ([2.10](#2.10)).
+    included deliberately — a triage passage naming a control on a device whose manual is absent
+    must stay reachable although no source for that device is selectable ([2.10](#2.10)). That set
+    is **empty today** and the union SHALL still be computed: a device enters it whenever one is
+    declared in the rig ahead of its manual, and a scope that omitted the term would silently filter
+    out the entries written for exactly that gap.
 13. <a name="5.13"></a>WHERE a retrieved passage declares the devices or software it applies to, the
     system SHALL **exclude it from the turn entirely** — filter, not merely rank lower — WHEN none
     of its declared devices is in the turn's device scope ([5.12](#5.12)). A passage that declares
@@ -532,11 +535,13 @@ from nothing else, so that neither my questions nor my provider keys are exposed
    counterpart that browser page can reach, so a field this operation omits reaches nobody.
 6. <a name="9.6"></a>The system SHALL return, alongside the source list, the
    **owned-but-undocumented** report published by `data/manual-corpus` (its §11, `CONTRACTS.md` §5)
-   — each device in the declared **rig inventory** for which no source is indexed, today the
-   Focusrite Scarlett Solo — naming each such device. The engine relays this report; it does not own
-   the rig inventory and SHALL NOT derive it from the corpus. Both the device scope in
-   [5.12](#5.12) and the `required_device` in [2.10](#2.10) draw on it, and the picker names the gap
-   so the user does not spend a question discovering it.
+   — each device in the declared **rig inventory** for which no source is indexed — naming each such
+   device. The engine relays this report; it does not own the rig inventory and SHALL NOT derive it
+   from the corpus. Both the device scope in [5.12](#5.12) and the `required_device` in
+   [2.10](#2.10) draw on it, and the picker names the gap so the user does not spend a question
+   discovering it. The report is **empty today** and SHALL be returned as an empty list rather than
+   omitted: it is the sole resolver of a canonical device id, so a consumer that treats absence as
+   equivalent to emptiness breaks silently on the day it fills.
 7. <a name="9.7"></a>The system SHALL return, alongside the source list, the
    **documented-but-unconfirmed** report published by `data/manual-corpus` (its §11) — each indexed
    source whose `hardware_applicability` is `assumed`, or whose declared revision differs from the
@@ -671,11 +676,15 @@ without it — but history is never a grounding source, and it never survives a 
   behaviour these criteria already describe — but the narrowing flow ([7.2](#7.2)) is only
   satisfiable in practice when it is.
 - The rig is fixed and known: Ableton Live 12 **Standard** (no Max for Live), Akai APC Key 25 mk2,
-  Focusrite Scarlett Solo, macOS. The Live manual documents the full product, so edition gating
-  ([1.12](#1.12)) is a permanent requirement, not a transitional one; and the Scarlett Solo is
-  owned-but-undocumented, which is the standing case for [2.10](#2.10). The rig inventory this rests
-  on is declared and maintained by hand in `data/manual-corpus` (its §11); the engine reads it only
-  through the reports in [9.6](#9.6)–[9.7](#9.7), so a device never declared is invisible here too.
+  Focusrite Scarlett Solo 4th Gen, Alesis Nitro Max, macOS. The Live manual documents the full
+  product, so edition gating ([1.12](#1.12)) is a permanent requirement, not a transitional one.
+  **Every one of them is documented**, so [2.10](#2.10) has no standing case: `no-manual-for-device`
+  fires only for gear outside the rig, and always with a free-form `required_device` and no
+  `required_manual` (`CONTRACTS.md` §4e). The criterion is kept whole against the next device
+  acquired, which will sit in the rig without a manual for as long as the download takes. The rig
+  inventory this rests on is declared and maintained by hand in `data/manual-corpus` (its §11); the
+  engine reads it only through the reports in [9.6](#9.6)–[9.7](#9.7), so a device never declared is
+  invisible here too.
 - One user, one conversation at a time. No contention, no isolation between tenants — [9.13](#9.13)
   resolves overlap by cancellation rather than by concurrency.
 - The reference machine for all latency figures is the user's own macOS development machine; the
@@ -698,7 +707,7 @@ without it — but history is never a grounding source, and it never survives a 
 | **An authored claim read as the manufacturer's.** A triage entry is cited by exactly the same machinery as a vendor manual, so a causal claim the user wrote themselves can arrive looking as authoritative as a page of the Live manual — and a wrong entry, unlike a wrong manual, has no external check on it. | The user's own guess is laundered into a manufacturer's statement, and the citation raises their confidence in it. | [1.13](#1.13) fixes what each kind is trusted for; [3.8](#3.8) carries the kind on every citation and requires it shown inline rather than behind a disclosure; [3.3](#3.3) carries `unbacked` so a cause resting on no manual is never read as documented; the fix an entry points at still cites a vendor manual ([7.6](#7.6)). |
 | **Undocumented Ableton control API.** A future live state feed cannot use Max for Live on Live 12 Standard, leaving an undocumented remote-control scripting interface that Ableton changes without notice or versioning guarantees. | A later `LiveFeedStateSource` could break on any Live point release, or prove unbuildable. | No requirement commits to a live feed. The seam is defined so it is additive ([8.4](#8.4)); the null path is fully functional ([8.3](#8.3)); state failures degrade to manual-only ([8.8](#8.8)). |
 | **Manual content going stale.** Live 12.x point releases change behaviour and renumber sections; the ingested PDF is a snapshot, and a manual can be re-ingested underneath a running conversation. | Answers stay confidently correct against a version the user is no longer running, or are grounded in passages that no longer exist. | Citations carry section, page and document version so the user can check against their own build ([3.2](#3.2)–[3.3](#3.3)); source contribution is reported per answer ([5.9](#5.9)); corpus change invalidates cached retrieval state and prunes carried scope ([5.10](#5.10)–[5.11](#5.11)). Version-aware corpus refresh belongs to `data/manual-corpus`, not here. |
-| **Every authored entry arrives as one source.** `data/symptom-triage` registers the whole entry store as a single source, so selecting it would otherwise put an entry about Live's routing in scope for a question about the drum module. | Triage widens the problem instead of narrowing it, and the wrong entry outranks the right documentation on a diagnostic question ([2.8](#2.8)). | [5.12](#5.12)–[5.13](#5.13) — a passage's own device declaration is a filter within its source, and the device scope includes owned-but-undocumented gear ([9.6](#9.6)) so a Scarlett Solo entry stays reachable. |
+| **Every authored entry arrives as one source.** `data/symptom-triage` registers the whole entry store as a single source, so selecting it would otherwise put an entry about Live's routing in scope for a question about the drum module. | Triage widens the problem instead of narrowing it, and the wrong entry outranks the right documentation on a diagnostic question ([2.8](#2.8)). | [5.12](#5.12)–[5.13](#5.13) — a passage's own device declaration is a filter within its source, and the device scope includes owned-but-undocumented gear ([9.6](#9.6)) so an entry for a device with no ingested manual stays reachable. |
 | **Corpus gaps invisible to the browser surface.** The picker can reach no counterpart but this engine, so anything the corpus computes and this spec does not relay reaches nobody. | The user spends a question discovering that a device has no manual, or trusts a source written for a revision they do not own. | [9.5](#9.5) fixes the list-sources payload field by field; [9.6](#9.6)–[9.7](#9.7) relay both gap reports; [3.3](#3.3) repeats applicability on the citation for the case caught only at answer time. |
 | **Small-source drowning.** The Live manual is ~200× the size of the APC guide; naive relevance ranking will rarely surface the small guide. | Cross-device questions — the user's most common diagnostic shape — answer from the wrong manual. | [5.5](#5.5), [5.6](#5.6), [5.7](#5.7). |
 | **Over-questioning.** Narrowing questions that do not discriminate are worse than a ranked guess, because each one costs a round trip during a session. | The tool feels obstructive and the user stops asking it things. | [7.5](#7.5), [7.6](#7.6), [7.7](#7.7), [7.8](#7.8). |

@@ -286,6 +286,11 @@ stealing it would break the return-focus contract of 13.3.
 2. **Marked selectable sources** — a record whose `hardware_applicability` is *assumed* carries the
    revision it is taken to describe (2.10), and `low_text` marks a sparse source.
 3. **Known gaps** — the owned-but-undocumented report, listed apart and never selectable (2.9).
+   The group is **omitted entirely when the report is empty**, heading included: 2.9 is conditional
+   on the engine reporting something, and an empty section headed "known gaps" reads as a gap in a
+   glance taken in a dim room. Empty is the state today — every rig device is documented
+   (`CONTRACTS.md` §5) — so this is the path that actually renders, and the populated one is
+   exercised against a fixture.
 
 Newness (2.4) is `source_id ∉ seen[]`, where `seen[]` is persisted and updated on the next submit —
 not on render, so a source seen in a glance the user did not act on is still new.
