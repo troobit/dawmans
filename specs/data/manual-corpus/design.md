@@ -61,11 +61,16 @@ result, so it must read the passages **this** run produced.
 | 10 | Authored load | `authored-triage` | entry store + **committed vendor shards** | `Region[]` | 12.3, 12.5–12.6, 12.8 |
 | 11 | Chunk, embed + shard commit | `authored-triage` | `Region[]` | `index/shards/authored_triage.*` | as 8–9 |
 | 12 | Merge + manifest commit | run | all shards | `index/*` | 8.1, 8.6, 8.8–8.11, 9.1, 9.4–9.6, 12.7 |
-| 13 | Rig report | run | `rig.yaml` + inventory | `index/gaps.json`, run report | 11.1–11.6 |
+| 13 | Rig report | run | `rig.yaml` + inventory | `views/<hex>/gaps.json`, before the manifest rename | 11.1–11.6 |
 
 Stage 11 is stages 8–9 called again over the authored regions; their being the same code is 12.2.
 The Criteria column is exhaustive for stage-local criteria; 12.2 and 12.4 are properties of the seam
 rather than stages.
+
+Each source's **ingestion audit** is written to `index/audits/<slug>.json` as that source finishes,
+whether it committed a shard or was rejected. A **view sidecar**, where the loader produces one, is
+committed with the shard at stage 9 or 11 and copied into the view at stage 12; §Index layout states
+why the two go to different places.
 
 Three orderings are load-bearing:
 
@@ -146,7 +151,7 @@ src/dawmans/
     embed.py            fastembed wrapper
     lexical.py          bm25s wrapper
     manifest.py
-  report.py             per-run report
+  report.py             the per-run report and the per-source ingestion audits
   cli.py                `dawmans ingest`, `dawmans validate`, `dawmans inventory`
 ```
 
@@ -180,7 +185,8 @@ class LoadResult:
     record: SourceRecord
     regions: list[Region]
     rejection: Rejection | None   # set ⇒ regions empty, run still succeeds (1.6)
-    report: dict                  # audits: English ranges, glyph counts, anchor quality
+    audit: dict                   # run diagnostics: English ranges, glyph counts, anchor quality
+    sidecar: dict | None          # per-`passage_id` data for the view; None where there is none
 
 @dataclass(frozen=True)
 class Region:                     # exactly one section or one titled region (6.5, 6.7)
@@ -224,6 +230,7 @@ This is the whole output of the spec. Every `Passage` field comes from exactly o
 | `degraded` | OR over **all** the chunk's units | a flagless repeated heading contributes nothing, so a chunk of degraded rows stays degraded |
 | `has_figures` | OR over all the chunk's units | chunk-scoped, see §Figures |
 | `unbacked` | OR over all the chunk's units | set only by `TriageLoader`; carried unchanged (12.6) |
+| `entry_location` | the entry's own `source_file` and `line` | `authored-triage` only; supplied by `TriageLoader`, carried unchanged, and never an input to `passage_id` (12.6, CONTRACTS §2) |
 
 ### Source identity and discovery
 
@@ -243,8 +250,20 @@ title-cased vendor and product: `Ableton Live 12`. The version is **not** append
 its own `SourceRecord` field and CONTRACTS §3 requires it shown inline on the citation, so folding
 it into the display name renders it twice, and `(v12)` after "Live 12" reads as a duplicate.
 
-**`<slug>`** is the on-disk name of a source's shard and report: `source_id` with its single `/`
-replaced by `_`. One rule covers both kinds — the authored store's `source_id` is the constant
+**The expression above is a bijection, and two other specs now depend on that** (2.7). `doc_version`
+is captured **without** its leading `v`, so the inverse is exactly
+`f"{vendor}_{product}_{doctype}_v{doc_version}_{lang}.pdf"` and there is one reconstruction rule for
+every reader. `api/answer-engine` runs it to locate the PDF it serves for CONTRACTS §3a's
+open-at-source action, and again to assemble `required_manual` for a device with no ingested source
+(CONTRACTS §4e). Two things follow that did not before. No filesystem path is published on
+`SourceRecord` — the five fields already there reconstruct the name, and a published path would be a
+field the browser cannot use. And a `vendor-manual` named by a **live** index must stay readable at
+that name: the served bytes come from that file, so renaming it under a live index turns a citation's
+open action into a not-found rather than a stale document. Serving is a byte stream, so it needs no
+PDF library and the PyMuPDF confinement is unaffected.
+
+**`<slug>`** is the on-disk name of a source's shard, its ingestion audit and its view sidecar:
+`source_id` with its single `/` replaced by `_`. One rule covers both kinds — the authored store's `source_id` is the constant
 `authored/triage` (CONTRACTS §1), giving `authored_triage`. The underscore is the right substitute
 and `-` is not: the filename grammar forbids `_` inside `vendor` and `product` but allows `-`, so
 `/`→`-` would map `a/b-c` and `a-b/c` to the same shard, while `/`→`_` keeps them `a_b-c` and
@@ -260,7 +279,9 @@ Fingerprint is `sha256` over the file bytes. Change detection (9.3) compares it 
 meta; the reuse rule is in §Incremental behaviour. Removal (1.4) is deletion of any shard whose
 `source_id` is not in the current discovery set **for that shard's own store** — the store name is
 recorded on the shard so that 9.5's "do not test one kind against the other kind's store" holds by
-construction.
+construction. Removal takes the source's `shards/<slug>.sidecar.json` and `audits/<slug>.json` with
+it: an audit whose shard no longer exists describes nothing, and a sidecar left behind would be
+copied into the next view keyed to passages that are gone.
 
 **A missing store is not an empty store.** If `manuals/` or the authored entry store does not exist
 or cannot be read, that store's discovery set is *unknown*: no removal is performed for shards from
@@ -421,7 +442,7 @@ The APC front page prints its own language index (`English ( 3 – 6 )`, `Append
 It is deliberately **not** parsed: it is exactly the per-manual structure 4.2 forbids depending on,
 and content-side detection reaches p23 anyway, which is what 4.6 asks for.
 
-Audit (4.4), written to `index/reports/<slug>.json` and reported alongside the inventory (9.1):
+Audit (4.4), written to `index/audits/<slug>.json` and reported alongside the inventory (9.1):
 
 ```json
 {"english_pages": [[3,6],[23,23]], "excluded_pages": [[1,2],[7,22],[24,24]], "partial_pages": [1]}
@@ -465,7 +486,7 @@ Mapping, in order:
    match them and the citation is marked as containing unreadable characters.
 
 Counts (5.4): `glyph_spans_repaired`, `glyph_spans_degraded` and `unmappable_char_ratio` go in the
-source report. **The 5.5 ratio's denominator is every character extracted from the source's text
+source's ingestion audit. **The 5.5 ratio's denominator is every character extracted from the source's text
 layer, counted after furniture suppression and before language selection.** Furniture is repeated
 boilerplate that is never indexed and would dilute the ratio; language selection would make it
 depend on how much of the document is English, so a 2% arrow ratio in a quarter-English guide would
@@ -605,7 +626,7 @@ Scarlett Solo must not make it look documented, which is the case CONTRACTS §5 
 `api/answer-engine` 9.6 both depend on. Today the reports name `focusrite/scarlett-solo` and
 `akai/apc-key-25` respectively.
 
-Both reports are published as `index/gaps.json` (11.6), part of the read contract below.
+Both reports are published as `views/<hex>/gaps.json` (11.6), part of the read contract below.
 
 ---
 
@@ -627,14 +648,48 @@ index/
     vectors.npy               1.8 MB  float32 (N, 384), L2-normalised
     lexical/                  ~2 MB   bm25s save directory
     gaps.json                 ~1 KB   the two rig gap reports (11.4–11.6)
-  reports/<slug>.json         ~10 KB  English audit, glyph counts, anchor quality, rejections
+    reports/<slug>.json       ~10 KB  view sidecar — per-`passage_id` data the view's readers need
+  audits/<slug>.json          ~10 KB  ingestion audit: English ranges, glyph counts, anchor quality,
+                                      rejection reason
   shards/<slug>.passages.jsonl        per-source cache — the unit of incremental work
   shards/<slug>.vectors.npy
+  shards/<slug>.sidecar.json          only for a source whose loader publishes one
   shards/<slug>.meta.json
 ```
 
 `index/` is gitignored and derived: 8.6 rebuilds it from the two stores with no other input. Total
 under 15 MB, including the shards that duplicate the merged view.
+
+**There are two report locations because there are two lifetimes.** An *ingestion audit* — English
+page ranges, glyph counts, anchor quality, the rejection reason — is a diagnostic for one run over
+one source. It is keyed to the shard: it is rewritten only when that source is re-ingested, it must
+survive the shard being reused, and it has to stay findable after the view it accompanied has been
+collected. A *view sidecar* is data about the passages **in a view**, keyed by `passage_id` and read
+by `api/answer-engine` as part of the view it has just loaded. Today the only sidecar is the
+authored-triage one specified by [`data/symptom-triage`](../symptom-triage/design.md) §The sidecar.
+
+Neither location serves both. Beside the views, a sidecar has no atomic switch — `manifest.json`'s
+rename is the only one this spec offers — so it pairs with whichever view a reader happens to hold,
+which for the triage sidecar means entries dropped from turns they apply to and entries admitted
+into turns they do not (`api/answer-engine` 5.13). Inside the view, an audit is deleted with every
+superseded view, so the diagnostics for the run that rejected a source are gone by the end of the
+next run, and a reused shard's audit would have to be copied forward for a reader that never wanted
+it. So the audit stays beside the views and the sidecar moves inside, each with the lifetime of the
+thing it describes.
+
+**The sidecar is a shard artefact that the merge copies in**, written to `shards/<slug>.sidecar.json`
+beside that shard's passages and vectors and copied to `views/<hex>/reports/<slug>.json` at stage 12.
+It is not written into the view by the loader, because a reused shard runs no loader: a sidecar
+produced only by `load()` would be absent from every view built after the run that produced it. The
+copy is what makes "the sidecar and the passages it keys are the same revision" hold by construction
+for any source, rather than resting on the authored store's `load()` happening to run
+unconditionally (`data/symptom-triage` §Discovery).
+
+**The two directories are named differently on purpose.** A second `index/reports/` would put two
+files at the same basename `<slug>.json`, distinguished only by their parent, one keyed by
+`passage_id` and one not — and a reader resolving the wrong one finds a well-formed JSON document
+rather than an error. That is the same silent failure `data/symptom-triage` §The sidecar names for a
+hyphenated spelling, and `audits/` costs nothing to avoid it.
 
 **The merged view is a contract read by `api/answer-engine`.** What it may rely on:
 
@@ -645,7 +700,14 @@ under 15 MB, including the shards that duplicate the merged view.
   entry carries `row_start` and `row_count`, so scoping retrieval to selected sources is a slice,
   not a scan.
 - `sources.json` carries every `SourceRecord` field including `kind` and `hardware_applicability`
-  (9.1, 9.6, 11.6, 12.7); `gaps.json` carries both rig gap reports (11.6).
+  (9.1, 9.6, 11.6, 12.7); `gaps.json` carries both rig gap reports (11.6). It carries no filesystem
+  path: a `vendor-manual`'s filename is reconstructed from its own fields (2.7), and the reader that
+  serves the file resolves it under the store root it is configured with.
+- `reports/<slug>.json` is present for every source in `manifest.sources` whose loader publishes a
+  sidecar, at the `<slug>` rule below, and is of the same revision as `passages.jsonl`. A reader
+  derives the name and does not spell it; a missing sidecar for a source whose kind is known to
+  publish one is a fault to be raised, not an empty default (`api/answer-engine` §What the engine
+  reads).
 
 Sorting is load-bearing. If the order derived from filesystem iteration, `row_start` offsets could
 differ between two runs over an identical source set while `corpus_revision` — hashed over *sorted*
@@ -723,6 +785,13 @@ concatenation of committed shards rather than a mutable store needing deletion l
 replaces a source's shard wholesale, which is 9.4 — no chunk of the superseded version can survive
 because nothing merges from anywhere else.
 
+**A reused shard carries its sidecar and its audit forward untouched.** `shards/<slug>.sidecar.json`
+is copied into every view built from that shard, so a view always holds a sidecar for each source
+that has one, including sources this run skipped; `index/audits/<slug>.json` is simply not rewritten,
+which is correct — it describes the run that produced the shard being reused, and stamping it with
+this run would make a skipped source look freshly audited for the same reason `ingested_at` is
+carried through unchanged.
+
 **Commit ordering** — this is what makes 8.7 hold:
 
 1. Shard artefacts are written to `shards/<slug>.*.tmp` and moved into place with `os.replace`, one
@@ -734,7 +803,8 @@ because nothing merges from anywhere else.
    is complete. Building into the live paths would let a reader that has already loaded the manifest
    pair one version's `row_start`/`row_count` against another version's rows, breaking the
    row-correspondence guarantee; and `lexical/` is a directory, which cannot be swapped by a single
-   file rename at all.
+   file rename at all. The sidecars are copied in here, which is what extends that same guarantee to
+   them: no sidecar is ever written to a view a reader can already see.
 4. `manifest.json` is renamed into place last, so that rename is the only switch: a reader sees
    either the old manifest with the old view or the new manifest with the new view, never a mix.
 5. Views not named by the live manifest are deleted at the **start of the next run**, not
@@ -841,6 +911,9 @@ Generators produce the *model* types (`Region`, `Unit`, TOC entry lists, span ge
 | Cache-key mismatch | changing `ingestion_version` or the embedding model re-embeds every shard rather than reusing it (8.3) |
 | Authored per-passage reuse | editing one authored entry re-embeds that entry's passages and reuses every other row by `passage_id`; changing the embedding model re-embeds all of them (8.3) |
 | Pass ordering | an authored fix pointer whose target text this run repaired resolves, and is not flagged `unbacked` from the previous run's passages (12.6, triage 8.4) |
+| Sidecar revision pairing | every `passage_id` keyed in a view's `reports/<slug>.json` is present in that view's `passages.jsonl`; a second run that rewrites the authored shard leaves the previous view's sidecar byte-identical |
+| Sidecar survives reuse | a run in which every shard is reused still produces a view holding each source's sidecar, copied from the shard rather than regenerated |
+| Audit lifetime | a rejected source's `index/audits/<slug>.json` is still readable after two later runs have superseded the view it accompanied; removing the source deletes its audit and its shard sidecar |
 
 ### Fixtures
 

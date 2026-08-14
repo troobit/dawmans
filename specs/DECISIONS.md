@@ -719,3 +719,187 @@ Unblocks the design phase for all four specs, fixes what `AGENTS.md` records as 
 determines the `.gitignore`, CI and `Makefile` targets that follow from it.
 
 ---
+
+## Decision 11: Govern every seam in CONTRACTS, including the stream and the answer body
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+Six contract defects were open, each found from **both** ends of its seam — named in the design of
+the spec that produces it and in the design of the spec that consumes it, and listed in
+`OVERVIEW.md`. A ranked cause list had no envelope representation; error detail had no envelope
+field, though §6 asserted that a rate-limited outcome "carries a retry-after"; open-at-source was
+mandatory on any citation and unbuildable in a browser tab; the typed blocks riding in `body` had no
+grammar and no criterion rendering them; no SSE event set was governed, so `scope_dropped` and
+`framing` were produced with nobody obliged to render them; and `no-manual-for-device` was defined as
+naming a filename the engine never sent.
+
+Five of the six share one shape. Decision 6 catches a produced-but-unconsumed capability by a join
+between what one spec emits and what another must consume, and that join can only range over what
+`CONTRACTS.md` enumerates. Where the seam was a **stream**, a **grammar** or an **activation** rather
+than a record field, there was nothing to join against — so the defect was invisible to exactly the
+review that Decision 6 exists to make possible. `scope_dropped` is the clearest case: it exists
+because `api/answer-engine` 5.11 requires a pruned scope be reported "rather than applying it
+silently", and no criterion anywhere rendered it.
+
+Three amendments were drafted and judged under three lenses — whether each defect actually closes,
+what the blast radius across the four specs is, and whether an engine and a browser surface could
+build the result and test it.
+
+### Decision
+
+`CONTRACTS.md` governs **every seam, whatever its shape**, as a closed set with a named consumer per
+member. It gains four new closed sets with the same standing as the four records — the turn's SSE
+event set (§4b), the `Cause` record (§4c), the `body` block and inline types (§4d), and
+`required_manual` (§4e) — plus an engine-mediated open-at-source contract (§3a) and a reason
+vocabulary beside the outcome taxonomy (§6a). `AnswerEnvelope` gains `suggested_sources[]`,
+`causes[]`, `required_manual`, `scope_dropped[]`, `reason`, `retry_after`, `detail` and `framing`;
+`Passage` and `Citation` gain `entry_location`; §6 gains `ranked-causes`, reaching 17 members.
+
+Six rules carry the amendment:
+
+1. **Every stream event carries a §3 or §4 field, and `done` is the only exception.** The rendering
+   obligation is stated once, on the field; the event table names the criterion that discharges it.
+   One truth, one place, and a mechanical audit across the two tables.
+2. **A value a consumer must act on is a field, never a substring.** `!suggest` leaves `body` for
+   `suggested_sources[]`; the filename leaves the prose for `required_manual`; the entry's file and
+   line leave the sidecar for `entry_location`.
+3. **A distinction finer than §6 goes in `reason`, never in a new outcome.** §6 grows only for a
+   distinct *renderer* — which is why `ranked-causes` is a member and `authentication-failed` is not.
+4. **Three different unknown-member rules, stated together.** An unknown event is ignored; an unknown
+   `body` block keeps its text and loses its wrapper; an unknown outcome is a broken state. The
+   stream is data, the body is presentation, and an outcome selects the renderer.
+5. **Open-at-source is engine-mediated and takes no path from the caller.** One new operation serves
+   a vendor manual inline at `#page=N`; the authored kind reuses the fetch-passage operation that
+   already exists and adds none.
+6. **A member with no stated obligation is a defect in the table it sits in**, and a debt to a
+   criterion not yet written is marked with a dagger rather than left implicit.
+
+### Rationale
+
+The base is the fullest of the three drafts, which scored highest in aggregate and won the
+implementability lens outright, with grafts every judge named taken from the other two and every
+fatal flaw repaired. It is chosen because the *cause* of five of six defects is that CONTRACTS
+governed only record fields; patching the fields without governing the seams would close these six
+and leave the mechanism that produced them intact.
+
+Rule 1 is the repair for the strongest objection to that base — that a governed event table restates
+what the field table already says, giving one truth two places to drift between. Naming the carrier
+and the discharging criterion, rather than restating the obligation, makes the second table a join
+rather than a duplicate.
+
+Where a graft was cheaper than the base, it was taken. Citations inside a `Cause` are `passage_id`
+references into the envelope's one `citations[]`, not nested records: the consumer already keys its
+citation map that way, and a second citation channel would make §3's five inline obligations
+something to satisfy twice. The authored open-at-source needs no new route, because
+`GET /passages/{id}` already returns the entry's text and the surface already reveals it in place —
+which removes a loopback endpoint whose only purpose would have been launching a process. No
+filesystem path is published on `SourceRecord`, because the filename grammar is a bijection over
+fields already on that record; the amendment states the reconstruction and settles the one ambiguity
+in it (`doc_version` excludes the leading `v`). `required_manual` carries `placeholders[]`, which is
+what lets the surface say *which* parts the user must supply without splitting a human-facing string.
+
+The three drafts' costs are all real and all paid deliberately: `CONTRACTS.md` grows from 187 lines
+to roughly 500 and takes on transport and grammar concerns; five criteria are added across two specs;
+§6 grows by one member, which obliges the engine's classification, its outcome-totality property, the
+evaluation confusion matrix and the surface's renderer union to change together.
+
+### Alternatives Considered
+
+- **Minimal surface — close every defect with the smallest addition to an existing record, keep §6
+  at 16 members, and refuse to govern the stream.** A signal that must be rendered becomes a field;
+  everything else on the wire stays the engine's business, and `scope_dropped` is closed by hoisting
+  it rather than by governing thirteen event names. It has the best ratio of defects closed to
+  criteria touched, and several of its positions were taken outright (see the grafts above).
+  Rejected as the base on three counts. It leaves incremental delivery unenforceable — its two stream
+  obligations are satisfied by an engine that buffers the whole answer and sends it at the end, so
+  nothing requires `direct_answer` before the first `body_delta`, which is the fact the surface's
+  no-reflow parser leans on and which UI 4.3 points at. Its closed block set drops **key terms**,
+  which §4 has always carried and which UI 4.4 and the [T] criterion 4.12 both consume — a silent
+  drop of a governed structure, committed while amending the file that forbids it. And carrying the
+  cause list on `partially-answered` collides with UI 4.8, which requires that outcome to render as a
+  normal answer, so a conforming surface would route a cause turn to the answer renderer.
+- **Layered — narrow `CONTRACTS.md` to records and add a second governing `WIRE.md` for transport**,
+  with a precedence rule and three join rules to keep Decision 6's audit running across two files.
+  Its individual devices were the best of the three and several are adopted here — the
+  discharged-by-criterion column, the dagger convention, `placeholders[]`. Rejected as a structure.
+  `PROCESS.md` §10's split test is written for a *large* spec that has acquired separate owners,
+  platforms or change cadences; `CONTRACTS.md` is 187 lines with one producer, one consumer, one
+  repo and one author, and neither the route list nor the event set has churned once. It also weakens
+  Decision 6 in rationale rather than in wording: that decision's stated reason is that "a single
+  governing document is the smallest artefact that gives the seams an owner", and its recorded
+  negative is that such a document goes stale when reconciliation is skipped — doubling the surface
+  doubles that exposure. Its own text then wrote one truth in two places, putting the `body` block
+  set's obligation in CONTRACTS and its spelling in WIRE, so a subordinate document controlled the
+  extent of a governing obligation.
+- **A polymorphic `details[]` of typed payloads for the error detail**, as the mature RPC error
+  models use. Rejected in the contract text itself: it requires the consumer rule *ignore the detail
+  types you do not know*, which legalises produced-but-unconsumed detail by construction — the exact
+  defect class Decision 6 exists to catch — and it buys extensibility for one producer and one
+  consumer that ship together.
+- **Grow the outcome taxonomy to carry the error distinctions**, adding members for a missing
+  credential and a rejected one. Rejected because a closed taxonomy both sides must render
+  exhaustively stops being enumerable at that rate, and every addition is a coordinated change across
+  four artefacts. The distinctions live in `reason`, which grows without touching §6.
+- **Capability negotiation at connect, or a per-message must-understand flag**, to enforce "render
+  every event you do know" on the wire rather than by review. Rejected as disproportionate: both are
+  dynamic machinery for open ecosystems with independently versioned peers, and both add a handshake
+  and a second failure mode to a single-client localhost application in order to remove a review
+  step. The honest cost of not building them is stated in §4b and mitigated by a consumer test
+  asserting one rendering path per governed event.
+
+### Consequences
+
+**Positive:**
+- All six defects close, each with a field or a table a reviewer can point at, and `scope_dropped`
+  and `framing` acquire obliged consumers for the first time.
+- The mechanism that produced five of them is closed too: a stream, a grammar and an activation are
+  now joinable surfaces, so the next produced-but-unconsumed capability of that shape is visible to
+  the same audit that catches a record field.
+- Every value a consumer acts on is addressable. Nothing is recovered by parsing prose, and `detail`
+  is declared unparsed, so the engine stays free to reword its own diagnostics forever.
+- Two false premises are struck rather than worked around: that a browser tab can open a local file
+  at a location, and that the engine's operation count is eight. The surface's assumption now names
+  the operation list, so the next route is an amendment rather than a defect.
+- The engine's HTTP surface grows by one operation, not two, and gains no process launcher.
+
+**Negative:**
+- `CONTRACTS.md` roughly triples, to about 500 lines, and stops being purely a record contract. A
+  future non-SSE transport — a WebSocket, or a non-streaming batch route — now edits the governing
+  file rather than a subordinate one.
+- "Render every event you do know" has no wire enforcement. Nothing detects a surface that quietly
+  stops rendering `scope_dropped`; it is held by review and by one test that has to be written and
+  kept.
+- §6 grew, and the precedent is one new outcome per new renderer. That is the mechanism by which a
+  closed taxonomy stops being enumerable by hand, and it obliges a coordinated change across the
+  engine's classification, its properties, the evaluation set and the surface's renderer union.
+- Two candidate-bearing shapes now sit side by side. `narrowing` and `causes[]` look alike in the
+  data and are opposite in affordance, and only two criteria hold them apart.
+- Applicability of the flat optional members lives in prose, not in the type. Nothing structurally
+  prevents a `retry_after` on `answered`; only the field table and review catch it, and each new need
+  costs another row.
+- `detail` is an unbounded string the engine fills from provider exception text and the surface
+  renders. Its content rule is stated, but it is a filter someone must build, and in a system holding
+  a provider key it is the likeliest leak path — one that now has a rendered home it did not have
+  before.
+- Serving PDF bytes from a loopback endpoint enlarges the surface that localhost servers are attacked
+  through. Refusing a caller-supplied path and resolving from the loaded index are the load-bearing
+  mitigations, but the endpoint exists now and a bad path resolution in it is a filesystem read
+  primitive.
+- One residual is not closed and is recorded as such: `required_manual.filename` carries named
+  placeholders for a document the engine has never seen, so UI 7.7 is weakened from "the exact
+  filename" to "the filename with the fields the document supplies".
+
+### Impact
+
+Amends `CONTRACTS.md` §§1–4, adds §3a, §4b, §4c, §4d, §4e and §6a, and amends §6 and §7. Reconciles
+all four specs against it: `api/answer-engine` 1.4, 1.10, 1.12, 2.3, 2.5, 2.9, 2.10, 3.2, 5.11, 6.6,
+6.8, 6.15, 7.6, 9.4, 9.9 and two new criteria (9.14, 9.15); `ui/ask-and-source-picker` 4.4, 5.5, 6.6,
+7.4, 7.7, 9.3, 9.4, 9.5, 9.8, 9.9, 9.10, three new criteria (3.11, 5.19, 9.19), one Non-Goal and two
+Assumptions; `data/manual-corpus` 2.7 (new) and 12.6; `data/symptom-triage` 1.5 and 3.5. The
+"Requirements defects to reconcile" sections of both designs are discharged in place, with what
+closed each item rather than by deletion.
+
+---

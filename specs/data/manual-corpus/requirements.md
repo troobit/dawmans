@@ -121,6 +121,18 @@ that citations name the right product and version without a separate registry to
    pattern, and SHALL NOT index any of its content.
 6. <a name="2.6"></a>WHEN two sources resolve to the same source ID, the system SHALL reject both
    and report the collision, rather than silently indexing one of them.
+7. <a name="2.7"></a>The system SHALL treat the filename grammar of [2.1](#2.1)–[2.3](#2.3) as a
+   **published convention that two other specs reproduce**, and SHALL keep the fields it derives in
+   [2.4](#2.4) sufficient to rebuild the filename exactly: `api/answer-engine` rebuilds it to locate
+   the PDF it serves for the open-at-source action of `CONTRACTS.md` §3a, and assembles it again for
+   a device with no ingested source (`CONTRACTS.md` §4e). The system SHALL therefore publish
+   `doc_version` **without** the leading `v`, as [2.4](#2.4) already derives it, so that one
+   reconstruction rule holds for every consumer; and a change to this grammar SHALL be treated as a
+   change to those consumers and not as a change this spec can make alone. WHILE an index is the live
+   one, each `vendor-manual` it names SHALL remain readable at the filename its identity was derived
+   from — the served bytes come from that file, so a source renamed underneath a live index is a
+   not-found rather than a stale document. Serving those bytes re-parses nothing and requires no PDF
+   library.
 
 ## 3. Text Extraction Fidelity
 
@@ -450,7 +462,10 @@ answerable without a second pipeline and without pretending the manufacturer sai
    whatever that spec declares valid, SHALL NOT restate or duplicate its rules, and SHALL treat a
    source that spec reports as invalid as a **rejection** ([1.6](#1.6)) rather than a failure. The
    `unbacked` flag of CONTRACTS §2 is owned by that spec; this spec SHALL carry it on the emitted
-   `Passage` unchanged and SHALL NOT set, clear or derive it.
+   `Passage` unchanged and SHALL NOT set, clear or derive it. The same holds for `entry_location`
+   (CONTRACTS §2), the authored entry's file and line: this spec publishes it to
+   `api/answer-engine` alongside the passage it belongs to, unchanged, and SHALL NOT derive it or let
+   it enter `passage_id`.
 7. <a name="12.7"></a>The system SHALL publish each source's `kind` to `api/answer-engine` and
    `ui/ask-and-source-picker` alongside the corpus inventory ([9.6](#9.6)), because kind
    determines what a source is trusted for (CONTRACTS §4a) and CONTRACTS §3 requires it to be

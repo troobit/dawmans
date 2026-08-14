@@ -76,7 +76,10 @@ tooling exercise.
    and SHALL reject an entry with more. A list longer than six is a reference chapter, not a
    triage order, and destroys the ranking that makes the entry useful.
 5. <a name="1.5"></a>The system SHALL preserve the author's declared cause order exactly, and SHALL
-   NOT re-order, merge or deduplicate causes during ingestion.
+   NOT re-order, merge or deduplicate causes during ingestion. That order is now load-bearing on a
+   second spec: it becomes the `rank` of CONTRACTS §4c, which `api/answer-engine` 7.6 emits and
+   `ui/ask-and-source-picker` 6.6 shows, so a reordering here would silently change which cause the
+   user is told is most likely.
 6. <a name="1.6"></a>The system SHALL hold entries in a location the author owns, sibling to the
    manuals directory, and SHALL discover them by scanning it on every ingestion run rather than
    from any hard-coded list of expected entries.
@@ -160,8 +163,15 @@ manual or on a note I wrote myself, so that I can weigh it accordingly without o
 5. <a name="3.5"></a>The system SHALL record no `page_start` and no `page_end` for an authored
    passage and SHALL NOT synthesise either, per CONTRACTS §2's rule for pageless sources. It SHALL
    supply the entry's symptom statement as the location the citation carries, and the entry itself
-   as the target the one-activation action of CONTRACTS §3 resolves to in place of a PDF page. How
-   both are rendered is CONTRACTS §3's rule and is not restated here.
+   as the target the one-activation action of CONTRACTS §3a resolves to in place of a PDF page. That
+   target SHALL be published as `entry_location` (CONTRACTS §2) — the entry's file and the line its
+   symptom heading sits on, as **one opaque display string `<path>:<line>`** with the path relative
+   to the repository root, which is the form the store's own layout ([1.6](#1.6)) already produces.
+   It is now user-visible and copyable, so that root SHALL be held stable. `entry_location` SHALL NOT
+   contribute to the entry's identity ([1.8](#1.8)) or to any passage identifier: the author moves
+   entries between files and re-lines them on every edit, and an identifier that moved with them
+   would orphan every retained citation. How both are rendered is CONTRACTS §3 and §3a's rule and is
+   not restated here.
 6. <a name="3.6"></a>The system SHALL record every authored passage as not `degraded` and without
    figures: authored text is plain, is written by the user, and has no image content to point at.
 7. <a name="3.7"></a>The system SHALL resolve every passage and citation drawn from an entry to the

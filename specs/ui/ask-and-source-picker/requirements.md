@@ -211,6 +211,13 @@ governing a question asked days later mid-take.
     indicator in a state visibly distinct from the all-sources state; and WHEN the engine names an
     out-of-scope source as a likely holder of the answer ([7.4](#7.4)), the system SHALL attribute
     the gap to the narrowing then in force rather than presenting it as an absence of documentation.
+11. <a name="3.11"></a>**[B]** WHEN the engine reports `scope_dropped[]` on a turn — sources it
+    removed from the carried scope because the corpus no longer holds them (`CONTRACTS.md` §4,
+    `api/answer-engine` 5.11) — the system SHALL name the dropped sources **with that turn**, SHALL
+    state that the corpus no longer holds them, and SHALL NOT present the narrowed scope as the
+    user's own choice. This is a prune the **engine** performed on the turn just asked, and is a
+    different subject from [3.8](#3.8), which drops a stale id from this surface's **own store** at
+    load time, before any turn exists, and is silent because there is nothing yet to report.
 
 ---
 
@@ -228,9 +235,19 @@ back to playing.
    position of text that has already been rendered, except in response to the user scrolling.
 3. <a name="4.3"></a>**[B]** The system SHALL render the envelope's `direct_answer` first, with
    supporting detail and citations following it, in the order supplied by `api/answer-engine`.
-4. <a name="4.4"></a>**[B]** The system SHALL render structural markers supplied in the answer body
-   (headings, ordered steps, key terms) as visually distinct scannable elements rather than as an
-   undifferentiated block of prose.
+4. <a name="4.4"></a>**[B]** The system SHALL render **every** block and inline type in the closed
+   set of `CONTRACTS.md` §4d as a visually distinct scannable element rather than as an
+   undifferentiated block of prose: headings, ordered steps, bullets, paragraphs, key terms, the
+   citation marker, and the two typed blocks that surface has not previously carried —
+   - a **`!caveat`** block, rendered in the reading position it appears in, visually distinct and
+     **never behind a disclosure**: it is the warning that a recommendation depends on a Live edition
+     or add-on the rig lacks (`CONTRACTS.md` §8), and a caveat dropped or hidden is worse than none;
+   - a **`!conflict`** block, rendering both readings with their separate citations, neither
+     presented as the answer and neither chosen for the user.
+
+   WHERE a block's first line matches no type in that set, the system SHALL render the block's text
+   content as a paragraph — dropping the wrapper it does not know and **never emitting nothing** —
+   and SHALL NOT re-type a block whose painting has begun ([4.2](#4.2)).
 5. <a name="4.5"></a>**[B]** WHEN an answer contains a sequence of steps, the system SHALL render
    each step as a separately identifiable line or block.
 6. <a name="4.6"></a>**[B]** WHEN streaming completes, the system SHALL mark the answer as
@@ -285,11 +302,19 @@ or reject the summary in seconds.
    placed behind a disclosure.
 4. <a name="5.4"></a>**[B]** WHERE a citation carries `has_figures`, the system SHALL render "figure
    on p*N*" with the citation, naming the figure's page.
-5. <a name="5.5"></a>**[B]** Every citation SHALL offer a **one-activation action that opens the
-   cited source at the cited location**, reachable by keyboard (`CONTRACTS.md` §3): for a
-   `vendor-manual`, the source PDF at the cited page, so that a citation is never a dead-end string
-   in a 1009-page document; for an `authored-triage` source, which has no pages, the entry itself,
-   so that a wrong entry can be corrected at the moment it is discovered.
+5. <a name="5.5"></a>**[B]** Every citation SHALL offer a **one-activation action that puts the user
+   at the cited location**, reachable by keyboard, by the two mechanisms `CONTRACTS.md` §3a governs
+   and by no other. For a `vendor-manual`: open the engine's **serve-document** operation for that
+   `source_id` in a new tab, at the fragment **`#page=N` and nothing else**, `N` being the citation's
+   page — the document is served from the engine's own origin, so the browser's own viewer honours
+   the fragment and a citation is never a dead-end string in a 1009-page document. The system SHALL
+   NOT append a zoom, a view or a text directive to that fragment, which disables the jump in at
+   least one browser's viewer. For an `authored-triage` source, which has no pages: reveal the
+   entry's own text **in place**, through the passage the citation already addresses ([5.6](#5.6)),
+   with its `entry_location` shown and copyable ([5.19](#5.19)), so that a wrong entry can be
+   corrected at the moment it is discovered. The system SHALL NOT attempt to reach a `file://` URL
+   for either kind: a tab served over `http://` cannot, and the refusal is silent, so the control
+   would be dead rather than unavailable.
 6. <a name="5.6"></a>**[B]** WHEN a citation is expanded, the system SHALL fetch the underlying
    passage from the engine's fetch-passage operation using the citation's `passage_id` — the passage
    text does not arrive with the answer — and SHALL display it verbatim, visually distinguishable
@@ -333,6 +358,13 @@ or reject the summary in seconds.
 18. <a name="5.18"></a>**[T]** Expanding a citation SHALL feel immediate. **Target:** passage text
     painted within 150 ms of activation, against the engine's ≤ 50 ms p95 fetch. **Band:** ≤ 300 ms;
     beyond that a working indicator ([8.2](#8.2)) appears rather than an empty area.
+19. <a name="5.19"></a>**[B]** WHERE a citation carries `entry_location` — an `authored-triage`
+    citation does, a `vendor-manual` citation does not (`CONTRACTS.md` §3) — the system SHALL show
+    the entry's file and line with the open-at-source action of [5.5](#5.5) and SHALL make that
+    string copyable in a single activation, so the user can reach the entry in whatever editor they
+    already have open. It SHALL NOT be placed in the location slot of [5.1](#5.1), which
+    [5.15](#5.15) fills with the entry's symptom title, and SHALL NOT be rendered as a section or a
+    page.
 
 ---
 
@@ -361,13 +393,18 @@ a keystroke rather than a retyped question.
    typing a free-text reply or an entirely new question — without first dismissing the candidate
    list, and typing a printable character other than an armed digit SHALL begin that reply
    ([1.2](#1.2)).
-6. <a name="6.6"></a>**[B]** WHEN the engine returns a **ranked list of candidate causes** instead
-   of a further narrowing question, the system SHALL render the causes in the engine's order, each
-   with its citations (§5), the check that would confirm or eliminate it, and the vendor-manual
-   citation for the fix, rendered as an ordinary citation (§5) and distinct from the authored cause
-   it belongs to ([5.14](#5.14)). WHERE the engine supplies no fix citation, the cause SHALL carry
-   the `unbacked` mark of [5.16](#5.16) rather than simply appearing without one. The system SHALL
-   show the ranking and SHALL NOT present the first cause as the answer.
+6. <a name="6.6"></a>**[B]** WHEN the engine returns the outcome `ranked-causes` — a **ranked list of
+   candidate causes** instead of a further narrowing question — the system SHALL render `causes[]`
+   (`CONTRACTS.md` §4c) in array order, showing each cause's `rank`, its `check`, and the citations
+   its `cites[]` and `fix_cites[]` name, resolved through the turn's own `citations[]` by
+   `passage_id`. The fix citation SHALL render as an ordinary citation (§5), distinct from the
+   authored cause it belongs to ([5.14](#5.14)). WHERE a cause's `fix_cites[]` is empty, the cause
+   SHALL carry the `unbacked` mark of [5.16](#5.16) rather than simply appearing without a fix. The
+   system SHALL show the ranking and SHALL NOT present the first cause as the answer. Causes are
+   **findings to read, not controls**: the system SHALL NOT render them as the activatable,
+   digit-armed candidates of [6.2](#6.2)–[6.3](#6.3), which is what distinguishes this state from a
+   narrowing question. The rank-1 cause's check arrives as `direct_answer` and is rendered first per
+   [4.3](#4.3), which is what keeps [4.10](#4.10) and [11.7](#11.7) reachable on this outcome.
 7. <a name="6.7"></a>**[B]** The system SHALL retain a narrowing exchange in history (§12) as part
    of the thread it belongs to, and SHALL NOT retain it as a standalone unanswered question.
 8. <a name="6.8"></a>**[T]** A narrowing question SHALL arrive at least as fast as an answer would.
@@ -396,8 +433,9 @@ and when nothing ingested will ever hold it, I want to be told that instead of r
 3. <a name="7.3"></a>**[B]** The state SHALL name the sources that were in scope when the question
    was asked.
 4. <a name="7.4"></a>**[B]** WHEN the engine names one or more out-of-scope sources that may contain
-   the answer, the system SHALL offer a control that adds those sources to scope and re-asks the
-   same question in a single activation.
+   the answer — `suggested_sources[]` on the envelope (`CONTRACTS.md` §4), each an addressable
+   `{source_id, display_name}` and not a substring of the rendered answer — the system SHALL offer a
+   control that adds those sources to scope and re-asks the same question in a single activation.
 5. <a name="7.5"></a>**[B]** WHEN no candidate source is suggested and out-of-scope sources exist,
    the system SHALL offer a control that widens scope to all sources and re-asks the same question
    in a single activation — EXCEPT for the `out-of-domain` and `no-manual-for-device` outcomes,
@@ -408,9 +446,16 @@ and when nothing ingested will ever hold it, I want to be told that instead of r
    neither a manual nor the authored triage notes — covers it, SHALL suppress source suggestions
    and widen-and-retry, and SHALL leave the question re-editable ([1.4](#1.4)).
 7. <a name="7.7"></a>**[B]** WHEN the engine returns `no-manual-for-device`, the system SHALL name
-   the `required_device` and the **exact filename** to add to `manuals/` in the convention that
-   directory's README documents, in a form copyable in one activation, and SHALL state that
-   ingestion must be re-run for it to take effect.
+   the `required_device` and SHALL state that ingestion must be re-run for the manual to take
+   effect. WHERE the engine supplies `required_manual` (`CONTRACTS.md` §4e), the system SHALL render
+   its `filename` in a form copyable in one activation and SHALL name the fields listed in
+   `placeholders[]` as the parts the user must fill from the document they obtain. It SHALL NOT
+   derive those fields by splitting `filename`, which is a human-facing value, and SHALL NOT
+   synthesise a filename where `required_manual` is absent — it SHALL then name the convention that
+   `manuals/` README documents together with the device, since a wrong name is worse than none and
+   ingestion rejects it (`data/manual-corpus` 2.5). The filename cannot be **exact** for a document
+   the engine has never seen: its doctype, version and language are unknowable until the user holds
+   it, and naming them as placeholders is the honest limit rather than a guess.
 8. <a name="7.8"></a>**[B]** WHEN all available sources were already in scope, the system SHALL say
    so and SHALL NOT offer widen-and-retry; it SHALL instead offer the next action available to it —
    the device-and-filename action of [7.7](#7.7) where a required device was named, and otherwise
@@ -489,15 +534,28 @@ to do about it in one screen, so that I fix it instead of reading a stack trace.
    SHALL offer at least one next action, presented as an activatable control where an in-app action
    exists.
 3. <a name="9.3"></a>**[B]** The system SHALL make underlying diagnostic detail available behind an
-   explicit disclosure on every error state, for debugging.
+   explicit disclosure on every error state, for debugging, and SHALL make the same disclosure
+   available on any turn the engine reports as `framing: unparsed` (`CONTRACTS.md` §4) — an answer
+   whose framing did not parse is a degraded rendering whether or not it failed. The disclosure
+   SHALL render the engine's `detail`, its `framing` and `timings`, and this surface's own per-turn
+   marks, and nothing else. No criterion in this spec may recover a machine fact by parsing
+   `detail`: `CONTRACTS.md` §4 declares it unparsed, so anything this surface acts on — which case a
+   failure is, how long to wait, which filename to add — is its own field.
 4. <a name="9.4"></a>**[B]** The system SHALL render every outcome in the taxonomy of
-   `CONTRACTS.md` §6 and SHALL NOT present an outcome the engine cannot emit. An outcome it does not
-   recognise SHALL be rendered as a broken state carrying the engine's own wording, rather than
-   being discarded or shown as an answer.
+   `CONTRACTS.md` §6 — all 17, `ranked-causes` ([6.6](#6.6)) included — and SHALL NOT present an
+   outcome the engine cannot emit. An outcome it does not recognise SHALL be rendered as a broken
+   state carrying `detail`, rather than being discarded or shown as an answer: an outcome selects
+   the renderer, so a turn whose renderer is unknown cannot be trusted to any renderer. This is
+   deliberately the opposite of the rule for an unknown stream event, which is ignored
+   ([9.19](#9.19)), and for an unknown answer-body block, which degrades to its text
+   ([4.4](#4.4)) — `CONTRACTS.md` §4b states all three together.
 5. <a name="9.5"></a>**[B]** WHEN the engine reports `provider-unconfigured`, the system SHALL state
-   which case it is — no provider chosen at all, or a **keyed hosted** provider chosen without a key
-   — and SHALL offer a control that opens provider configuration (§10) directly, preserving the
-   typed question. A configured **local** provider or the **shared backend** SHALL NEVER be reported
+   which case it is, keyed on the `reason` sub-code of `CONTRACTS.md` §6a and never on the wording
+   in `detail`: `no-provider-kind` (no provider chosen at all), `missing-credential` (a **keyed
+   hosted** provider chosen without a key), or `disclosure-unacknowledged` (the shared backend
+   chosen with its disclosure not yet acknowledged, [10.4](#10.4)). In each case it SHALL offer a
+   control that opens provider configuration (§10) directly, preserving the typed question. A
+   configured **local** provider or the **shared backend** SHALL NEVER be reported
    as unconfigured on account of having no key ([10.3](#10.3)).
 6. <a name="9.6"></a>**[B]** WHEN the engine reports `provider-unreachable`, the system SHALL name
    the configured provider, SHALL distinguish this from a coverage failure (§7), SHALL preserve the
@@ -507,18 +565,22 @@ to do about it in one screen, so that I fix it instead of reading a stack trace.
    `provider-unreachable` — the engine draws that distinction deliberately and this surface SHALL
    NOT collapse the two — SHALL preserve the question, and SHALL offer a retry control.
 8. <a name="9.8"></a>**[B]** WHEN the engine reports `provider-rate-limited`, the system SHALL state
-   that the provider is rate-limiting and SHALL render the **retry-after value** as a concrete wait,
-   counting it down where one is supplied and enabling the retry control when it elapses. WHERE no
-   retry-after is supplied, the system SHALL say so rather than inventing an interval.
-9. <a name="9.9"></a>**[B]** WHEN the engine reports `provider-error`, the system SHALL state that
+   that the provider is rate-limiting and SHALL render `retry_after` (`CONTRACTS.md` §4) as a
+   concrete wait, counting it down where one is supplied and enabling the retry control when it
+   elapses. WHERE `retry_after` is absent — which `CONTRACTS.md` §6 permits, because a provider need
+   not state an interval — the system SHALL say so rather than inventing one, and SHALL NOT render
+   the absence as a fault. It MAY round the value for display.
+9. <a name="9.9"></a>**[B]** WHEN the engine reports `provider-error` with `reason:
+   provider-rejected` (`CONTRACTS.md` §6a), the system SHALL state that
    the provider failed or rejected the request — distinctly from `provider-unreachable`
-   ([9.6](#9.6)) and from `timeout` ([9.7](#9.7)) — SHALL carry the engine's own wording for it in
-   the diagnostic disclosure of [9.3](#9.3), SHALL preserve the question, and SHALL offer a retry
-   control.
-10. <a name="9.10"></a>**[B]** WHERE a `provider-error` is caused by an invalid or expired
-    credential, the system SHALL say so specifically and SHALL offer a control that opens provider
-    configuration (§10) in place of the retry of [9.9](#9.9), since a retry on the same credential
-    cannot succeed.
+   ([9.6](#9.6)) and from `timeout` ([9.7](#9.7)) — SHALL carry `detail`, the engine's own wording
+   for it, in the diagnostic disclosure of [9.3](#9.3), SHALL preserve the question, and SHALL offer
+   a retry control.
+10. <a name="9.10"></a>**[B]** WHERE a `provider-error` carries `reason: authentication-failed`
+    (`CONTRACTS.md` §6a) — the credential was rejected — the system SHALL say so specifically and
+    SHALL offer a control that opens provider configuration (§10) **in place of** the retry of
+    [9.9](#9.9), since a retry on the same credential cannot succeed. It SHALL key that branch on
+    the sub-code alone and SHALL NOT infer it from the wording in `detail`.
 11. <a name="9.11"></a>**[B]** WHEN the engine reports `unknown-source-id`, the system SHALL name
     the identifier that was rejected, SHALL drop it from the stored scope ([3.8](#3.8)), and SHALL
     offer to re-ask against the remaining scope in one activation.
@@ -535,7 +597,7 @@ to do about it in one screen, so that I fix it instead of reading a stack trace.
     retain the partial text, SHALL mark it explicitly as incomplete rather than as a finished answer
     ([4.6](#4.6)), and SHALL offer a retry.
 15. <a name="9.15"></a>**[B]** The system SHALL NOT submit a question longer than **1000
-    characters** — the limit `api/answer-engine` 9.9 enforces — and SHALL state the limit and the
+    characters** — the limit `api/answer-engine` 9.12 enforces — and SHALL state the limit and the
     length typed while the question remains editable ([1.4](#1.4)). WHERE the engine nevertheless
     rejects a request as malformed, which carries no outcome and no answer envelope and so is not
     covered by [9.4](#9.4), the system SHALL render it as a broken state naming what was rejected
@@ -550,6 +612,14 @@ to do about it in one screen, so that I fix it instead of reading a stack trace.
     answers. **Target:** the error's one-line summary and its action are both readable at the
     distance in [11.2](#11.2) without expanding anything. **Band:** summary readable at that
     distance; the action readable within one step closer.
+19. <a name="9.19"></a>**[B]** WHEN the engine declares a turn-stream version the system does not
+    know (`CONTRACTS.md` §4b), the system SHALL refuse the turn and render a broken state naming
+    both versions, rather than reading the stream and half-rendering it. Such a state carries no
+    outcome and is not covered by [9.4](#9.4), for the same reason as the malformed-request
+    rejections of [9.15](#9.15): no turn is being described. Conversely, an **event name** the
+    system does not know within a version it does know SHALL be ignored and SHALL NOT fail the turn
+    — that is what lets the engine add an event without breaking a running client — and the system
+    SHALL render or act on every event that table does name.
 
 ---
 
@@ -742,8 +812,12 @@ reader knows they were weighed, not overlooked.
   Responsive behaviour below tablet width is not a goal.
 - **PDF ingestion, parsing, or an in-app manual reader.** Owned by `data/manual-corpus`. This
   surface shows cited passages and hands the cited source off to be opened at its cited location —
-  the operating system's PDF viewer for a vendor manual, the entry itself for an authored triage
-  source ([5.5](#5.5)); it does not render, page through, or search whole documents itself.
+  **the browser's own PDF viewer**, in a new tab, against the document the engine serves
+  ([5.5](#5.5), `CONTRACTS.md` §3a); it does not render, page through, or search whole documents
+  itself. The authored kind is the one exception, and it is not a reader: an authored entry has no
+  document to open, so its citation reveals **that entry's own passage text** in place, which
+  [5.6](#5.6) already does for every citation. Nothing here paginates, searches or indexes a
+  document.
 - **Retrieval, grounding, synthesis quality, citation generation, or the narrowing judgement.**
   Owned by `api/answer-engine`. This spec renders what that engine emits.
 - **Declaring or editing the rig inventory.** The picker *surfaces* owned-but-undocumented gear
@@ -758,9 +832,11 @@ reader knows they were weighed, not overlooked.
   other, and marked as the user's own ([5.14](#5.14)). What remains excluded is anything uncited,
   which would destroy the trust the citation model is built on.
 - **Authoring or editing the triage source.** The picker selects it ([2.12](#2.12)), citations
-  attribute it ([5.14](#5.14)), and the open-at-source action hands a wrong entry off to be
-  corrected where it lives ([5.5](#5.5)); writing and validating its entries belong to
-  `data/symptom-triage` and happen outside this browser surface.
+  attribute it ([5.14](#5.14)), and the open-at-source action shows a wrong entry with the file and
+  line it lives at, copyable, so it can be corrected there ([5.5](#5.5), [5.19](#5.19)); writing and
+  validating its entries belong to `data/symptom-triage` and happen outside this browser surface.
+  This surface launches no editor: no browser mechanism reaches a line in a file, and a mandatory
+  action may not depend on software the user has not installed (`CONTRACTS.md` §3a).
 - **Exporting, printing, or annotating answers.**
 - **In-app corpus management (adding, removing, or re-ingesting manuals from the browser).** The
   surface names the file to add ([7.7](#7.7)); adding it and re-running ingestion happen outside.
@@ -774,19 +850,26 @@ reader knows they were weighed, not overlooked.
 - A single trusted local user on macOS, on `localhost`, with no authentication boundary inside the
   application.
 - **`api/answer-engine`'s loopback HTTP service is this surface's only counterpart.** Everything it
-  knows arrives through the eight operations that engine names (`api/answer-engine` 9.4):
-  submit-question (streaming), fetch-passage by identifier, list-sources, get-provider-status,
-  set-provider (choosing a provider kind), set-credential, clear-credential, and test-provider
-  (reachability without a turn). The last four back §10. It never reads the corpus, the index, or
-  the filesystem.
-- The engine emits exactly the outcome taxonomy of `CONTRACTS.md` §6 and the envelope fields of §4,
-  and this surface consumes them without extension or invention.
+  knows arrives through **the operations that engine names in its 9.4**, at the version it names
+  them — today submit-question (streaming), fetch-passage by identifier, list-sources,
+  get-provider-status, set-provider (choosing a provider kind), set-credential, clear-credential,
+  test-provider (reachability without a turn), and serve-document (a cited PDF, served inline for
+  [5.5](#5.5)). The middle five back §10. This assumption names **the operation list, not a count**:
+  a count is what made a needed route a requirements defect rather than an amendment, and adding one
+  is now an amendment to 9.4. It never reads the corpus, the index, or the filesystem.
+- The engine emits exactly the outcome taxonomy of `CONTRACTS.md` §6, the envelope fields of §4, and
+  the stream events of §4b, and this surface consumes them without extension or invention.
 - A provider may be a keyed hosted provider, a locally-run model, or the shared public backend. **A
   user key is not always present, and its absence is not a misconfiguration.**
-- A cited source can be opened at its cited location from outside this surface ([5.5](#5.5)): the
-  operating system can open a local PDF at a given page, with the files remaining in `manuals/`
-  under the names their source identity was derived from; and an authored triage entry can be
-  opened at the entry itself, where it can be corrected.
+- A cited source can be reached at its cited location **through the engine**, never through the
+  filesystem ([5.5](#5.5), `CONTRACTS.md` §3a). The earlier form of this assumption — that "the
+  operating system can open a local PDF at a given page" — was false and was what made 5.5
+  unbuildable: a tab served over `http://` cannot navigate to `file://`, and nothing in a page can
+  hand a viewer a page number. What is assumed now is narrower and true: the browser's built-in PDF
+  viewer honours a `#page=N` fragment on a same-origin document; the vendor PDFs remain readable in
+  `manuals/` under the names their source identity was derived from (`data/manual-corpus` 2.7), so
+  the engine can serve them; and an authored entry's text and its file and line arrive with the
+  citation, so the entry can be shown and corrected without leaving the tab.
 - The second screen is at least 1280×800 of usable browser viewport at 100% zoom.
 - Three vendor manuals exist today (Ableton Live 12 reference manual, Akai APC Key 25 user guide,
   Alesis Nitro Max drum module user guide), joined by the user's authored triage source; more will
@@ -808,15 +891,29 @@ reader knows they were weighed, not overlooked.
   work costs a click into Ableton to restore its keyboard focus. That round trip appears in no
   latency budget in this spec or in `CONTRACTS.md` §7, and it may dominate the numbers those budgets
   do cover. [1.12](#1.12) minimises it; it does not measure it.
-- **Open-at-source can dead-end outside the app.** [5.5](#5.5) depends on a vendor manual's PDF
-  still being present under its expected name and on the viewer honouring a page target, and on an
-  authored entry still being where the citation says it is. When either fails the citation must
-  degrade to its string form rather than to a broken action.
+- **Open-at-source can still dead-end, one layer further out.** [5.5](#5.5) now depends on the
+  engine finding the PDF under the name its source identity was derived from, and on the browser's
+  viewer honouring `#page=N` — which all three current viewers do, and none of which this project
+  controls. A viewer change makes the fragment silently inert and lands the user on page 1 of a
+  1009-page document, which is the exact failure `CONTRACTS.md` §3a exists to prevent. When the
+  engine reports not-found the citation degrades to its string form ([5.11](#5.11)) rather than to a
+  broken action; a fragment silently ignored has no such signal.
 - **Provenance marking costs glance budget too.** [5.14](#5.14) puts an inline "your own note"
   marker on every authored citation and [5.16](#5.16) an inline "no manual behind this" marker on
   every unbacked cause, on top of the applicability caveat above, and all of them compete with
   [11.7](#11.7)'s 25-word reading budget. Provenance wins on trust, but it has to be carried by
   compact markers rather than sentences.
+- **A `ranked-causes` turn is the densest thing this surface will ever render.** Four causes, each
+  with a check, its own authored citation and a separate vendor-manual fix citation, is up to eight
+  citations with their inline provenance marks ([5.14](#5.14), [5.16](#5.16)) on one turn, against
+  [11.7](#11.7)'s reading budget. Putting the rank-1 check in `direct_answer` protects the first
+  glance ([4.10](#4.10)), but the [T] bands below the fold may not hold and this is the state to
+  measure them in.
+- **Two candidate-bearing shapes now sit side by side.** `narrowing` and `causes[]` look alike in the
+  data and are opposite in affordance — one is controls that re-ask, the other is findings to read.
+  Only [6.2](#6.2) and [6.6](#6.6) hold them apart, and the failure mode is a ranked list rendered
+  with digit-armed controls, which would invite the user to "answer" a question the engine has
+  stopped asking.
 - **Scope decay cuts both ways.** [3.6](#3.6) protects the user from a forgotten narrowing, but it
   also discards a narrowing that was deliberate and long-lived. The one-activation reinstate is the
   mitigation; if users reinstate constantly, the 8-hour boundary is wrong.

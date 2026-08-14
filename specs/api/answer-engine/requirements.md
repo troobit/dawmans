@@ -43,7 +43,7 @@ It does **not** own:
 | **Passage** | A retrieved chunk carrying source ID, section number, section title, page number, flags for unrepairable characters and for figures in the section, the `unbacked` marking of an authored cause resting on no manual, and, where the passage declares one, the devices it applies to. A pageless source's passages carry no section number and no page (`CONTRACTS.md` §2). |
 | **Citation** | A reference from a claim in the answer to the passage that supports it, carrying the passage's location *and* the source's kind, document version and hardware applicability ([3.2](#3.2)–[3.3](#3.3), [3.8](#3.8)). |
 | **Provider kind** | What the LLM backend is, and therefore whether it needs a credential: **keyed hosted**, **local**, or **shared backend** ([6.4](#6.4)). |
-| **Answer envelope** | The record returned for a turn (`CONTRACTS.md` §4): outcome, `direct_answer`, `body`, `citations[]`, `contributing_sources[]`, `uncovered_parts[]` ([2.2](#2.2)), `timings` ([4.11](#4.11)), and any narrowing, `required_device` or `ungrounded` signal. |
+| **Answer envelope** | The record returned for a turn (`CONTRACTS.md` §4): outcome, `direct_answer`, `body`, `citations[]`, `contributing_sources[]`, `uncovered_parts[]` ([2.2](#2.2)), `suggested_sources[]` ([2.3](#2.3)), `scope_dropped[]` ([5.11](#5.11)), `timings` ([4.11](#4.11)), the failure-refining `reason`, `retry_after`, `detail` and `framing` members, and any `narrowing`, `causes[]` ([7.6](#7.6)), `required_device`, `required_manual` ([2.10](#2.10)) or `ungrounded` signal. It is delivered as the event stream `CONTRACTS.md` §4b governs, and is what the caller has accumulated when that stream ends. |
 | **Rig inventory** | The declared list of hardware the user owns, held by `data/manual-corpus` (its §11) separately from the corpus inventory of what is indexed. This spec neither owns nor derives it; it relays the two gap reports computed over it ([9.6](#9.6), [9.7](#9.7)). |
 | **Device scope** | The devices and software a turn is asked about, derived from the selected sources and the rig inventory ([5.12](#5.12)), against which a passage's own device declaration is tested ([5.13](#5.13)). |
 | **Session state** | Optional, out-of-band knowledge of the user's live or saved DAW project, supplied through the `StateSource` seam. |
@@ -69,7 +69,9 @@ say, so that I can act on it without second-guessing whether the tool made it up
    and SHALL rank them by relevance to the question before truncation, subject to the source
    inclusion floor in [5.6](#5.6), which takes precedence over this cap.
 4. <a name="1.4"></a>WHEN retrieved passages conflict with one another, the system SHALL present
-   both readings with their separate citations rather than silently selecting one.
+   both readings with their separate citations rather than silently selecting one, as the `!conflict`
+   block of `CONTRACTS.md` §4d — the grammar the caller is obliged to render, with both readings
+   shown and neither chosen for the user.
 5. <a name="1.5"></a>WHERE the question asks for a procedure, the system SHALL express the answer as
    ordered steps, each step traceable to at least one retrieved passage.
 6. <a name="1.6"></a>The system SHALL cap a synthesised answer at 400 words unless the caller
@@ -82,14 +84,18 @@ say, so that I can act on it without second-guessing whether the tool made it up
 9. <a name="1.9"></a>The `direct_answer` SHALL reach its first actionable instruction within 25
    words, so that the caller can render an instruction the user can act on without scrolling.
 10. <a name="1.10"></a>The system SHALL carry the remainder of the answer in a `body` bearing
-    machine-identifiable structure — headings, ordered steps and key terms — such that the caller can
-    identify each without applying heuristics to prose.
+    machine-identifiable structure, drawn from the closed block and inline set of `CONTRACTS.md` §4d
+    — heading, ordered step, bullet, paragraph, `!caveat` and `!conflict`, with the citation marker
+    and the key-term span as the only inline forms — such that the caller can identify each from a
+    block's first line, at column 0, without applying heuristics to prose and without re-typing a
+    block it has begun painting. The system SHALL NOT emit a block type outside that set.
 11. <a name="1.11"></a>The system SHALL declare, in its response, the text format of `direct_answer`
     and `body`, and SHALL use one declared format for every provider and every outcome.
 12. <a name="1.12"></a>WHEN an answer's recommended course of action depends on a Live edition or
     add-on the user does not have — a Suite-only device, or a Max for Live feature under Live 12
-    Standard — the system SHALL flag that dependency in the answer, since the recommendation is
-    manual-accurate and unusable on the declared rig.
+    Standard — the system SHALL flag that dependency in the answer as the `!caveat` block of
+    `CONTRACTS.md` §4d, in the reading position it qualifies, since the recommendation is
+    manual-accurate and unusable on the declared rig and a caveat the caller drops is worse than none.
 13. <a name="1.13"></a>The system SHALL treat a `vendor-manual` source as authoritative for what a
     control **is** and **does**, and an `authored-triage` source as authoritative for **which
     documented control to check, and in what order**, for a given symptom (`CONTRACTS.md` §4a). The
@@ -117,12 +123,17 @@ confident answer that is wrong — a wrong answer about gain staging costs me mo
    gap subordinate to the answer rather than as a refusal.
 3. <a name="2.3"></a>WHEN the system refuses under [2.1](#2.1) or partially refuses under
    [2.2](#2.2), the system SHALL name up to 3 unselected sources whose content is likely to hold
-   the answer, ordered by likelihood.
+   the answer, ordered by likelihood, in `suggested_sources[]` on the answer envelope
+   (`CONTRACTS.md` §4) as `{source_id, display_name}` values. It SHALL NOT carry them as prose in
+   `body`: the caller offers "add these to scope and re-ask" in one activation, which it cannot do
+   against a substring of a rendered answer.
 4. <a name="2.4"></a>WHEN naming an unselected source under [2.3](#2.3), the system SHALL NOT quote,
    paraphrase or otherwise use that source's content in the answer.
 5. <a name="2.5"></a>IF no unselected source is a plausible holder of the answer, THEN the system
    SHALL say that no ingested manual appears to cover the question rather than suggesting a source
-   at random, unless [2.9](#2.9) or [2.10](#2.10) applies.
+   at random, unless [2.9](#2.9) or [2.10](#2.10) applies. In that case `suggested_sources[]` SHALL
+   be **absent** rather than empty: an empty array asserts that the check ran and found nothing,
+   which is a different claim from making no suggestion.
 6. <a name="2.6"></a>The system SHALL NOT state a product fact — behaviour, parameter name, menu
    path, key command or numeric value — that is not carried by a retrieved passage, under any
    condition, including when the user asks it to. This constraint governs **facts**. Deciding
@@ -144,7 +155,8 @@ confident answer that is wrong — a wrong answer about gain staging costs me mo
    documented control does — a technique question, not a control question — AND **neither** a
    vendor manual **nor** an `authored-triage` entry covers it, the system SHALL return an
    out-of-domain result stating plainly that the ingested sources document what controls do and not
-   what constitutes good practice, and SHALL suppress the source suggestion in [2.3](#2.3), because
+   what constitutes good practice, and SHALL suppress the source suggestion in [2.3](#2.3) by
+   emitting no `suggested_sources[]` at all, because
    no reference manual in the corpus will ever cover it. This outcome exists because no vendor
    manual documents practice; IF an `authored-triage` entry does cover the question, the system
    SHALL answer from that entry under [1.1](#1.1) and SHALL NOT return out-of-domain, which would
@@ -155,6 +167,14 @@ confident answer that is wrong — a wrong answer about gain staging costs me mo
     **device** whose documentation is needed — for example the audio interface whose
     direct-monitoring switch governs monitoring latency. This names a device, not an ingested source
     ID, and it takes precedence over [2.5](#2.5), which otherwise terminates with no path forward.
+    WHERE that device resolves to a canonical `<vendor>/<product>` id, the system SHALL additionally
+    populate `required_manual` (`CONTRACTS.md` §4e) with the filename to add to `manuals/`, assembled
+    under the corpus filename grammar, writing a **named placeholder** in the string for every field
+    it cannot know and listing those fields in `placeholders[]`. The filename SHALL NOT be left as a
+    fact in the answer's prose: `CONTRACTS.md` §6 has always required it and the caller cannot
+    assemble it, because the grammar needs a doctype, a version and a language no browser can learn.
+    WHERE the device does not resolve to a canonical id, `required_manual` SHALL be absent and the
+    system SHALL NOT synthesise a name that is placeholder in the vendor and product positions.
     An `authored-triage` entry may legitimately cover a device whose manual is absent — an entry may
     direct the user to check DIRECT MONITOR on the Focusrite Scarlett Solo without quoting
     Focusrite — and WHERE such an entry answers the question, the system SHALL answer from it and
@@ -178,7 +198,11 @@ or read around it when the answer is not quite the case I am in.
    source has neither section numbering nor pages (`CONTRACTS.md` §2, §3) — the system SHALL emit
    the section number and the page as **absent**, SHALL NOT synthesise either, and SHALL NOT
    withhold the citation for lacking them; the section title, which is the entry's symptom
-   statement, occupies the location slot the section and page would otherwise fill.
+   statement, occupies the location slot the section and page would otherwise fill. Such a citation
+   SHALL additionally carry `entry_location` (`CONTRACTS.md` §2, §3) — the entry's file and line as
+   one opaque display string — which is the open-at-source target of `CONTRACTS.md` §3a for a source
+   with no page. It is **not** a location field: it never occupies the location slot and is never
+   rendered as a section or a page.
 3. <a name="3.3"></a>Each citation SHALL additionally carry the `doc_version` of the source, its
    `hardware_applicability` — including whether that applicability is confirmed or assumed — the
    `degraded` and `has_figures` flags of the cited passage, and its `unbacked` flag, which marks an
@@ -316,8 +340,12 @@ can exclude noise from the 1009-page Live manual when the question is really abo
     grounded in passages that no longer exist.
 11. <a name="5.11"></a>WHEN a corpus change removes a source that a conversation is carrying forward
     in its scope ([10.4](#10.4)), the system SHALL drop that source from the carried scope, SHALL
-    report the drop to the caller rather than applying it silently, and SHALL answer from the
-    remaining sources — or, IF none remain, decline per [5.2](#5.2).
+    report the drop to the caller in `scope_dropped[]` on the answer envelope (`CONTRACTS.md` §4)
+    rather than applying it silently, and SHALL answer from the
+    remaining sources — or, IF none remain, decline per [5.2](#5.2). The report is a governed field
+    with a named consumer (`ui/ask-and-source-picker` 3.11), not a diagnostic nobody is obliged to
+    show; it is a turn-time prune the user did not perform, and is a different subject from that
+    surface's silent load-time prune of its own stored scope.
 12. <a name="5.12"></a>The system SHALL derive a **device scope** for each turn from the selected
     source IDs: the devices and software the selected sources document, together with every
     owned-but-undocumented device in the rig inventory ([9.6](#9.6)). The undocumented devices are
@@ -355,14 +383,18 @@ tool changing how it behaves.
    a provider must be configured, and SHALL still permit retrieval-only operations such as passage
    lookup ([3.4](#3.4)).
 6. <a name="6.6"></a>WHEN a provider whose kind requires a key is configured without one, the system
-   SHALL fail the turn as `provider-unconfigured` carrying a missing-credential reason, and SHALL
-   make that reason distinguishable by the caller from an authentication failure, which is a
-   `provider-error`.
+   SHALL fail the turn as `provider-unconfigured` carrying `reason: missing-credential`
+   (`CONTRACTS.md` §6a), and SHALL make that reason distinguishable by the caller from an
+   authentication failure, which is a `provider-error` carrying `reason: authentication-failed`. The
+   distinction is carried by the enumerated sub-code and never by the human wording in `detail`,
+   which no caller may parse.
 7. <a name="6.7"></a>WHEN a provider is unreachable, the system SHALL fail the turn within 10 s
    ([4.9](#4.9)) and SHALL return a result identifying the provider and the failure kind.
 8. <a name="6.8"></a>WHEN a provider returns a rate-limit response, the system SHALL retry at most
-   once, honouring any stated retry interval up to 3 s, and SHALL otherwise surface a rate-limited
-   result including any retry-after value.
+   once, honouring any stated retry interval up to 3 s **as the provider stated it, unrounded**, and
+   SHALL otherwise surface a rate-limited result carrying that same unrounded value in `retry_after`
+   (`CONTRACTS.md` §4). WHERE the provider states no interval, `retry_after` SHALL be absent and the
+   system SHALL NOT invent one — the caller renders the absent case plainly.
 9. <a name="6.9"></a>WHEN a provider returns any other error, the system SHALL surface the provider's
    error kind and SHALL NOT substitute a synthesised answer or a cached answer from a different turn.
 10. <a name="6.10"></a>WHEN a provider fails mid-stream after partial output, the system SHALL mark
@@ -378,8 +410,10 @@ tool changing how it behaves.
 15. <a name="6.15"></a>WHERE the shared public backend is selected, the system SHALL disclose
     explicitly, before the first turn on that provider kind is sent, that question text and retrieved
     passages leave the machine, and SHALL NOT send that turn until the caller has acknowledged the
-    disclosure. A provider kind that exports the user's questions off a loopback-only tool is not a
-    default the user may discover after the fact.
+    disclosure. A turn attempted before acknowledgement SHALL fail as `provider-unconfigured`
+    carrying `reason: disclosure-unacknowledged` (`CONTRACTS.md` §6a). A provider kind that exports
+    the user's questions off a loopback-only tool is not a default the user may discover after the
+    fact.
 
 ### 7. Symptom-Shaped Questions
 
@@ -413,11 +447,18 @@ well-formed manual query — I want the tool to narrow it down with me rather th
 5. <a name="7.5"></a>The system SHALL ask at most 2 consecutive narrowing questions for a single
    symptom before producing an answer.
 6. <a name="7.6"></a>WHEN the narrowing limit in [7.5](#7.5) is reached and the cause is still
-   ambiguous, the system SHALL return a ranked list of at most 4 documented candidate causes, each
-   with its citations and the check that would confirm or eliminate it. WHERE the causes come from
-   an `authored-triage` entry, the system SHALL preserve that entry's ranking, and SHALL carry with
-   each cause its confirming check and — where the entry names one — the vendor-manual citation for
-   the fix.
+   ambiguous, the system SHALL return the outcome `ranked-causes` carrying `causes[]` — at most 4
+   documented candidate causes as the `Cause` record of `CONTRACTS.md` §4c, each with an explicit
+   `rank` equal to its position, its `check`, its own `cites[]`, and its `fix_cites[]` where a fix is
+   named. WHERE the causes come from an `authored-triage` entry, the system SHALL preserve that
+   entry's ranking exactly and SHALL NOT reorder, merge, add or drop causes. WHERE a cause's fix is
+   unnamed, unbacked or out of the turn's scope, `fix_cites[]` SHALL be empty and the cause's own
+   citation SHALL carry `unbacked` ([1.13](#1.13)) rather than the cause simply appearing without a
+   fix. Every `passage_id` in `cites[]` and `fix_cites[]` SHALL resolve into the same turn's
+   `citations[]`; a cause SHALL NOT carry citation records of its own. `direct_answer` on such a turn
+   SHALL state the rank-1 cause's `check` as an instruction to perform and SHALL NOT assert that
+   cause, since the ranked list is what the turn established and promoting its head would defeat the
+   ranking.
 7. <a name="7.7"></a>The system SHALL NOT ask a narrowing question whose answer would not change
    which passages are retrieved or which cause is reported.
 8. <a name="7.8"></a>WHEN session state ([§8](#8-session-state-context)) already supplies the value a
@@ -471,9 +512,18 @@ from nothing else, so that neither my questions nor my provider keys are exposed
    through the user's browser.
 4. <a name="9.4"></a>The system SHALL expose, at minimum: submit-question (streaming), fetch-passage
    by identifier, list-sources, get-provider-status, set-provider (choosing a provider kind),
-   set-credential, clear-credential, and test-provider (reporting reachability without synthesising
-   a turn). Every one of these is required by the configuration surface in
-   `ui/ask-and-source-picker`; without them that surface has nothing to call.
+   set-credential, clear-credential, test-provider (reporting reachability without synthesising
+   a turn), and **serve-document**. Every one of these is required by the browser surface in
+   `ui/ask-and-source-picker`; without them that surface has nothing to call. **Serve-document**
+   returns a `vendor-manual` source's own PDF, addressed by `source_id`, served inline from this
+   service's own origin with `Range` honoured, so the browser's viewer opens it at `#page=N`; it is
+   what makes `CONTRACTS.md` §3a's open-at-source action buildable at all, and it is served from the
+   file this service locates by rebuilding that source's filename from its `SourceRecord` fields
+   (`CONTRACTS.md` §1). It SHALL accept **no filesystem path from the caller** — the loaded index is
+   the allowlist — and SHALL return not-found where the source is unknown, is not a `vendor-manual`,
+   or its file is no longer readable, so that the caller degrades the citation to its string form
+   rather than to a broken action. The authored kind needs no operation of its own: its entry text is
+   already reachable through fetch-passage by the `passage_id` the citation carries.
 5. <a name="9.5"></a>The list-sources operation SHALL return, for every source in the corpus and for
    **both** kinds: `source_id`, `display_name`, `kind` (`vendor-manual` or `authored-triage`),
    `doc_version` where the kind carries one, and `hardware_applicability` including whether it is
@@ -497,13 +547,17 @@ from nothing else, so that neither my questions nor my provider keys are exposed
    all, only the masked form in [6.13](#6.13) SHALL be returned.
 9. <a name="9.9"></a>The system SHALL return a machine-readable outcome with every response, drawn
    from exactly this set and no other: `answered`, `partially-answered`, `needs-narrowing`,
-   `refused-not-covered`, `out-of-domain` ([2.9](#2.9)), `no-manual-for-device` ([2.10](#2.10)),
+   `ranked-causes` ([7.6](#7.6)), `refused-not-covered`, `out-of-domain` ([2.9](#2.9)),
+   `no-manual-for-device` ([2.10](#2.10)),
    `no-sources-selected` ([5.2](#5.2)), `unknown-source-id` ([5.3](#5.3)), `corpus-empty`,
-   `provider-unconfigured`, `provider-unreachable`, `provider-rate-limited` (carrying any
-   retry-after value, [6.8](#6.8)), `provider-error`, `timeout` (attributed to the provider and
-   distinct from unreachable, [4.9](#4.9)), `incomplete` ([6.10](#6.10)) and `cancelled`
+   `provider-unconfigured`, `provider-unreachable`, `provider-rate-limited` (carrying `retry_after`
+   where the provider stated one, [6.8](#6.8)), `provider-error`, `timeout` (attributed to the
+   provider and distinct from unreachable, [4.9](#4.9)), `incomplete` ([6.10](#6.10)) and `cancelled`
    ([4.10](#4.10)). The caller cannot render an outcome the engine has not named, so the system
-   SHALL NOT hold a private outcome outside this set.
+   SHALL NOT hold a private outcome outside this set. WHERE a distinction is finer than this set can
+   carry, the system SHALL express it in `reason` from the closed vocabulary of `CONTRACTS.md` §6a
+   and SHALL NOT grow this set to encode it; `detail` carries the occurrence's own wording for the
+   caller's diagnostic disclosure and SHALL NOT be the only place any machine-readable fact appears.
 10. <a name="9.10"></a>WHEN the caller disconnects mid-stream, the system SHALL treat this as
     cancellation per [4.10](#4.10).
 11. <a name="9.11"></a>The system SHALL NOT log question text, answer text or passage content at
@@ -520,6 +574,19 @@ from nothing else, so that neither my questions nor my provider keys are exposed
     streaming, the system SHALL cancel the in-flight turn per [4.10](#4.10), report it as
     `cancelled`, and begin the new turn; it SHALL NOT interleave two streams on one conversation and
     SHALL NOT queue the new question behind the old one.
+14. <a name="9.14"></a>The system SHALL deliver a turn as the **named event stream** governed by
+    `CONTRACTS.md` §4b: only the events that table names, carrying only the envelope fields it maps
+    them to, in the ordering it fixes. Every field the system produced for a turn SHALL reach the
+    caller before that turn ends, and the turn SHALL be terminated by an explicit `done` event
+    **carrying a payload** — an event with a name and no data is never dispatched by a conforming
+    reader, so a payload-free terminator can vanish and a completed turn would be indistinguishable
+    from a truncated one. The system SHALL NOT rely on the stream simply ending to report completion,
+    and SHALL NOT emit an event the table does not name.
+15. <a name="9.15"></a>The system SHALL declare the turn stream's version, `dawmans/turn-stream/1`,
+    in a response header on submit-question, readable before the first byte of the body, so that a
+    caller running against a version it does not know fails by name rather than half-rendering a
+    turn. The version SHALL be bumped only when the meaning of an existing event changes; adding an
+    event, or a member to an event's payload, SHALL NOT bump it.
 
 ### 10. Conversation Continuity
 
@@ -591,7 +658,13 @@ without it — but history is never a grounding source, and it never survives a 
   version, hardware applicability, declared devices where the passage has them, and the degraded,
   figure and `unbacked` flags already attached, so citations ([3.2](#3.2)–[3.3](#3.3),
   [3.8](#3.8)) are assemblable without re-parsing the PDFs. On a pageless source the section
-  number, page and document version arrive absent, and are emitted absent.
+  number, page and document version arrive absent, and are emitted absent, and the entry's
+  `entry_location` (`CONTRACTS.md` §2) arrives with them.
+- **The vendor PDFs stay readable at the names their identity was derived from**, for as long as the
+  index that names them is live (`data/manual-corpus` 2.7). [9.4](#9.4)'s serve-document rebuilds a
+  filename from a `SourceRecord`'s own fields and reads it under a configured store root; it re-parses
+  nothing and needs no PDF library, so the confinement of the extraction dependency is untouched. A
+  renamed or deleted file is a not-found, never a stale answer.
 - The corpus holds two kinds of source, not one. `data/symptom-triage` supplies an `authored-triage`
   source whose entries reach this engine as ordinary passages through `data/manual-corpus`. Nothing
   here assumes it is present — with no matching entry the engine falls back to the manual-only

@@ -136,23 +136,27 @@ indicator replaceable the moment content exists.
 
 ### The engine client
 
-The eight operations `api/answer-engine` 9.4 names, mapped to the routes its design fixes:
+The nine operations `api/answer-engine` 9.4 names, mapped to the routes its design fixes:
 
 | Operation | Call | Consumed by |
 |---|---|---|
 | submit-question | `POST /turn` → SSE | §4, §6, §7, §8, §9 |
-| fetch-passage | `GET /passages/{passage_id}` | 5.6, 5.11 |
+| fetch-passage | `GET /passages/{passage_id}` | 5.6, 5.11, and 5.5's authored branch |
 | list-sources | `GET /sources` | §2, 2.9, 2.10, 9.13 |
 | get-provider-status | `GET /provider` | 10.7 |
 | set-provider | `PUT /provider` | 10.1, 10.3 |
 | set-credential | `PUT /provider/credential` | 10.5 |
 | clear-credential | `DELETE /provider/credential` | 10.8 |
 | test-provider | `POST /provider/test` | 10.10 |
+| serve-document | `GET /sources/{source_id}/document` | 5.5's vendor-manual branch |
 
-Two more the surface needs and the eight do not provide — `GET /sources/{source_id}/document` and
-`POST /sources/{source_id}/open` — are argued in defect 1. Until they exist, `openAtSource()` reports
-unavailable and the citation degrades to its string form (5.11's shape, and the Risks section's
-requirement that it "degrade to its string form rather than to a broken action").
+`openAtSource()` is two branches and no third. For a `vendor-manual` it is a plain link activation —
+`target="_blank"`, `rel="noopener"`, `href` the serve-document route with the fragment `#page=N` and
+**nothing appended**; a link activation is not a popup, so "one activation" holds without fighting a
+popup blocker, and appending `&zoom=` or a text directive would silently disable the jump in Safari's
+viewer. For an `authored-triage` citation it is the ordinary passage expansion of 5.6 plus the
+copyable `entry_location`. A 404 from serve-document degrades the citation to its string form
+(5.11), never to a broken action.
 
 `client.ts` is stateless and returns parsed records. It performs **no retries**: a retry that the
 user did not ask for would either duplicate a turn or mask the `provider-unreachable` state that 9.6
@@ -166,38 +170,55 @@ and a source list in its body and `EventSource` cannot POST. `sse.ts` decodes UT
 otherwise paint as `U+FFFD` and be indistinguishable from a `degraded` passage), splits on `\n\n`,
 and yields `{event, data}`.
 
-The reducer maps each of the engine's event names onto the turn, and **only ever appends**:
+The reducer fills the envelope from **CONTRACTS §4b's sixteen events**, and **only ever appends**.
+The table is that one, per client effect; the rendering obligation itself lives on the field in §4.
 
 | Event | Effect |
 |---|---|
-| `scope_dropped` | Record dropped ids; drives 9.11 and the silent drop of 3.8 |
-| `outcome` | Fixes which renderer the turn uses (§4 / §6 / §7 / §9) |
+| `scope_dropped` | Fills `scope_dropped[]`; reported with the turn (3.11) |
+| `outcome` | Fixes which renderer the turn uses (§4 / §6 / §7 / §9), and carries `reason`, `retry_after` and `detail` with it, so an error state paints once rather than being amended |
 | `direct_answer` | The first painted content; the 8.8 measurement lands here |
 | `body_delta` | Appended to the block parser below |
 | `citation` | Added to the turn's citation map, keyed by `passage_id` |
+| `cause` | Appended to `causes[]` in rank order; `rank` is asserted equal to position (6.6) |
 | `contributing_sources` | 4.7 |
 | `uncovered_parts` | 4.8, 4.9 |
+| `suggested_sources` | 7.4 — addressable `{source_id, display_name}`, not a substring of the body |
 | `narrowing` | §6 |
 | `required_device` | 7.7 |
+| `required_manual` | 7.7 — the copyable filename and its `placeholders[]` |
 | `ungrounded` | 5.13 — marks text already on screen; never blanks it |
+| `framing` | 9.3's disclosure, which for `unparsed` opens on a successful turn too |
 | `timings` | 8.8 attribution, and the 9.3 disclosure |
 | `done` | `settled`; focus returns to an empty input (1.6) |
 
-An event name not in this table is ignored rather than treated as an error — an added event must not
-break a running client. An **`outcome` value** not in CONTRACTS §6 is the opposite case and renders
-as a broken state carrying the engine's own wording (9.4), because an unrecognised outcome means the
-turn cannot be trusted to any renderer.
+**Three unknown-member rules, and they differ deliberately** (CONTRACTS §4b). An event **name** not
+in this table is ignored and never fails the turn, so an added event does not break a running client.
+An **`outcome` value** not in CONTRACTS §6 renders as a broken state carrying `detail` (9.4), because
+an outcome selects the renderer and a turn whose renderer is unknown cannot be trusted to any of
+them. A **`body` block type** the parser does not know keeps its text and loses only its wrapper
+(4.4) — dropping it would make a `!caveat` vanish rather than degrade.
+
+**Absence of `done` is a failure, not a completion.** The reader treats end-of-stream without `done`
+as `incomplete` and marks what arrived (9.14); it does not infer completion from the stream closing,
+because a stream truncated mid-event discards the pending event silently. There is no reconnection:
+`fetch` + `ReadableStream` inherits none of `EventSource`'s retry machinery. The response's
+`dawmans/turn-stream/*` header is checked before the body is read, and an unknown version refuses the
+turn by name (9.19).
 
 ### Streaming without reflow
 
 4.2 is the hardest constraint on this surface, and it is met structurally rather than by care.
 
-**Block type is decided by a block's first line and never revised.** The engine's body format is a
-restricted Markdown subset whose block types are identifiable at column 0 — `## `, `N. `, `- `,
-paragraph, and the typed sigil blocks `!caveat`, `!conflict`, `!suggest`. The parser holds the
-current line only until its prefix is decidable (at most 10 characters — the longest prefix is
-`!conflict `), fixes the block type, and streams the remainder into that block. A block already on
-screen is therefore never re-typed and never re-flowed.
+**Block type is decided by a block's first line and never revised.** CONTRACTS §4d fixes the closed
+set, all identifiable at column 0 — `## `, `N. `, `- `, paragraph, `!caveat` and `!conflict`. The
+parser holds the current line only until its prefix is decidable (at most 10 characters — the longest
+prefix is `!conflict `), fixes the block type, and streams the remainder into that block. A block
+already on screen is therefore never re-typed and never re-flowed. That rule outranks a producer
+obligation: `!conflict` is specified to carry exactly two readings, and a block arriving with some
+other count is rendered as the conflict block it declared itself to be, with the readings it
+supplied — **never re-typed to a paragraph**, which would move painted text. `!suggest` is no longer
+in this set; it arrives as an envelope field.
 
 This buffering costs nothing against 8.8: `direct_answer` arrives as its own event, ahead of any
 `body_delta`, so the *first painted token* never waits on prefix disambiguation.
@@ -315,10 +336,16 @@ retained as part of that thread rather than as a standalone unanswered question 
 Typing any printable character other than an armed digit begins a free-text reply without dismissing
 the list (6.5) — which falls out of the keyboard router above at no extra cost.
 
-A **ranked cause list** (6.6) renders causes in the engine's order with the rank shown, each with its
-check, its citations, and the vendor-manual fix citation as an ordinary citation distinct from the
-authored cause it belongs to; a cause with no fix citation carries the `unbacked` mark. The first
-cause is not promoted to an answer. **How this arrives is unresolved** — see defect 2.
+A **ranked cause list** is the `ranked-causes` outcome carrying `causes[]` (CONTRACTS §4c). It
+renders in array order with each `rank` shown, each cause with its `check` and with the citations its
+`cites[]` and `fix_cites[]` name — **resolved through the turn's own citation map by `passage_id`**,
+which is why a `Cause` carries ids and not citation records: the map is already keyed that way, and a
+second citation channel would make §5's inline obligations something to satisfy twice. A cause whose
+`fix_cites[]` is empty carries the `unbacked` mark of 5.16. The first cause is not promoted to an
+answer, and the causes are **not** armed digit controls — that affordance belongs to narrowing
+candidates alone (6.2, 6.3), and it is the only thing keeping two similar-looking shapes apart. The
+rank-1 cause's check arrives as `direct_answer`, so 4.10 and 11.7 stay reachable on a turn whose body
+is four things to check.
 
 ### Coverage failure, errors, and the outcome table
 
@@ -330,6 +357,7 @@ it, so adding a member to the union without a renderer fails the type check rath
 |---|---|---|
 | `answered`, `partially-answered` | Answer (§4) | Partial: re-ask each uncovered part alone (4.9) |
 | `needs-narrowing` | Narrowing (§6) | Candidates 1–4; free-text reply |
+| `ranked-causes` | Ranked causes (§6, 6.6) | No per-cause control — findings to read, not candidates that re-ask; the causes' citations expand and open like any other, and the ordinary follow-up input remains the way forward |
 | `refused-not-covered` | Coverage failure (§7) | Add named sources and re-ask (7.4); else widen-all and re-ask (7.5) |
 | `out-of-domain` | Coverage failure, technique wording (7.6) | Re-edit only; suggestions and widen suppressed |
 | `no-manual-for-device` | Coverage failure (7.7) | Copy the exact filename; suggestions and widen suppressed |
@@ -387,10 +415,14 @@ failed exchanges are not retained as answers; a partial retained under 9.14 is m
 
 ## Data Models
 
-`records.ts` mirrors CONTRACTS §1–§4 exactly: no field added, none dropped, `outcome` typed as the
-union of §6. Optionality follows the contract's own rules — `section_number`, `page_start`,
-`page_end` and `doc_version` are optional because a pageless or unnumbered source has none, and the
-renderer treats absent as *absent*, never as empty string or zero.
+`records.ts` mirrors CONTRACTS §1–§4e exactly: no field added, none dropped, `outcome` typed as the
+union of §6 and `reason` as the union of §6a. Optionality follows the contract's own rules —
+`section_number`, `page_start`, `page_end` and `doc_version` are optional because a pageless or
+unnumbered source has none; `entry_location` because only an authored citation has one;
+`suggested_sources[]`, `causes[]`, `required_manual`, `scope_dropped[]`, `retry_after` and `detail`
+because each is scoped to particular outcomes. The renderer treats absent as *absent*, never as empty
+string, zero, or an empty array — an empty `suggested_sources[]` would assert that the engine looked
+and found nothing, which is a different claim from its having made no suggestion.
 
 Client-only types, which cross no spec boundary:
 
@@ -457,66 +489,68 @@ any work is done here. The marks are what the 9.3 diagnostic disclosure shows.
 | Stream drops mid-answer with no `outcome` | Partial text retained and marked incomplete, retry offered (9.14) |
 | `GET /sources` fails | Picker reports the engine unreachable and submission is blocked; distinct from `corpus-empty`, which is the engine answering that nothing is ingested (9.13) |
 | Passage fetch fails | 5.11 — citation intact, body unavailable |
-| Open-at-source unavailable | Action reports unavailable and the citation degrades to its string form with a copyable location; never a broken action |
-| Unrecognised `outcome` | Broken state carrying the engine's own wording (9.4) |
+| serve-document 404 | Citation degrades to its string form with its location and marks intact; never a broken action (5.11) |
+| Unrecognised `outcome` | Broken state carrying `detail` (9.4) |
+| Unknown turn-stream version | Turn refused before the body is read; broken state naming both versions (9.19). Carries no outcome |
 
-Diagnostics (9.3) sit behind an explicit disclosure on every error state and render **only** the
-engine's own `reason` text plus the client's per-turn marks. No request body is ever echoed, which is
-what keeps 9.17 structural rather than a filtering rule — the credential is never in a value the
-error renderer can reach.
+Diagnostics (9.3) sit behind an explicit disclosure on every error state — and on any turn carrying
+`framing: unparsed`, which is a degraded rendering whether or not it failed — and render **only** the
+engine's `detail`, `framing` and `timings` plus the client's per-turn marks. Nothing here parses
+`detail`: CONTRACTS §4 declares it unparsed, and every fact this surface acts on (`reason`,
+`retry_after`, `required_manual`) is its own field. No request body is ever echoed, which is what
+keeps 9.17 structural rather than a filtering rule — the credential is never in a value the error
+renderer can reach.
 
 Raw exception text and payloads never appear as the primary message (9.1); every error state offers
 at least one action (9.2).
 
 ## Requirements defects to reconcile
 
-Six places where this surface cannot be built as specified. None is resolved unilaterally beyond the
-position stated. Items 1, 2 and 3 were independently confirmed from the `api/answer-engine` side by
-two reviews of that design, which reached them from the engine's end of the same seams.
+Five of the six are **closed** by `DECISIONS.md` Decision 11, which amended CONTRACTS and then
+reconciled this spec against it. They are kept with what closed them rather than deleted: items 1, 2
+and 3 were each found independently from the `api/answer-engine` side as well, and that is the
+evidence the amendment was owed.
 
-1. **Open-at-source (5.5, CONTRACTS §3) cannot be done with the eight operations.** The requirements
-   assume "the operating system can open a local PDF at a given page", but this surface is a browser
-   tab: navigation from an `http://` document to a `file://` URL is blocked by every current browser,
-   and nothing in a page can launch a viewer at a page number. CONTRACTS §3 makes the action
-   mandatory on *any* citation, so this is not a soft failure. It needs two engine operations —
-   `GET /sources/{source_id}/document` serving the PDF inline, opened in a new tab at `#page=N` (the
-   browser's own viewer honours the fragment, and same-origin means no download), and
-   `POST /sources/{source_id}/open` performing the OS open for an authored entry at the file and line
-   `data/symptom-triage` already defines as the open-at-source target. Either the requirements'
-   eight-operation assumption is amended, or 5.5 is unbuildable.
-2. **A ranked cause list (6.6, `api/answer-engine` 7.6) has no representation in the envelope.**
-   CONTRACTS §4 carries `narrowing` — a question plus 2–4 candidates — and nothing else, and the
-   engine's answer framing has a `?narrow` sigil and no sigil for a ranked cause list. But 6.6
-   requires rendering causes *instead of* a narrowing question, each with its rank, its check, its
-   citations and its fix citation. Rendered here from `narrowing` candidates plus their citations,
-   which is the only representation available and cannot carry the rank distinctly. Either CONTRACTS
-   §4 gains a `causes[]` field or the framing gains a sigil.
-3. **Provider error detail has no envelope home.** 9.3 needs the engine's own wording, 9.8 needs the
-   retry-after value, and 9.10 needs to know a `provider-error` was a credential rejection so the
-   configuration control replaces the retry. CONTRACTS §4's field table carries none of these, though
-   §6 asserts that `rate-limited` "carries a retry-after". Implemented against a `reason` field this
-   design assumes; CONTRACTS §4 should name it.
-4. **8.8's closing sentence is stale.** It states that "CONTRACTS §7 states 1.5 s / 2.8 s and states
-   no band" and asks that the band be recorded there. CONTRACTS §7 already records it — ≤2.0 s hosted
-   and ≤3.5 s local at p95, explicitly as an acceptance band under `PROCESS.md` §5. The two do not
-   disagree; the sentence should go.
-5. **The static mount is missing from the engine's HTTP surface.** Serving `web/build` at `/` is what
-   makes the page same-origin, which is what lets the engine keep its strict `Origin` guard. The
-   engine's route table does not include it.
+1. **CLOSED — open-at-source could not be done with the eight operations.** The old assumption that
+   "the operating system can open a local PDF at a given page" was false, and it — not 5.5 — was the
+   defect. Closed by CONTRACTS §3a and **one** new engine operation, serve-document: the
+   vendor-manual branch opens the engine-served PDF in a new tab at `#page=N` and nothing else. The
+   authored branch needed **no** operation at all — `GET /passages/{passage_id}` already returns the
+   entry's text and 5.6 already reveals it in place — so the proposed
+   `POST /sources/{source_id}/open` is dropped, along with its process launcher on a loopback
+   endpoint. The entry's file and line arrive as `entry_location` (5.19). The Assumptions section now
+   names the engine's operation **list** rather than a count, so the next route is an amendment
+   rather than a defect.
+2. **CLOSED — a ranked cause list had no representation.** Closed by CONTRACTS §4c `Cause` and the
+   `ranked-causes` outcome, rendered by an amended 6.6: array order, explicit `rank`, per-cause
+   `check`, and `cites[]`/`fix_cites[]` resolved through the turn's citation map. The interim
+   position — rendering it from `narrowing` candidates, which could not carry the rank — is
+   withdrawn, and the two shapes are now held apart by affordance as well as by outcome.
+3. **CLOSED — provider error detail had no envelope home.** Closed by `reason` (from the closed §6a
+   vocabulary), `retry_after`, `detail` and `framing` as CONTRACTS §4 fields, and by amendments to
+   9.3, 9.5, 9.8, 9.9 and 9.10 keying on them. The `reason` this design had assumed is now governed,
+   and it is a machine sub-code rather than the human wording it was being used as: the wording is
+   `detail`, which no criterion may parse.
+4. **CLOSED — 8.8's closing sentence was stale.** CONTRACTS §7 already records the band. Nothing in
+   CONTRACTS needed changing; the sentence is the thing to remove from 8.8, and it is the one item
+   here that was never a contract defect.
+5. **OPEN — the static mount is missing from the engine's HTTP surface.** Serving `web/build` at `/`
+   is what makes the page same-origin, which is what lets the engine keep its strict `Origin` guard.
+   *(Now listed in that design's route table, but no engine criterion requires it; 9.4 names
+   operations and the mount is not one. It is the smallest remaining item on this seam.)*
+6. **CLOSED — `scope_dropped` was produced with no criterion requiring it to be rendered.** Closed by
+   CONTRACTS §4b, which governs the event set and requires every event to discharge into a named
+   criterion, and by the new 3.11. §4b also states in one sentence why 3.8 was never in conflict with
+   it: 3.8 prunes this surface's **own store at load time**, before any turn exists, while
+   `scope_dropped` reports a prune the **engine** performed on the turn just asked.
 
-6. **`scope_dropped` is produced with no criterion requiring it to be rendered.** `api/answer-engine`
-   5.11 requires a pruned scope be reported "rather than applying it silently", and its design emits
-   a `scope_dropped` SSE event for that. No criterion here renders it, and the nearest one — 3.8 —
-   mandates the *opposite* for a different case, dropping a stale stored id silently on load. The two
-   are reconcilable (3.8 is a load-time prune of the client's own store; 5.11 is a turn-time prune the
-   engine performed) but nothing says so. The reducer consumes the event and the renderer reports the
-   drop with the turn; §3 or §9 should carry a criterion for it, and CONTRACTS should govern the SSE
-   event set, which it currently does not.
-
-A seventh item is a consequence rather than a defect: 4.9 re-asks an uncovered part "widening scope to
-any sources the engine names for it", but `uncovered_parts[]` entries are strings and `!suggest`
-blocks are not associated with a particular part. The re-ask therefore widens to every suggested
-source, not to a per-part subset.
+A seventh item remains a consequence rather than a defect, and the amendment has made it *fixable*
+without fixing it: 4.9 re-asks an uncovered part "widening scope to any sources the engine names for
+it", but `uncovered_parts[]` entries are strings and `suggested_sources[]` is an envelope-level array
+with no association to the part that motivated a suggestion. The re-ask therefore still widens to
+every suggested source. Closing it means an association on the record — an optional `for_part` member,
+or a nested shape — and no criterion asks for one, so it was left out rather than designed on
+speculation.
 
 ## Testing Strategy
 
@@ -528,9 +562,12 @@ provider, a corpus, or a key.
 
 | Test | Asserts |
 |---|---|
-| SSE parser | Frames split across chunk boundaries reassemble; a multi-byte character split across chunks does not become `U+FFFD`; an unknown event name is ignored |
-| Reducer totality | Every member of the CONTRACTS §6 union maps to a renderer; an outcome outside it renders broken with the engine's wording (9.4) |
-| Block typing | A block's type is fixed by its first line and never revised across any chunk split; the `!conflict ` prefix is disambiguated within 10 characters |
+| SSE parser | Frames split across chunk boundaries reassemble; a multi-byte character split across chunks does not become `U+FFFD`; an unknown event name is ignored; end-of-stream without `done` yields `incomplete` rather than a settled turn; an unknown `dawmans/turn-stream/*` header refuses the turn before the body is read (9.19) |
+| Event coverage | **One rendering path per event in CONTRACTS §4b** — the test that enforces §4b's "render everything you do know" clause, which the wire cannot. A governed event with no path fails here, not in review |
+| Reducer totality | Every member of the CONTRACTS §6 union — all 17 — maps to a renderer; an outcome outside it renders broken with `detail` (9.4) |
+| Block typing | A block's type is fixed by its first line and never revised across any chunk split; the `!conflict ` prefix is disambiguated within 10 characters; an unknown first line renders its text as a paragraph rather than nothing (4.4); a `!conflict` with other than two readings is not re-typed |
+| Ranked causes | Causes render in array order with `rank` shown, never as armed digit controls; each cause's `cites[]` and `fix_cites[]` resolve through the turn's citation map; an empty `fix_cites[]` renders the `unbacked` mark (6.6) |
+| Dropped scope | A turn carrying `scope_dropped[]` names the dropped sources with that turn (3.11), while a stale stored id at load time drops silently (3.8) — the two paths asserted together, since the pair is what the criteria disagree about on a careless reading |
 | Marker stability | A citation's printed integer is assigned at first appearance and does not change when its `citation` event arrives late |
 | Absent fields | A pageless citation renders the symptom title in the location slot with page and section absent — never `0`, never empty (5.15) |
 | Inline obligations | `kind`, `doc_version`, `hardware_applicability`, `unbacked`, `has_figures` each render on the citation with no disclosure in the path (5.2, 5.3, 5.4, 5.14, 5.16) |
@@ -547,6 +584,7 @@ provider, a corpus, or a key.
 |---|---|
 | No reflow | Over a scripted stream, the `top` of every already-painted line is unchanged at every subsequent frame (4.2) |
 | Keyboard-only loop | Ask, narrow, cancel, widen scope, expand a citation and open it, using no pointer at all (1.13, 13.1) |
+| Open at source | A `vendor-manual` citation activates a link to the serve-document route whose fragment is exactly `#page=N`, with nothing appended; an `authored-triage` citation reveals the entry in place with `entry_location` copyable, and no navigation leaves the tab (5.5, 5.19) |
 | Focus return | Each region dismissed with `Escape` returns focus to its opener; no region traps focus (13.3) |
 | Reading position | Expanding and collapsing a citation mid-stream leaves it at the same viewport offset (5.8) |
 | Greyscale | A greyscale screenshot preserves every distinction 11.6 lists |

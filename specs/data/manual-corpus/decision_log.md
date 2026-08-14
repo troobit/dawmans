@@ -569,3 +569,104 @@ let offsets move while `corpus_revision`, hashed over *sorted* triples, stayed t
   recovery is deleting `index/` and rebuilding.
 - Two version integers must be bumped by hand — `index_version` when the on-disk shape changes,
   `ingestion_version` when a stage's output could change — and forgetting either is silent.
+
+---
+
+## Decision 8: Ingestion audits beside the views, view sidecars inside them
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+`LoadResult.report` was one channel carrying two unrelated payloads, and the design published both to
+one place, `index/reports/<slug>.json`. The first payload is an ingestion audit — English page
+ranges, glyph counts, anchor quality, the rejection reason — a diagnostic for one run over one
+source. The second is the authored-triage sidecar `data/symptom-triage` specifies: per-`passage_id`
+device declarations and per-cause structure that CONTRACTS §2 has no field for, read by
+`api/answer-engine` on every turn to satisfy its 5.13 device predicate and its 7.2 narrowing.
+
+Published beside the views, the sidecar has no atomic switch. `manifest.json`'s rename is the only
+one this spec offers, so a sidecar rewritten in place pairs with whichever view a reader is holding.
+The consequence is not a stale diagnostic but wrong answers: entries dropped from turns they apply
+to, entries admitted into turns scoped to other gear, and — where a reader finds no sidecar at all —
+every entry in scope for every turn. `data/symptom-triage` §The sidecar listed the relocation as its
+first outstanding request on this spec, and `api/answer-engine` §What the engine reads recorded it as
+a blocking prerequisite: that design pins `<manifest.view_dir>/reports/authored_triage.json` and did
+not hold until this landed.
+
+### Decision
+
+Split the channel. `LoadResult` carries `audit` and `sidecar` separately. The audit is published to
+`index/audits/<slug>.json`, keeping the shard's lifetime. The sidecar is committed as a shard
+artefact, `shards/<slug>.sidecar.json`, and copied by the merge into `views/<hex>/reports/<slug>.json`,
+where it joins the merged view's read contract and swaps with the manifest rename.
+
+### Rationale
+
+The two payloads have different lifetimes because they describe different things. An audit describes
+a *run over a source*: it is regenerated only when that source is re-ingested, it must survive shard
+reuse unchanged, and it has to remain findable after the view it accompanied has been collected —
+the run that rejected a source is exactly the run whose diagnostics are wanted later. A sidecar
+describes *the passages in a view*: it is only meaningful against the `passage_id`s it keys, so its
+correctness is a function of being the same revision as `passages.jsonl`.
+
+Copying the sidecar in from the shard, rather than writing it into the view from `load()`, is what
+makes that revision guarantee structural. A reused shard runs no loader, so a loader-written sidecar
+would be missing from every view built after the run that produced it. Copying at merge holds for any
+source, instead of resting on the authored store's `load()` happening to run unconditionally
+(`data/symptom-triage` §Discovery) — a property of a sibling spec that could change without this one
+noticing.
+
+The directory is `audits/` rather than a second `reports/` because two files at the same basename
+`<slug>.json`, distinguished only by their parent, fail silently when resolved wrongly: the reader
+gets a well-formed JSON document rather than an error. That is the same failure mode
+`data/symptom-triage` names for a hyphenated sidecar spelling, and a distinct name costs nothing.
+
+### Alternatives Considered
+
+- **Move every report inside the view**: One location, one lifetime, no split to explain - Rejected
+  because superseded views are deleted at the start of the next run, so a source's audit would
+  survive at most one further run; the diagnostics for a rejection would be gone by the time anyone
+  looked. It also forces every reused shard's audit to be copied forward for a reader that has no use
+  for it.
+- **Leave both beside the views and have the engine re-read on a manifest change**: No change to this
+  spec at all - Rejected because there is nothing to re-read *to*. The file is mutable in place and
+  carries no revision, so a reader that reloads after the swap still gets whatever the next run has
+  since overwritten. No read order closes a race that has no versioned object in it.
+- **Fold the sidecar's fields into `Passage` and drop the file**: Removes the second artefact
+  entirely - Rejected because CONTRACTS §2 fixes the `Passage` field set and forbids a spec inventing
+  one; and retargeting a fix pointer would then change the passage text, orphaning the citation
+  history that `data/symptom-triage` 8.2 and this spec's 6.1 exist to preserve.
+- **Write the sidecar into the view directly from `load()`, skipping the shard**: One fewer artefact
+  and one fewer copy - Rejected because a reused shard runs no loader: any view built by a run that
+  skipped the source would hold no sidecar for it, which is the same silent under-scoping in a new
+  costume.
+- **Keep both directories named `reports/`**: Nothing to rename, and the parent already disambiguates
+  - Rejected for the silent-resolution failure above.
+
+### Consequences
+
+**Positive:**
+- The sidecar and the passages it keys are always the same revision, by construction rather than by a
+  reader's discipline. `api/answer-engine`'s blocking prerequisite is discharged and its stated path
+  is the one this spec writes.
+- Ingestion diagnostics outlive the views, so a rejection stays diagnosable after later runs.
+- The rule generalises: any future loader with per-passage data beyond the `Passage` fields publishes
+  a sidecar and gets the atomic swap free.
+
+**Negative:**
+- Two locations and two names to know, where there was one; a reader has to be told which of
+  `audits/` and `views/<hex>/reports/` it wants.
+- One more shard artefact to write, copy, and delete on source removal — cheap at ~10 KB, but it is
+  another file whose absence is only caught by the reader that needs it.
+- The audit for a source is now silently older than the view sitting beside it whenever that source's
+  shard was reused. That is correct, and it reads as staleness to anyone who has not read §Index
+  layout.
+
+### Impact
+
+`data/manual-corpus` §Index layout, §Stages, §The loader protocol, §Source identity and discovery,
+§English selection, §Glyph repair, §Incremental behaviour, §Testing Strategy.
+`data/symptom-triage` §The sidecar and its dependency table — the request is discharged, not dropped.
+`api/answer-engine` §What the engine reads — the blocking-prerequisite paragraph is removed.

@@ -33,18 +33,23 @@ All of these are present in that design as it now stands.
 | `passage_id(source_id, text)` in `corpus/passage_id.py` | §Passage identity | 3.9 | authored IDs diverge from manual IDs |
 | `<slug>` = `source_id` with `/` replaced by `_`, giving `authored_triage` | §Source identity and discovery | the sidecar's filename | the sidecar's reader finds nothing |
 | `views/<hex>/passages.jsonl` + `sources.json`, located via `manifest.view_dir` | §Index layout | pointer resolution input | resolution needs a new read path |
+| `LoadResult.sidecar` published at `views/<hex>/reports/<slug>.json`, copied in from the shard by the merge | §Index layout, Decision 8 | the sidecar's location and its atomic swap | the sidecar pairs with an arbitrary view again (§The sidecar) |
 | the authored load runs **after every vendor shard has committed** | §Stages, orderings | 2.1 — resolution reads the passages this run produced | pointers resolve against a stale corpus |
 | per-`passage_id` vector reuse via the authored shard meta's `vectors` map | §Incremental behaviour | 5.6 | every run re-embeds every entry |
 | the pageless citation header omits `§` and the number entirely | §Chunking | 3.4 | every authored chunk is embedded with a literal `§None` |
 | `rig.yaml` device ids and `revision` values | §Rig inventory | 4.2, 4.6 | scope validation loses its vocabulary |
 | `authored-triage` `hardware_applicability` fixed at `assumed`, nothing in `rig.yaml` setting it | §Rig inventory | 3.8 | see §Requirements defects |
 
-Two requests on that design remain open, and both are named at their point of use below:
+Two requests were made on that design. The first has landed; the second remains open. Both are named
+at their point of use below:
 
 1. **The sidecar must move inside the view directory** and join the merged view's read contract —
-   `views/<hex>/reports/<slug>.json`, not `index/reports/<slug>.json` (§The sidecar).
+   `views/<hex>/reports/<slug>.json`, not `index/reports/<slug>.json`. **Landed**: `manual-corpus`
+   §Index layout now splits the report channel, publishing view sidecars inside the view and keeping
+   the per-run ingestion audits at `index/audits/<slug>.json`, with its Decision 8 recording why
+   (§The sidecar).
 2. **The per-run model load must become lazy-on-first-embed**, so an authored-only ingest that
-   re-embeds nothing never loads the model (§Discovery, fingerprint and the run budget).
+   re-embeds nothing never loads the model (§Discovery, fingerprint and the run budget). Still open.
 
 ### The store on disk
 
@@ -420,7 +425,7 @@ src/dawmans/triage/
 class TriageLoader:                       # satisfies corpus SourceLoader
     def __init__(self, store: Path, corpus: CorpusView, rig: Rig, ledger: Ledger): ...
     def discover(self) -> Iterable[Discovered]: ...   # 0 or 1 — the store is one source
-    def load(self, d: Discovered) -> LoadResult: ...  # regions in sorted path order, sidecar in .report
+    def load(self, d: Discovered) -> LoadResult: ...  # regions in sorted path order, sidecar in .sidecar
 
 @dataclass(frozen=True)
 class Entry:
@@ -428,8 +433,8 @@ class Entry:
     devices: list[DeviceRef]
     causes: list[Cause]                   # declared order, never sorted
     closing: str | None
-    source_file: Path
-    line: int                             # the H1's line — the CONTRACTS §3 open-at-source target
+    source_file: Path                     # repo-relative, e.g. triage/no-sound-from-track.md
+    line: int                             # the H1's line; with source_file, CONTRACTS §2 entry_location
 
 @dataclass(frozen=True)
 class Cause:
@@ -478,8 +483,9 @@ def terms(cause: Cause) -> list[str]                                   # 2.6 ext
 ### The sidecar — `index/views/<hex>/reports/<slug>.json`
 
 Everything `Passage` cannot carry, keyed by `passage_id`. Written by the corpus from
-`LoadResult.report`, and **read by `api/answer-engine`**, which promotes that report channel from
-diagnostic output to a contract.
+`LoadResult.sidecar`, and **read by `api/answer-engine`**, which promotes that channel from
+diagnostic output to a contract — which is why `manual-corpus` now separates it from the ingestion
+audit it used to share a file with.
 
 `<slug>` is the corpus's own rule — `source_id` with `/` replaced by `_` — so the file is
 `authored_triage.json`. Naming it literally, and hyphenating it, is a silent failure: the corpus
@@ -489,9 +495,16 @@ raised, and under 5.13 no passage declares devices, so **every entry stays in sc
 It sits **inside the view directory**, not beside it. `manifest.json`'s rename is the only switch
 `manual-corpus` provides, and a sidecar written in place pairs arbitrarily with whichever view a
 reader has loaded — dropping entries from turns they apply to, or admitting entries scoped to other
-gear. Inside `views/<hex>/` it commits and swaps atomically with the passages it keys. This is the
-first outstanding request on `manual-corpus`: the file moves under `views/<hex>/reports/` and joins
-the merged view's read contract.
+gear. Inside `views/<hex>/` it commits and swaps atomically with the passages it keys.
+
+This was the first outstanding request on `manual-corpus`, and it has **landed**. That design's
+§Index layout splits the report channel by lifetime: view sidecars go inside the view at
+`views/<hex>/reports/<slug>.json`, per-run ingestion audits stay beside it at
+`index/audits/<slug>.json`, and its Decision 8 records the split. One consequence reaches this spec:
+the sidecar is committed as a shard artefact and copied into the view by the merge, so it survives
+shard reuse. That costs nothing here — this store's `load()` runs on every ingest (§Discovery,
+fingerprint and the run budget), so its sidecar is regenerated every run regardless — but it means
+the revision guarantee does not rest on that fact.
 
 ```json
 {"passages": [
@@ -522,6 +535,25 @@ the merged view's read contract.
 just the passage text. The pointer counts are 2.8. `rejections` and `flags` carry one row per
 occurrence with its reason, which is what 5.5 asks for beyond the counts; they hold the same rows
 `dawmans coverage` renders (§Coverage).
+
+**`source_file` and `line` now have a named consumer, and it is a governed one.** They are the two
+halves of CONTRACTS §2 `entry_location`, which the engine joins as the one opaque display string
+`triage/no-sound-from-track.md:7` and puts on every authored `Citation` (CONTRACTS §3), where
+`ui/ask-and-source-picker` 5.19 shows it and makes it copyable. That is the whole of the
+open-at-source action for a pageless source (CONTRACTS §3a): no browser mechanism reaches a line in
+a file, so the entry is revealed in place — through the passage the citation already addresses — and
+its location is handed to the user rather than to a launcher. The label this design has carried since
+it was written is therefore true rather than aspirational.
+
+Two consequences. **`source_file` is repo-relative and that root is now fixed** (3.5): the string is
+user-visible and pasted into an editor, so it may not drift to store-relative later. And
+`entry_location` is a **locator, not an identity** — it moves whenever the author edits the file
+above the heading — so it stays out of `passage_id` and `entry_key` derivation, exactly as
+CONTRACTS §2 requires and as §Identity already computes them.
+
+The `causes` array acquires a second governed consumer at the same time: it is the source of
+CONTRACTS §4c's `Cause` records, whose `rank` is the declared position. 1.5's "never re-order" is now
+load-bearing on `api/answer-engine` 7.6 and `ui/ask-and-source-picker` 6.6 as well as on retrieval.
 
 `entry_key` — sha256 over the normalised symptom and the sorted device ids — is an annotation, not
 a key of anything: it gives the report a stable handle on an entry across a file rename. 1.9's own

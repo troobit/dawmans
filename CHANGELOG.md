@@ -10,6 +10,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **`specs/CONTRACTS.md` amended to close all six open cross-spec defects** (DECISIONS
+  Decision 11). Each had been found from both ends of its seam. New governing sections:
+  - §3a **Open at source** — the action is mediated by the engine, never by the browser's
+    own filesystem access, because a tab served over `http://` cannot navigate to `file://`
+    in any current engine and the refusal is silent, making such a control dead rather than
+    unavailable. A vendor manual is served same-origin and opened at `#page=N` and nothing
+    else; an authored entry is revealed in place through the existing fetch-passage
+    operation, with `entry_location` copyable. The engine resolves every target from
+    `source_id` — no caller supplies a path, and the index is the allowlist.
+  - §4b **the turn stream** — sixteen named events with ordering, a version token, and both
+    halves of the unknown-member rule, so a streamed seam is governed like a record.
+  - §4c `Cause`, §4d `body` block types, §4e `required_manual`, §6a **reason vocabulary**.
+  - §6 gains `ranked-causes` (17 members) with an explicit rule: the taxonomy may be amended
+    but never grown to encode a *refinement* of an existing member — that is what `reason` is
+    for.
+- `Passage` and `Citation` gain `entry_location`; `AnswerEnvelope` gains `reason`,
+  `retry_after`, `detail`, `framing`, `causes[]`, `required_manual` and `scope_dropped[]`.
+  Each has a named consumer criterion, so none repeats the produced-but-unconsumed defect
+  the amendment exists to close.
+- All four specs reconciled against the amended contract — 10 new criteria across
+  `api/answer-engine` (111), `ui/ask-and-source-picker` (154) and `data/manual-corpus` (83).
+- The triage sidecar now lives at `views/<hex>/reports/<slug>.json`, inside the view, so it
+  and the passages it keys always share a revision. Ingestion audits stay at
+  `index/audits/<slug>.json`: an audit describes a *run* and must outlive the view it
+  accompanied, whereas a sidecar describes *the passages in a view*. The run-side directory
+  is renamed to avoid two files at the same basename differing only in parent, which fails
+  silently rather than erroring. This discharges the blocking prerequisite on the answer
+  engine (manual-corpus Decision 8).
+
 ### Added
 
 - `ui/ask-and-source-picker` design and decision log (7 ADRs) — the fourth and last design.

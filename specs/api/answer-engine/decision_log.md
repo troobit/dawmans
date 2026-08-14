@@ -165,7 +165,17 @@ ten tokens and of provider uniformity.
 ## Decision 3: Classify the outcome with fixed-order engine gates plus a model-chosen content outcome carried as the stream's first line
 
 **Date**: 2026-08-14
-**Status**: accepted
+**Status**: accepted, counts amended by `DECISIONS.md` Decision 11
+
+> **Amendment (2026-08-14).** `DECISIONS.md` Decision 11 added `ranked-causes` to `CONTRACTS.md` §6,
+> so every count below moves by one on the model's side: **seventeen** outcomes, **seven** of them
+> content outcomes validated against a seven-member enum, ten still engine-determined. The split,
+> its disjointness and the single framing-unparsed exception are unchanged, and `ranked-causes` is
+> deliberately model-chosen for that reason — reaching it from the engine's own narrowing counter
+> would put a content outcome behind a gate and add a second exception to the property this decision
+> exists to keep provable. The counter is instead carried into the prompt, exactly as 7.5 already
+> requires. `causes[]` itself is still engine-built from the triage sidecar on the entry path, for
+> the same reason `narrowing` is.
 
 ### Context
 

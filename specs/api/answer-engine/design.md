@@ -77,11 +77,12 @@ what 5.13 exists to prevent. The engine therefore **fails loudly** when a view n
 `authored-triage` source whose sidecar is absent, rather than serving with an empty one.
 
 Its location is `<manifest.view_dir>/reports/authored_triage.json` — inside the view, so the sidecar
-and the passages it keys are always the same revision. **This design does not hold until
-`data/manual-corpus` lands that move**: that spec currently writes `index/reports/<slug>.json`,
-beside the views rather than in them, and `data/symptom-triage` lists relocating it as its first
-outstanding request on the corpus. Until it lands, the engine would pair an arbitrary sidecar version
-with whichever view it loaded. Recorded as a blocking prerequisite, not a detail.
+and the passages it keys are always the same revision. That is now what `data/manual-corpus` writes:
+its §Index layout splits view sidecars, which go inside the view and swap with the manifest rename,
+from per-run ingestion audits, which stay beside it at `index/audits/<slug>.json`; Decision 8 there
+records the split. The engine therefore never pairs a sidecar with a view it did not come from, and
+§Corpus change detection can discard the sidecar with the rest of the view rather than tracking it
+separately.
 
 ### Corpus change detection (5.10, 5.11)
 
@@ -280,54 +281,69 @@ answered
 Turn the Track Activator back on — click the dimmed track number in the mixer. [[p:ableton/live-12#4b12a1]]
 ---
 ## Why
-The Track Activator mutes the track's output when off. [[p:ableton/live-12#4b12a1]]
+The `Track Activator` mutes the track's output when off. [[p:ableton/live-12#4b12a1]]
 
 1. Look at the mixer for a dimmed track number. [[p:authored/triage#9f3c1a]]
 2. Click it to re-enable the track. [[p:ableton/live-12#4b12a1]]
 ~uncovered whether the interface's direct monitoring is also muted
 ```
 
+The backticks around `Track Activator` are CONTRACTS §4d's key-term inline form, which UI 4.4 and
+4.12 render as a discrete key-styled element. There is no other emphasis in the subset.
+
 | Element | Rule |
 |---|---|
-| Line 1 | One of six **content outcomes**, bare. See §The outcome procedure |
+| Line 1 | One of seven **content outcomes**, bare. See §The outcome procedure |
 | Line 2 | `direct_answer`, one line, first actionable instruction within 25 words (1.9) |
 | Line 3 | `---` |
-| After | `body`, a restricted Markdown subset plus five sigil lines |
+| After | `body`, the closed subset CONTRACTS §4d fixes, plus the sigil lines below |
 
-Body block types, all identifiable at column 0 without prose heuristics (1.10): `## ` heading,
-`N. ` ordered step, `- ` bullet, blank-line-separated paragraph, and the sigils:
+**The framing is engine-internal; `body` is not.** The sigils never reach a consumer — the parser
+either hoists them into an envelope field or, for the two that stay, emits them as the typed blocks
+CONTRACTS §4d governs. So the sigil spelling is this design's to choose, while the block set and the
+two inline forms are the contract's. Body block types, all identifiable at column 0 without prose
+heuristics (1.10): `## ` heading, `N. ` ordered step, `- ` bullet, blank-line-separated paragraph,
+and the sigils:
 
 | Sigil | Meaning | Destination |
 |---|---|---|
 | `~uncovered ` | A named part of the question the sources do not cover (2.2) | Hoisted to `uncovered_parts[]` |
 | `?narrow ` + `* ` lines | The narrowing question and its 2–4 candidates (7.1, 7.2) | Hoisted to `narrowing` |
-| `@device ` | The device whose documentation is needed (2.10) | Hoisted to `required_device` |
-| `!caveat ` | A recommendation depending on an edition or add-on the rig lacks (1.12) | Stays in `body` as a typed block |
-| `!conflict ` + two `- ` lines | Two readings of conflicting passages, each with its own citations (1.4) | Stays in `body` as a typed block |
-| `!suggest <source_id>` | An unselected source likely to hold the answer (2.3) | Stays in `body` as a typed block |
+| `?cause ` + a `check: ` line | One terminal candidate cause on the **fallback** path only (7.6) | Hoisted to `causes[]` |
+| `@device ` | The device whose documentation is needed (2.10) | Hoisted to `required_device`, from which the engine assembles `required_manual` |
+| `!suggest <source_id>` | An unselected source likely to hold the answer (2.3) | Hoisted to `suggested_sources[]`, in emitted order |
+| `!caveat ` | A recommendation depending on an edition or add-on the rig lacks (1.12) | Stays in `body` as the CONTRACTS §4d caveat block |
+| `!conflict ` + two `- ` lines | Two readings of conflicting passages, each with its own citations (1.4) | Stays in `body` as the CONTRACTS §4d conflict block |
 
-Citations are inline markers `[[p:<passage_id>]]`.
+Citations are inline markers `[[p:<passage_id>]]`. A key term — a key name or combination, a
+parameter name, a menu path — is a backtick span, which is CONTRACTS §4d's second inline form and
+what UI 4.4 and 4.12 render as a discrete element. Emphasis, links and images are outside the
+subset and the prompt forbids them.
 
 **Source suggestion (2.3–2.5) needs no content from the suggested source.** The prompt carries a
 metadata-only roster of the *unselected* sources — `source_id`, `display_name`, `product`, `kind` —
 and nothing else. 2.4 then holds by construction: source scoping is a mask applied before retrieval,
 so no passage from an unselected source exists anywhere in the turn to be quoted. The model orders
 up to three `!suggest` lines by likelihood from names alone, emits none when no source is a
-plausible holder (2.5), and the prompt forbids them entirely on `out-of-domain` (2.9). Suggestions
-have no field on the closed `AnswerEnvelope`, so like 1.12 and 1.4 they ride in `body` as a typed
-block rather than inventing one.
+plausible holder (2.5), and the prompt forbids them entirely on `out-of-domain` (2.9). The parser
+hoists them into `suggested_sources[]`, resolving each `source_id` against `sources.json` for its
+`display_name` and **dropping any that does not resolve** — a model-invented id is not an
+addressable value, and 2.4 already guarantees no unselected source's content is in the turn. Where
+none survives, the field is **absent**, never an empty array (2.5).
 
-**Riding in `body` is a position, not a free pass.** 1.12, 1.4 and 2.3 all need machine-identifiable
-output that CONTRACTS §4 has no field for, and all three ride in `body`. But §4 defines `body` as
-carrying "headings, ordered steps, key terms", and `ui/ask-and-source-picker` 4.4 renders exactly
-those three — so a `!caveat`, `!conflict` or `!suggest` block currently arrives at a consumer with no
-agreed grammar for it and no criterion requiring it to be rendered. `!suggest` is the worst of the
-three: UI 7.4 needs the `source_id` as an addressable value to offer "add this source and re-ask in
-one activation", not as a sigil inside a prose blob. Recorded as defect 3 below; CONTRACTS §4 has to
-name the `body` block types, which is a contract amendment rather than something this design can
-settle alone.
+**Riding in `body` is now a position with a contract behind it.** CONTRACTS §4d names the closed
+block set and its two inline forms, and UI 4.4 renders every one of them — so `!caveat` and
+`!conflict` arrive at a consumer obliged to show them, with `!caveat` in its reading position and
+both readings of a `!conflict` unchosen. `!suggest` left that class entirely: it was an addressable
+value spelled as text, and UI 7.4 needs the `source_id` as a value to offer "add this source and
+re-ask in one activation". It is hoisted like `~uncovered`, `?narrow` and `@device` and no longer
+rides in `body` at all.
 
-This design does **not** claim that no envelope field is invented — see defect 2 on `reason`.
+Two consequences for the parser. First, an unknown first line is **not** dropped: CONTRACTS §4b rule
+2 makes the consumer render it as a paragraph, so the engine's own block classifier does the same
+rather than discarding output it does not recognise. Second, `!conflict`'s arity is a producer
+obligation the parser checks and reports through `framing`; it never causes a block already emitted
+to be re-typed, which UI 4.2 forbids.
 
 **The outcome token precedes `direct_answer`, and 1.8 still holds.** 1.8 forbids qualification,
 caveats, restatement and supporting context ahead of the answer. An outcome token is none of those —
@@ -345,10 +361,12 @@ degradation for a provider that ignores the framing.
 two. It is stated here because §The outcome procedure otherwise asserts the two sets are disjoint,
 and on this path they are not.
 
-The unparsed status is reported as its own `framing` field, **not** on `timings`. CONTRACTS §4
-defines `timings` as "per-stage, for verifying the latency budget" and §7 as the stage-budget record;
-a parser status is not a duration and putting it there is the same field invention this design flags
-as defect 2 elsewhere. `framing` is subject to that same defect — CONTRACTS §4 must name it.
+The unparsed status is reported as its own `framing` field, **not** on `timings` — CONTRACTS §4 now
+names both, and fixes `timings` as durations only. `framing` is a parser status over the provider's
+output, not a fact about the transport, which is why it is an envelope field carried by an event
+rather than a property of the stream. Its consumer is UI 9.3, which for this reason opens its
+diagnostic disclosure on a successful turn as well as a failed one: a `framing: unparsed` answer had
+its `direct_answer` recovered by fallback, and nothing else on the envelope would say so.
 
 **Suppressing the model's own XML.** With thinking disabled on Claude Opus 5 the model occasionally
 leaks `<thinking>` tags into visible output. The system prompt therefore carries *"Do not include
@@ -423,7 +441,7 @@ with the state side unattributed to any citation.
 
 ## The outcome procedure
 
-§6 is closed — **16 members: 10 engine-determined and 6 content** — and every turn yields exactly
+§6 is closed — **17 members: 10 engine-determined and 7 content** — and every turn yields exactly
 one. The two sets are disjoint on every path but one, named below.
 
 A question over 1000 characters is **not** in the table below: 9.12 rejects the submission with HTTP
@@ -458,11 +476,18 @@ violated ("SHALL mark the answer as incomplete and SHALL NOT present the truncat
 finished answer") and UI 9.14 would have no producer at all. Whether output already exists is a
 property of the turn, not of the error, so it is asked first.
 
-**Model-chosen (6).** Line 1 of the stream, validated against the enum
-`answered | partially-answered | needs-narrowing | refused-not-covered | out-of-domain |
-no-manual-for-device`. The model can emit no other member; the engine emits none of these **except**
-on the framing-unparsed path, where it is restricted to `answered` and `refused-not-covered`
-(§Answer shape). That exception is the only overlap between the two sets.
+**Model-chosen (7).** Line 1 of the stream, validated against the enum
+`answered | partially-answered | needs-narrowing | ranked-causes | refused-not-covered |
+out-of-domain | no-manual-for-device`. The model can emit no other member; the engine emits none of
+these **except** on the framing-unparsed path, where it is restricted to `answered` and
+`refused-not-covered` (§Answer shape). That exception remains the only overlap between the two sets.
+
+**`ranked-causes` is model-chosen, deliberately, and that is what keeps disjointness intact.** The
+engine could reach the terminal form from its own narrowing counter, but making it engine-determined
+would put a content outcome behind a gate and add a second exception to the disjointness property.
+Instead the counter is carried into the prompt exactly as it already is for 7.5: at the limit the
+prompt forbids `?narrow` and directs `ranked-causes`. `causes[]` itself is still **engine-built** on
+the entry path, from the sidecar, for the same reason `narrowing` is — see below.
 
 The classification is a byproduct of the synthesis call — no pre-flight classifier, no second round
 trip, no latency. [Decision 3](decision_log.md) records why.
@@ -494,13 +519,16 @@ entry in `gaps.owned_but_undocumented`, the engine substitutes the canonical `<v
 and the rig display name; otherwise the free-form name is carried through. 2.10 names a device, not
 a source id, so an unmatched name is valid output, not an error.
 
-**The filename must travel with it.** CONTRACTS §6 defines `no-manual-for-device` as naming "the
-device **and the filename** to add", and UI 7.7 requires the exact filename in a form copyable in one
-activation. The UI cannot synthesise it: the corpus filename grammar needs `doctype`, `version` and
-`lang`, none of which the engine sends and none of which the UI can know. So the engine emits a
-**filename template** alongside `required_device`, built from the canonical id and the corpus's
-documented convention with the unknown fields left as named placeholders. Requirement 2.10 omits this
-and is itself a defect against CONTRACTS §6 — recorded as defect 4.
+**The filename travels with it, as its own field.** CONTRACTS §6 defines `no-manual-for-device` as
+naming "the device **and the filename** to add", and UI 7.7 renders it copyable in one activation.
+The UI cannot synthesise it: the grammar needs `doctype`, `version` and `lang`, none of which a
+browser can know. So where the device resolved to a canonical id the engine emits `required_manual`
+(CONTRACTS §4e): `filename` assembled from `<vendor>_<product>` plus a named placeholder for each
+unknown field, and `placeholders[]` listing those fields so the UI can say which parts the user
+supplies without splitting a human-facing string. Where the device did **not** resolve, vendor and
+product are unknown too, no placeholder can stand in for them, and `required_manual` is omitted —
+the UI then names the convention and the device. 2.10 now requires all of this; it previously asked
+only for the device, which was defect 4.
 
 **`contributing_sources[]`** is the set of `source_id` over `supplied`. CONTRACTS §4 fixes it as
 "which selected sources actually supplied passages". A citation-derived set would be more
@@ -566,14 +594,29 @@ assembly** rather than merely recorded. On a turn where the counter has reached 
 outcome is model-chosen, so nothing else in the design can stop a third question, and 7.5 would have
 no mechanism at all.
 
-The terminal form 7.6 requires — a ranked list of at most 4 documented candidate causes, each with
-its citations and its confirming check — has **no representation in CONTRACTS §4 and no sigil in the
-framing**, while `ui/ask-and-source-picker` 6.6 is written to render exactly it, distinctly from a
-narrowing question and showing the rank. This design cannot settle it alone; it is defect 1 below.
-The interim position, so the path is not simply absent: the turn carries `partially-answered` (the
-only honest fit inside a closed §6 — the cause is not established, so `answered` would overclaim),
-and the causes render as an ordered-step block, each step carrying its check and its fix citation.
-That loses the explicit rank the UI is required to show.
+The terminal form 7.6 requires is now `ranked-causes` carrying `causes[]` (CONTRACTS §4c), and it is
+built the same way `narrowing` is:
+
+1. The prompt, at counter 2, forbids `?narrow` and directs `ranked-causes` on line 1.
+2. **On the entry path the engine builds `causes[]` from the sidecar**, not from the model — the
+   same rule, and for the same reasons, as `narrowing`: 7.6 preserves the entry's ranking, and a
+   model-authored list would put prose where a ranked, individually-cited record has to be. `rank`
+   is the 1-based position, `statement` and `check` are the cause's own, `cites[]` is the entry
+   passage, and `fix_cites[]` is that cause's fix passages **after the same scope filter** the
+   narrowing expansion applies. Out of scope ⇒ empty `fix_cites[]` and the cause's citation carries
+   `unbacked`, exactly as the narrowing path already handles it.
+3. **On the fallback path** — the limit reached with no matching entry — there is no authored
+   ranking to preserve, so the causes come from the model over cited passages, one `?cause` sigil
+   block each, in emitted order. `rank` is that order. This asymmetry is the same one 7.7 already
+   carries: the entry path is the one the requirements call satisfiable.
+4. `direct_answer` is the rank-1 cause's `check`, stated as an instruction — never the cause. That
+   is what keeps UI 4.10 and 11.7 reachable on a turn whose whole content is four things to check,
+   while satisfying UI 6.6's "SHALL NOT present the first cause as the answer".
+
+`cites[]` and `fix_cites[]` carry `passage_id` and nothing else. The citations themselves go out on
+the turn's ordinary `citation` events, into the one `citations[]` the consumer already keys by
+`passage_id` — a `Cause` bearing citation records of its own would open a second channel on which
+§3's inline obligations would have to be met twice.
 
 Budget: the sidecar lookup is a dict hit; the fix resolution is at most a few dozen dict hits. 7.3 is
 met because a narrowing turn is an ordinary synthesis call with a shorter output, held to the same
@@ -606,7 +649,8 @@ class Provider(Protocol):
 
 class ProviderFailure(Exception):
     kind: Literal["unreachable", "rate-limited", "auth", "error"]
-    retry_after: float | None
+    retry_after: float | None       # seconds, as the provider stated it; never rounded here
+    detail: str | None              # CONTRACTS §4 `detail`; filtered, never parsed
 ```
 
 **1.6's longer form has no transport, and is deferred rather than pretended.** `max_words` is
@@ -650,7 +694,9 @@ and must sit after the breakpoint.
 
 **Rate limits (6.8).** `anthropic.RateLimitError` carries `retry-after`. Retry once if the stated
 interval is ≤3 s, after sleeping it; otherwise surface `provider-rate-limited` with the value
-unchanged.
+unchanged. **Unrounded on both branches**, which is what keeps the retry decision and the reported
+value consistent: rounding 3.4 s up to 4 s before the comparison would change which branch runs.
+`retry_after` is absent where the provider stated none, and the engine invents nothing (UI 9.8).
 
 **Cancellation (4.10).** The stream is driven by an `asyncio.Task`; cancelling it exits the async
 context manager, which closes the HTTP response. The 250 ms bound is a close, not a drain.
@@ -671,9 +717,15 @@ Stored in the macOS Keychain via `keyring`, under service `dawmans` and a per-pr
   `provider-error` + `reason: authentication-failed` (HTTP 401 with a key present).
 - 6.15: `PUT /provider` to `shared-backend` returns `requires_disclosure_ack: true` and records
   nothing; a turn on an unacknowledged shared backend fails as `provider-unconfigured` +
-  `reason: disclosure-unacknowledged`. §6 is closed, so no outcome is added — but `reason` is a
-  field CONTRACTS §4 does not define, and adding it is a contract amendment, not a design choice.
-  See defect 2.
+  `reason: disclosure-unacknowledged`. §6 is closed, so no outcome is added; `reason` is now a
+  CONTRACTS §4 field drawn from the closed §6a vocabulary, which is what makes these three cases
+  distinguishable by the caller without a seventeenth outcome per distinction.
+- `detail` (CONTRACTS §4) carries the engine's own wording for a failure, and is the one string a
+  provider SDK's exception text reaches. It is filtered before it is set — the same
+  `logging.Filter` predicate that drops a record containing the stored secret is applied to it — and
+  it never carries a stack trace, a raw provider payload, or a path outside the two store roots.
+  Nothing may parse it: everything the caller acts on is `reason`, `retry_after` or a field of its
+  own.
 
 ---
 
@@ -732,27 +784,47 @@ Starlette on uvicorn, bound `127.0.0.1`.
 | set-credential | `PUT /provider/credential` | Returns masked (9.8) |
 | clear-credential | `DELETE /provider/credential` | |
 | test-provider | `POST /provider/test` | Reachability only; no synthesis |
-| open-at-source (doc) | `GET /sources/{source_id}/document` | The PDF served inline, so the browser's own viewer honours `#page=N`. See defect 5 |
-| open-at-source (entry) | `POST /sources/{source_id}/open` | OS open of an authored entry at its `source_file` and `line`. See defect 5 |
-| the surface | `GET /` and static assets | `web/build`, mounted so the page is same-origin |
+| serve-document | `GET /sources/{source_id}/document` | 9.4. The PDF served **inline** — `Content-Type: application/pdf`, **no `Content-Disposition` filename**, `Range` honoured — so the browser's own viewer opens it and honours `#page=N`. Anything that sets an attachment disposition downloads the file instead and silently defeats the fragment |
+| the surface | `GET /` and static assets | `web/build`, mounted so the page is same-origin. A route on this surface, listed because `ui/ask-and-source-picker` depends on it |
+
+**serve-document takes no path and reads no index it did not load.** It resolves `source_id` against
+`sources.json`, refuses anything that is not a `vendor-manual`, and rebuilds the filename from that
+record's own fields under Decision 2's grammar —
+`f"{vendor}_{product}_{doctype}_v{doc_version}_{lang}.pdf"`, with `doc_version` already stripped of
+its leading `v` by the corpus (`data/manual-corpus` 2.7), so there is one reconstruction rule and no
+`_vv1.0_`. The name is joined to the configured manuals root, the result is `realpath`-resolved and
+refused if it escapes that root, and a missing or unreadable file is a 404 — the caller degrades the
+citation to its string form (UI 5.11), never to a broken action. **The engine gains a read dependency
+on `manuals/` and no parsing dependency**: it streams bytes, so the PyMuPDF confinement above is
+untouched and the import test still passes. The route is not a stage of a turn (CONTRACTS §7).
+
+There is no `POST /sources/{source_id}/open`. The authored kind's open-at-source is served by
+`GET /passages/{passage_id}`, which already exists and which UI 5.6 already renders in place; the
+entry's file and line reach the surface as `entry_location` on the citation. Launching an editor
+would add a loopback endpoint whose whole purpose is starting a process, to reach a line only an
+editor-specific invocation can reach, for an action CONTRACTS §3a makes mandatory — so it is not
+built.
 
 **Streaming is SSE over a POST, not `EventSource`.** `EventSource` cannot POST, and the request
 carries a question plus a source list that does not belong in a URL. The caller uses `fetch` with a
-`ReadableStream`; the response is `text/event-stream` so the framing, the retry semantics and — most
-usefully — 9.10's "caller disconnects ⇒ cancellation" all come for free from the transport.
+`ReadableStream`. Only 9.10's "caller disconnects ⇒ cancellation" comes free from the transport:
+`retry`, `Last-Event-ID` and automatic reconnection are `EventSource` processing-model behaviours
+that a hand-rolled stream reader does not inherit, and CONTRACTS §4b now states that a broken stream
+is a failed turn with no resumption. `done` therefore carries `{"complete": true}` — an event with a
+name and no data line is never dispatched — and the response declares `dawmans/turn-stream/1` in a
+header before the first body byte (9.15).
 
-SSE event names: `scope_dropped`, `outcome`, `direct_answer`, `body_delta`, `citation`,
-`contributing_sources`, `uncovered_parts`, `narrowing`, `required_device`, `ungrounded`, `framing`,
-`timings`, `done`.
+The SSE event set is **CONTRACTS §4b's**, not this design's: `scope_dropped`, `outcome`,
+`direct_answer`, `body_delta`, `citation`, `cause`, `contributing_sources`, `uncovered_parts`,
+`suggested_sources`, `narrowing`, `required_device`, `required_manual`, `ungrounded`, `framing`,
+`timings`, `done` — sixteen, in the ordering that table fixes, each carrying a named envelope field
+except `done`. `scope_dropped` and `framing` now have obliged consumers (UI 3.11, UI 9.3), which
+was defect 3.
 
 **`timings` carries the five stages 4.11 names, and only durations:**
 `retrieval_ms`, `state_acquisition_ms`, `engine_overhead_ms`, `first_token_ms`, `completion_ms`, plus
-the run-level `corpus_reload_ms`. The framing parse status is its own `framing` event, not a member
-of `timings` — CONTRACTS §4 defines `timings` as per-stage latency and §7 as the stage-budget record,
-so a parser status does not belong in it.
-
-**CONTRACTS governs no SSE event set at all**, which is why `scope_dropped` and `framing` can exist
-here without any consumer being obliged to render them. That gap is defect 3.
+the run-level `corpus_reload_ms`. The framing parse status is the separate `framing` field — CONTRACTS
+§4 fixes `timings` as durations only.
 
 **Binding and headers.**
 
@@ -811,7 +883,7 @@ against under-count; `count_tokens` is reserved for offline `make bench` calibra
 |---|---|---|
 | Provider fails before the first token | `provider-unreachable` / `-error` / `-rate-limited` / `timeout` | Nothing |
 | Provider fails mid-stream | `incomplete` | Everything streamed so far, marked (6.10) |
-| Framing unparseable | The engine's coverage-derived outcome | Whole stream as `body`, `timings.framing: unparsed` |
+| Framing unparseable | The engine's coverage-derived outcome | Whole stream as `body`, `framing: unparsed` on the envelope |
 | Marker resolves to nothing | Unchanged | Marker stripped; counted; feeds the 3.7 check |
 | State source fails or times out | Unchanged | Manual-only, with a note (8.8) |
 | New manifest unreadable | Unchanged | Live view retained; reported on `GET /sources` |
@@ -824,47 +896,54 @@ answer cache at all.
 
 ## Requirements defects to reconcile
 
-Six places where the requirements, CONTRACTS and the sibling specs cannot all be satisfied as
-written. None is resolved unilaterally beyond the position stated at its point of use above. Items 1,
-2 and 5 were reached independently from the `ui/ask-and-source-picker` side as well, from the
-consuming end of the same seams.
+All six are **closed** by `DECISIONS.md` Decision 11, which amended CONTRACTS and then reconciled
+this spec and `ui/ask-and-source-picker` against it. They are kept here with what closed them rather
+than deleted, because each was found from both ends of its seam and the history is the evidence that
+the reconciliation was real work.
 
-1. **7.6's terminal ranked-cause list has no representation.** CONTRACTS §4 carries `narrowing` — a
-   question plus 2–4 candidates — and nothing else; the framing has `?narrow` and no sigil for a
-   ranked cause list; yet 7.6 requires ≤4 ranked causes each with citations and a confirming check,
-   and `ui/ask-and-source-picker` 6.6 is written to render exactly that, showing the rank and
-   distinct from a narrowing question. Implemented here as `partially-answered` with an ordered-step
-   block, which loses the rank the UI must show. Either CONTRACTS §4 gains a `causes[]` field or the
-   framing gains a sigil.
-2. **`reason` and `framing` are fields CONTRACTS §4 does not define.** 6.6 needs to distinguish a
-   missing credential from an authentication failure, 6.15 needs `disclosure-unacknowledged`, §6
-   asserts that `rate-limited` "carries a retry-after" without §4 listing it, and
-   `ui/ask-and-source-picker` 9.3, 9.8, 9.9 and 9.10 each need one of these to render. §4's field
-   table carries none. Raise `reason` (with its enumerated values) and `retry_after` to CONTRACTS §4.
-3. **CONTRACTS governs no SSE event set, so produced-and-unconsumed signals are invisible to review.**
-   `scope_dropped` exists because 5.11 requires a pruned scope be reported, and no UI criterion
-   renders it — while UI 3.8 mandates the opposite for a different case. `framing` has the same
-   shape. This is the produced-but-unconsumed defect class Decision 6 exists to catch, and it is
-   currently ungoverned because the seam is a stream rather than a record.
-4. **2.10 omits the filename CONTRACTS §6 requires.** §6 defines `no-manual-for-device` as naming
-   "the device **and the filename** to add" and UI 7.7 requires the exact filename copyable in one
-   activation, but 2.10 asks only for the device. The engine emits a filename template; 2.10 should
-   say so.
-5. **Open-at-source has no route, and its data is produced upstream for nobody.**
-   `data/symptom-triage` publishes `source_file` and `line` per entry, labelled the CONTRACTS §3
-   open-at-source target; CONTRACTS §3 makes a one-activation open action mandatory on *any*
-   citation; and this engine is the only counterpart the browser can reach. A browser tab cannot
-   navigate from `http://` to `file://` nor launch a viewer at a page, so the action is unbuildable
-   without engine routes. The two routes added to the surface table above are this design's position,
-   and they take the engine past the eight operations the UI spec assumes.
-6. **CONTRACTS §4 defines `body` too narrowly for what rides in it.** §4 says "headings, ordered
-   steps, key terms" and UI 4.4 renders those three, but 1.12, 1.4 and 2.3 ride in `body` as
-   `!caveat`, `!conflict` and `!suggest` typed blocks with no agreed grammar and no criterion
-   requiring them to be rendered. `!suggest` is the sharpest case: UI 7.4 needs its `source_id` as an
-   addressable value, not as a sigil inside prose. §4 should name the block types.
+1. **CLOSED — 7.6's terminal ranked-cause list had no representation.** CONTRACTS §4 carried
+   `narrowing` and nothing else, and the framing had no sigil for a ranked cause list, while UI 6.6
+   was written to render exactly one. Closed by CONTRACTS §4c `Cause` and the `ranked-causes` outcome
+   (§6), with `causes[]` on the envelope, a `?cause` sigil for the fallback path, and 7.6 and UI 6.6
+   both amended to them. The interim `partially-answered`-plus-ordered-steps position, which lost the
+   rank, is withdrawn.
+2. **CLOSED — `reason`, `retry_after`, `detail` and `framing` were fields CONTRACTS §4 did not
+   define.** Closed by all four as flat optional members of §4, with `reason` drawn from the closed
+   per-outcome vocabulary of §6a. §6's "`rate-limited` carries a retry-after" is weakened to MAY,
+   which is what 6.8 and UI 9.8 already assumed. The taxonomy stays closed against refinement.
+3. **CLOSED — CONTRACTS governed no SSE event set.** Closed by CONTRACTS §4b: sixteen events, each
+   carrying a named §3/§4 field, with ordering, the version token, the three mechanics SSE does not
+   supply, and both halves of the unknown-member rule. `scope_dropped` now discharges into UI 3.11
+   and `framing` into UI 9.3. §4b also states in one sentence why UI 3.8 and 5.11 were never in
+   conflict.
+4. **CLOSED — 2.10 omitted the filename CONTRACTS §6 requires.** Closed by CONTRACTS §4e
+   `required_manual` and the amendment to 2.10 and UI 7.7. **With a residual, stated:** where the
+   engine has never seen the document, `filename` carries named placeholders for `doctype`,
+   `version` and `lang`, so UI 7.7 no longer demands an *exact* name — that was unknowable, and the
+   criterion was the defect. Where the device does not resolve to a canonical id the field is absent
+   altogether and the UI names the convention instead.
+5. **CLOSED — open-at-source had no route.** Closed by CONTRACTS §3a and one new operation, 9.4's
+   serve-document. The authored kind needed **no** new route: its entry text is `GET /passages/{id}`,
+   which already existed, and its file and line travel as `entry_location` (CONTRACTS §2, §3), which
+   is `data/symptom-triage`'s `source_file` and `line` finally acquiring a consumer. The proposed
+   `POST /sources/{source_id}/open` is dropped — no browser mechanism reaches a line in a file, so a
+   mandatory action may not depend on an editor the user may not have installed.
+6. **CLOSED — CONTRACTS §4 defined `body` too narrowly.** Closed by CONTRACTS §4d, which names the
+   six block types, the two inline forms, and the degrade-don't-drop rule for an unknown block.
+   `!suggest` left `body` entirely for `suggested_sources[]`, since UI 7.4 needs an addressable
+   value; `!caveat` and `!conflict` stayed, because their position in reading order carries meaning
+   that hoisting would destroy.
 
-A seventh item is a dependency rather than a defect: the triage sidecar must move inside the view
-directory before this design holds at all. See §What the engine reads.
+A seventh item was a dependency rather than a defect: the triage sidecar had to move inside the view
+directory before this design held at all. `data/manual-corpus` has landed it — Decision 8 there — and
+§What the engine reads now states the location as a contract rather than a request.
+
+**Still open, and untouched by that amendment.** CONTRACTS §7 allots the concurrent retrieval-and-
+state stage retrieval's 50 ms, while §Architecture bounds that `gather` by the 100 ms state timeout.
+The composed figure holds today only because `NullStateSource` returns immediately, and it stops
+holding when `LogTailStateSource` lands. That needs its own §7 amendment — either a line for the
+concurrent stage at 100 ms, or a state timeout that fits inside the retrieval budget — and it blocks
+that source, not this design.
 
 ---
 
@@ -883,6 +962,8 @@ Genuine invariants — each is a universal statement, not an example wearing a g
 | Outcome disjointness | No engine-determined outcome is reachable from a model line, and no content outcome from a gate **except on the framing-unparsed path, where the engine may emit `answered` or `refused-not-covered` and nothing else** | 9.9 |
 | Incomplete precedence | Any provider failure occurring after ≥1 streamed token yields `incomplete`, whatever the failure kind | 6.10 |
 | Narrowing provenance | On the entry path the emitted candidate list equals, in order, the entry's first 2–4 causes — no reorder, no merge, no addition | 7.2, 7.6 |
+| Cause provenance and rank | On a `ranked-causes` turn, `causes[]` equals the entry's first ≤4 causes in order; every `rank` equals its 1-based position; every `passage_id` in `cites[]` and `fix_cites[]` appears in the turn's `citations[]`; an empty `fix_cites[]` implies the cause's citation carries `unbacked` | 7.6 |
+| Stream completeness | For any turn, every envelope field the engine produced is carried by exactly one CONTRACTS §4b event, the ordering constraints hold, and `done` is emitted exactly once with a payload | 9.14 |
 | Fix-pointer scope | No fix passage admitted to `supplied` lies outside the selected set | 1.1, 2.4, 5.1 |
 | Fusion monotonicity | Improving a candidate's rank in either list never lowers its fused rank | 5.5 |
 | Fusion input invariance | Fused order is invariant to the order candidates arrive in, ties broken by `passage_id` | 5.5 |
@@ -914,6 +995,9 @@ survives tokenisation (owned by `data/manual-corpus`).
 | Corpus swap | A `corpus_revision` change between turns discards the view; a source removed mid-conversation drops from the carried scope with a `scope_dropped` event; removing the last one yields `no-sources-selected` |
 | Narrowing expansion | A matching entry's causes become 2–4 candidates in the entry's order, each fix passage is in `supplied`, and `unbacked` reaches the citation |
 | Cross-source | A question needing both the controller guide and the Live manual cites both, with the small guide represented under 5.6 |
+| Serve-document | A known `vendor-manual` returns its bytes inline with no attachment disposition and an honoured `Range`; an `authored-triage` id, an unknown id and a renamed file each 404; no request body or path parameter can reach the filesystem, and a `realpath` outside the manuals root is refused |
+| Filename round-trip | For every ingested `vendor-manual`, rebuilding `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` from its `SourceRecord` yields the file it was ingested from — the reconstruction `data/manual-corpus` 2.7 guarantees, asserted rather than assumed |
+| Required manual | A canonical device yields `required_manual` whose `placeholders[]` lists exactly the fields written as placeholders in `filename`; a free-form device yields no `required_manual` at all |
 
 ### Timing
 
@@ -946,5 +1030,5 @@ specific criterion this design rests on:
 Labels are gold `(source_id, section_number)` pairs, **not** `passage_id` — a re-chunk changes every
 `passage_id` and would invalidate the whole set, while section identity survives it. The last three
 bands carry no gold passage: they label the expected **outcome**, and scoring them is a confusion
-matrix over the six content outcomes. Without those bands, 2.8 and 2.9 — the criteria written
+matrix over the seven content outcomes. Without those bands, 2.8 and 2.9 — the criteria written
 against this product's worst failure mode — are untestable at all.
