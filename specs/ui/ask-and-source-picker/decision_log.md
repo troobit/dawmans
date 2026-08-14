@@ -450,3 +450,55 @@ counter ticking on every three-second wait draws more attention than the wait de
 - A per-second text update is an `aria-live` hazard: the region must not announce each tick, so the
   counter is excluded from the announcement region of 13.5.
 - A visible counter may read as a promise about how long the wait will be, which it is not.
+
+---
+
+## Decision 8: The thread mints its conversation id client-side
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+A follow-up turn must name the conversation it continues: `POST /turn` carries `conversation_id`,
+and `api/answer-engine`'s design states only that "null starts one" (its 10.6). No CONTRACTS §4b
+event, envelope field, or response header carries a conversation id back to this surface, so there
+is no channel by which the engine could issue one. Yet 1.7 makes every question over a rendered
+answer a follow-up, and 12.5's re-ask must start a new conversation — both require the client to
+say which conversation a turn belongs to.
+
+### Decision
+
+The thread sends `conversation_id: null` on the first turn of a thread — the specced way to start a
+conversation — and mints one id (`crypto.randomUUID()`) once that turn is accepted, sending it on
+every follow-up in the thread. `clear()` (1.7's fresh context-free thread) resets the id to null.
+
+### Rationale
+
+The engine retains a single current conversation in memory (its §10), so the id's job is only to
+distinguish "continue what you are holding" from "discard and start over". Null already means the
+latter by specification; any stable non-null token serves the former. Minting client-side needs one
+engine-side sentence — a non-null id continues the current conversation — rather than a new
+response channel, and it keeps 12.5's `conversation_id: null` re-ask exactly as the design states
+it.
+
+### Alternatives Considered
+
+- **The engine issues the id in a response header or stream event**: The conventional shape -
+  Rejected: it amends CONTRACTS §4b's closed event set (or invents an ungoverned header) for a
+  value the single-conversation engine never needs to disambiguate.
+- **Mint the id before the first turn and never send null**: One code path - Rejected: "null starts
+  one" is the only specced start primitive, and 12.5 names `conversation_id: null` explicitly; a
+  first turn carrying an unknown id would rest on a larger unspecced assumption.
+
+### Consequences
+
+**Positive:**
+- Follow-up continuity works against the engine as specified, with no contract amendment.
+- The re-ask and fresh-thread paths remain exactly as the requirements and design word them.
+
+**Negative:**
+- The engine must treat a non-null `conversation_id` as continuing its current conversation; that
+  sentence is owed to `api/answer-engine`'s design when the route is implemented.
+- Two rapid first submits can both carry null and start two conversations; the engine's own
+  cancel-on-new-question rule (its 9.13) already bounds the effect to the abandoned turn.

@@ -88,6 +88,40 @@ module-level `$state` is not reactive across the module boundary). Persistence k
   never throws. Retention: user-cancelled, engine-`cancelled` and error/broken/empty-scope turns
   are skipped; a `failed`/`incomplete` turn is retained with `incomplete: true` (9.14, 12.7).
 
+- `thread.svelte.ts` — the conversation on screen. `draft` (the composed question) lives here, not
+  in the input component, so the router's manual insert, ThreadView's re-edit and stop's
+  question-restore all reach one text. Guards in `submit()`: whitespace no-op, `scope.canSubmit`,
+  1000-char limit; the `Turn` is constructed synchronously (8.7) before the fetch. **Conversation
+  ids are minted client-side** (Decision 8): first turn of a thread sends `conversation_id: null`,
+  then one `crypto.randomUUID()` for every follow-up; `clear()` resets to null. The engine will
+  need to treat any non-null id as "continue the current conversation". Error paths in `#run`:
+  user-cancel synthesizes `outcome: cancelled` + `done` through `applyEvent` (the client knows who
+  cancelled, 8.6 vs 9.16); `EngineRejection`/`UnknownStreamVersionError` are kept in a WeakMap
+  (`failureOf(turn)`) with no outcome for Phase 7's broken renderer; any other mid-stream throw
+  becomes `incomplete`. `onSettled` is a settable callback AskSurface uses for 1.6's focus return.
+
+## Keyboard router (`src/lib/keys.ts`)
+
+Plain TS (no runes) — a `KeyRouter` class with three registries: the question-input adapter
+(`{element, focus, insert}`), at most one armed digit set (`arm()` **throws** on a second
+registration; Decision 5's invariant is enforced, not assumed), and an Escape stack of overlay
+regions. Decision-table order as designed, with **one recorded deviation**: an armed digit fires
+even when the target is the question input, because 1.1 keeps focus resting there and arming only
+exists while the input is empty — a literal text-entry pass-through would defeat 1.10/6.3's
+one-keypress rule. All other text-entry targets pass through entirely (including Escape).
+Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window onkeydown onfocus>`.
+
+## Components (`src/lib/components/`)
+
+- `AskSurface.svelte` — textarea bound to `thread.draft`; Enter submits, Shift+Enter passes
+  through; shortcut row (`SYMPTOM_SHORTCUTS`, module export) renders and arms only while
+  `draft === '' && !busy && !awaitingNarrowing` — the gating that keeps the one-armed-set
+  invariant when Phase 6's narrowing candidates arm. Zero-scope and over-limit notices render from
+  store state (not submit attempts). Stop restores the question into the draft.
+- `ThreadView.svelte` — the thread shell. The question is a button that re-edits (sets
+  `thread.draft`); state line is text (`working…`/`stopped`/`abandoned`/`incomplete`/`broken`/
+  `finished`). Body rendering is a deliberate plain-text placeholder until task 24.
+
 ## Testing stack
 
 vitest (jsdom) + @testing-library/svelte for units/components; @playwright/test + axe-core
@@ -100,3 +134,11 @@ installed but not yet configured (no browser tests exist yet — config comes wi
   in-memory `Storage` over both globals; don't remove it on the theory that jsdom provides one.
 - The SSE tests assert "header checked before body read" via `response.bodyUsed`; a `pull()`-spy
   stream cannot work because the stream machinery calls `pull` eagerly to fill its queue.
+- **Component tests need `resolve.conditions: ['browser']` under vitest** (gated on
+  `process.env.VITEST` in vite.config.ts) — without it vitest resolves Svelte's *server* entry and
+  `render()` dies with `lifecycle_function_unavailable: mount(...) is not available on the server`.
+- `src/lib/testing/turn-channel.ts` is the shared stub engine: `sseChannel()` (a controllable
+  SSE `Response` carrying the version header, with an `abort()` that errors the stream the way a
+  real aborted fetch does) and `fakeEngine()` (records `TurnRequest`s, one channel per turn,
+  wires the abort signal). Thread and component tests both inject `fakeEngine().submit` into
+  `new ThreadStore({...})`.

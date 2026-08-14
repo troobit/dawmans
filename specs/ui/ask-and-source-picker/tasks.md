@@ -151,7 +151,7 @@ references:
 
 ## Phase 4: Keyboard routing and the ask surface
 
-- [ ] 19. Write tests for the keyboard router and arming registry <!-- id:f9ae01i -->
+- [x] 19. Write tests for the keyboard router and arming registry <!-- id:f9ae01i -->
   - The decision table in order: modifier held passes through; a text-entry target passes through; Escape dismisses the topmost region returning focus to its opener (13.3); digits 1–4 activate an entry only while the registry holds an armed set (1.11); any other printable focuses the input and inserts the character manually — `preventDefault` then append, because the keydown already happened on another element (1.2, Decision 5).
   - Registry invariant: at most one armed set ever — shortcuts show only on an empty input and a narrowing turn has a question in flight, so the ambiguous case cannot arise.
   - `svelte:window onfocus` restores focus to the input unless an overlay region holds it — stealing it would break 13.3's return-focus contract (1.1).
@@ -160,13 +160,13 @@ references:
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.2](requirements.md#1.2), [1.11](requirements.md#1.11), [13.3](requirements.md#13.3)
 
-- [ ] 20. Implement keys.ts <!-- id:f9ae01j -->
+- [x] 20. Implement keys.ts <!-- id:f9ae01j -->
   - One `keydown` listener on `window` with the explicit arming registry; components register and unregister, never handling these keys themselves — per-component handlers cannot know what another has armed (Decision 5).
   - Blocked-by: f9ae01i (Write tests for the keyboard router and arming registry)
   - Stream: 1
   - Requirements: [1.1](requirements.md#1.1), [1.2](requirements.md#1.2), [1.11](requirements.md#1.11), [13.3](requirements.md#13.3)
 
-- [ ] 21. Write tests for the ask input, symptom shortcuts and thread shell <!-- id:f9ae01k -->
+- [x] 21. Write tests for the ask input, symptom shortcuts and thread shell <!-- id:f9ae01k -->
   - Focus lands in the input on load and window focus without a click (1.1); unmodified Enter submits, Shift+Enter inserts a line break (1.3); empty or whitespace-only submit does nothing and contacts no engine (1.5); submitted text stays inspectable and re-editable (1.4); on `done`, focus returns to an empty input without discarding the answer (1.6).
   - A question over a rendered answer is a follow-up, indicated on screen, with a single keyboard-and-pointer control that starts a fresh context-free thread (1.7, 1.8); a keyboard-reachable stop control retains whatever text arrived (1.9).
   - The four symptom shortcuts — no sound, distorting, latency, wrong drum sound — render on an empty input, each submitting in one keypress via the arming registry and equally by pointer and normal navigation (1.10).
@@ -176,7 +176,7 @@ references:
   - Stream: 1
   - Requirements: [1.3](requirements.md#1.3), [1.4](requirements.md#1.4), [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [1.8](requirements.md#1.8), [1.9](requirements.md#1.9), [1.10](requirements.md#1.10), [1.12](requirements.md#1.12), [3.2](requirements.md#3.2), [9.15](requirements.md#9.15)
 
-- [ ] 22. Implement the ask input, symptom shortcuts and thread shell <!-- id:f9ae01l -->
+- [x] 22. Implement the ask input, symptom shortcuts and thread shell <!-- id:f9ae01l -->
   - The ask input, the shortcut row, and thread.svelte.ts holding the conversation on screen; submission goes through the scope store's block and the turn state machine.
   - Blocked-by: f9ae01k (Write tests for the ask input, symptom shortcuts and thread shell)
   - Stream: 1

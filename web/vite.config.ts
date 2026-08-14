@@ -41,6 +41,9 @@ export default defineConfig({
 	server: {
 		proxy: engineProxy
 	},
+	// Component tests mount in jsdom; without the browser condition vitest
+	// resolves Svelte's server entry and `mount(...)` is unavailable.
+	resolve: process.env.VITEST ? { conditions: ['browser'] } : undefined,
 	test: {
 		environment: 'jsdom',
 		// jsdom only provides Web Storage on a non-opaque origin; without a URL

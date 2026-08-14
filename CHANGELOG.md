@@ -12,6 +12,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/keys.ts` — the keyboard router and arming registry** (`ui/ask-and-source-picker`
+  Phase 4, Decision 5). One `keydown` listener on `window` with the design's decision table:
+  modifiers and foreign text-entry targets pass through; `Escape` dismisses the topmost overlay
+  region, returning focus to its opener (13.3); digits 1–4 activate an armed entry (1.11); any
+  other printable focuses the question input and inserts the character manually — `preventDefault`
+  then append, because the keydown already happened elsewhere (1.2). The registry enforces at most
+  one armed set by throwing on a second registration, and window focus restores the input unless a
+  region holds it (1.1). One recorded deviation: an armed digit fires even when the target is the
+  question input, since focus rests there and arming exists only while it is empty — a literal
+  pass-through would defeat 1.10/6.3's one-keypress rule.
+- **`web/src/lib/state/thread.svelte.ts` — the thread store** (Phase 4). The conversation on
+  screen: the composed draft, the turns oldest first, and submission through the scope store's
+  block and the turn state machine — whitespace submits contact no engine (1.5), zero scope blocks
+  (3.1), the 1000-character limit is enforced client-side (9.15), and the turn is acknowledged
+  synchronously before any fetch (8.7). A user stop retains what arrived and ends the turn as
+  cancelled, distinct from an engine abandonment (1.9, 8.6, 9.16); a mid-stream transport failure
+  is `incomplete` (9.14); request rejections are kept for the broken-state renderer with no
+  outcome synthesised. Conversation ids are minted client-side after the first turn of a thread
+  (decision log Decision 8); nothing listens to window focus, so leaving costs nothing (1.12).
+- **`web/src/lib/components/AskSurface.svelte` — the ask input and symptom shortcuts** (Phase 4).
+  Focus lands in the input on load and window focus (1.1); unmodified Enter submits and
+  Shift+Enter breaks the line (1.3); the four symptom shortcuts — no sound, distorting, latency,
+  wrong drum sound — render on an empty idle input with their armed digits printed, each
+  submitting in one keypress via the registry and equally by pointer (1.10, 1.11). A follow-up is
+  indicated with a single new-question control that starts a context-free thread (1.7, 1.8); a
+  stop control restores the question for re-editing (1.9, 8.6); the zero-scope state offers
+  select-all preserving the typed text (3.2) and the over-limit notice states limit and length
+  while the question stays editable (9.15).
+- **`web/src/lib/components/ThreadView.svelte` — the thread shell** (Phase 4). Turns oldest
+  first, each question inspectable and re-editable in one activation (1.4), with a textual
+  working/stopped/abandoned/incomplete/broken/finished state line and a plain-text body
+  placeholder until the Phase 5 answer renderer.
+- **`web/src/lib/testing/turn-channel.ts`** — the stubbed engine shared by the thread and
+  component tests: controllable SSE channels carrying the turn-stream version header, wired to
+  the abort signal the way a real fetch is.
+- **`ui/ask-and-source-picker` decision log Decision 8** — the thread mints its conversation id
+  client-side; the engine issues none and `null` remains the specced way to start a conversation.
+
 - **`web/src/lib/state/sources.svelte.ts` — the sources store** (`ui/ask-and-source-picker`
   Phase 3). Available sources of both kinds plus both gap reports from `GET /sources` — no fixed
   source count anywhere, an added or removed source reflected on the next load (2.1, 2.3). Carries
@@ -62,6 +100,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Fixed
 
+- **`web/vite.config.ts`** — vitest now resolves Svelte's browser entry
+  (`resolve.conditions: ['browser']` under `VITEST`), without which component tests fail with
+  `lifecycle_function_unavailable`.
 - **Web Storage in vitest under Node ≥ 22.** Node's experimental `localStorage`/`sessionStorage`
   globals (lazy getters, undefined without `--localstorage-file`) shadow jsdom's in vitest, which
   skips keys the Node global already owns — so storage was undefined in every test. A
