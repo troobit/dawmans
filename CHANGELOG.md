@@ -12,6 +12,18 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Costed the `data/manual-corpus` merge that unblocks `data/symptom-triage` Phase 4.**
+  `docs/agent-notes/triage-entry-grammar.md` said Phase 4 becomes reachable when that branch merges,
+  but not that the merge is already available: everything Phase 4 needs — `SourceRecord` and
+  `passage_id` — is committed at `4f0ea7c`, and the work still uncommitted in that worktree is all
+  under `index/`, which Phase 4 never touches. The note now records that `git merge-tree` reports
+  seven conflicting files, all of them the shared scaffolding the two branches grew independently
+  (`.gitignore`, `CHANGELOG.md`, `Makefile`, `pyproject.toml`, `specs/OVERVIEW.md`,
+  `src/dawmans/__init__.py`, `uv.lock`) with no semantic clash among them, and two already ruled by
+  PROCESS.md §9. Phase 4 is therefore blocked on a decision about what belongs on this branch, not
+  on a missing artefact — worth settling once instead of re-deriving each run. Phase 2 is unaffected:
+  its two prerequisites are human-only.
+
 - **Corrected the `data/symptom-triage` blocked-work note.** `docs/agent-notes/triage-entry-grammar.md`
   claimed `data/manual-corpus` was complete only through its task 17 and that no chunker or
   passage-id scheme existed; both now exist. The note names the real gate for Phase 2 — a committed

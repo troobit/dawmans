@@ -24,6 +24,20 @@ expressible in the ledger — every remaining task here has one. `corpus/passage
 unmerged `orbit-impl-1/manual-corpus` branch; Phase 4 becomes reachable when that
 merges, ahead of Phase 2 and without waiting for an index.
 
+That merge is available now and does not wait on the corpus agent. Everything Phase 4
+needs is already committed at `4f0ea7c` — `records.py` `SourceRecord` (its
+`authored/triage` arm enforcing 12.5) and `passage_id(source_id, text)`; the work still
+uncommitted in that worktree is all under `index/`, which Phase 4 never touches. The
+merge is not clean, but nothing in it is a semantic clash: `git merge-tree` reports seven
+files where the two branches independently grew the same shared scaffolding — `.gitignore`,
+`CHANGELOG.md`, `Makefile`, `pyproject.toml`, `specs/OVERVIEW.md`, `src/dawmans/__init__.py`,
+`uv.lock`. Both rewrote the Makefile's `$(error unconfigured)` stubs and both created
+`__init__.py` with a different docstring; PROCESS.md §9 already rules `OVERVIEW.md`
+(regenerate, never hand-merge) and `uv.lock` is `uv lock`. So the block on Phase 4 is a
+decision about what belongs on this branch, not a missing artefact — worth resolving once
+rather than re-checking each run. Phase 2 stays blocked either way: its two prerequisites
+are human-only.
+
 ## Modules
 
 | Module | Holds |
