@@ -188,7 +188,7 @@ references:
 
 ## Phase 6: Providers, credentials and the state seam
 
-- [ ] 22. Define the provider and StateSource seam types <!-- id:f3kp022 -->
+- [x] 22. Define the provider and StateSource seam types <!-- id:f3kp022 -->
   - provider/base.py: ProviderKind, SynthesisRequest, the Provider protocol (status/probe/stream) and the four-kind ProviderFailure - the design's Provider abstraction verbatim. stream() yields text deltas and nothing else, which is what makes 6.2 structural rather than a per-provider obligation (Decision 4).
   - requires_key is derived from the kind; max_words is fixed at 400 - 1.6's longer form has no transport in the MVP and the deferral is recorded in the design, so no request field is invented here.
   - state/base.py and state/null.py: StateValue as the flat (key, value, observed_at, origin, origin_kind) triple (Decision 7), StateSnapshot, the StateSource protocol, and NullStateSource returning an empty snapshot immediately - the flat shape is what admits LogTail and Als implementations without redefinition.
@@ -197,7 +197,7 @@ references:
   - Stream: 2
   - Requirements: [6.1](requirements.md#6.1), [8.1](requirements.md#8.1), [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.5](requirements.md#8.5)
 
-- [ ] 23. Write tests for the Anthropic provider <!-- id:f3kp023 -->
+- [x] 23. Write tests for the Anthropic provider <!-- id:f3kp023 -->
   - Settings pinned so a drift fails a test: thinking disabled with effort low, max_retries=0 - the SDK's default retries would apply their own backoff inside the 10 s window and make 6.8's retry-at-most-once unenforceable - and httpx timeout 30 s with 2 s connect so the engine's watchdog fires first and attributes the stall to the provider.
   - Rate-limit policy: a 429 with retry-after <= 3 s retries once after sleeping it; over 3 s surfaces the rate-limited failure carrying the value unrounded on both branches - rounding before the comparison would change which branch runs; absent where the provider stated none, and nothing is invented.
   - cache_control on the last system block; a selected model whose cache minimum the ~600-token prompt does not clear reports prompt_cache: unavailable rather than silently losing the cache.
@@ -208,7 +208,7 @@ references:
   - Requirements: [6.7](requirements.md#6.7), [6.8](requirements.md#6.8)
   - References: specs/api/answer-engine/prerequisites.md
 
-- [ ] 24. Implement provider/anthropic.py <!-- id:f3kp024 -->
+- [x] 24. Implement provider/anthropic.py <!-- id:f3kp024 -->
   - AsyncAnthropic against claude-opus-5 with the settings table of design 'Anthropic provider specifics'; the single-retry rate-limit policy.
   - Verifying against the real API needs the Keychain key of prerequisites.md; nothing in CI does.
   - Blocked-by: f3kp023 (Write tests for the Anthropic provider)
@@ -216,7 +216,7 @@ references:
   - Requirements: [6.7](requirements.md#6.7), [6.8](requirements.md#6.8)
   - References: specs/api/answer-engine/prerequisites.md
 
-- [ ] 25. Write tests for the local and shared-backend providers <!-- id:f3kp025 -->
+- [x] 25. Write tests for the local and shared-backend providers <!-- id:f3kp025 -->
   - Local: requires_key False and a configured keyless provider is a fully configured state - status() returns configured=True, credential=None, and nothing reports it as unconfigured or missing a credential.
   - Local: the client is constructed against a loopback base URL only, so no outbound network request occurs for the whole turn - 6.14 holds by construction, asserted with networking poisoned.
   - Shared backend: a stub behind the disclosure gate - selecting it returns requires_disclosure_ack: true and records nothing; a turn attempted before acknowledgement fails as provider-unconfigured with reason disclosure-unacknowledged.
@@ -225,13 +225,13 @@ references:
   - Stream: 2
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.4](requirements.md#6.4), [6.14](requirements.md#6.14), [6.15](requirements.md#6.15)
 
-- [ ] 26. Implement provider/local.py and provider/shared.py <!-- id:f3kp026 -->
+- [x] 26. Implement provider/local.py and provider/shared.py <!-- id:f3kp026 -->
   - OpenAI-compatible client on a loopback base URL; the shared-backend stub and its acknowledgement gate.
   - Blocked-by: f3kp025 (Write tests for the local and shared-backend providers)
   - Stream: 2
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.4](requirements.md#6.4), [6.14](requirements.md#6.14), [6.15](requirements.md#6.15)
 
-- [ ] 27. Write tests for credential storage and masking <!-- id:f3kp027 -->
+- [x] 27. Write tests for credential storage and masking <!-- id:f3kp027 -->
   - keyring under service dawmans, one account per provider kind; no key is written to any configuration file or environment variable (Decision 6) - keyring is stubbed, so state the CI limitation in the test rather than pretending the Keychain path runs.
   - Masking is structural: ProviderStatus carries masked: str | None and no field that can hold a full key; every read path returns the last-4 masked form or None, and the full value has exactly one reader - the provider's client constructor.
   - The logging.Filter backstop drops any record whose formatted output contains the stored secret; the raw key appears in no log record at any level, and the same predicate filters detail - no credential material, no stack trace, no raw provider payload, no path outside the two store roots.
@@ -240,7 +240,7 @@ references:
   - Stream: 2
   - Requirements: [6.11](requirements.md#6.11), [6.12](requirements.md#6.12), [6.13](requirements.md#6.13)
 
-- [ ] 28. Implement provider/credentials.py and the logging filter <!-- id:f3kp028 -->
+- [x] 28. Implement provider/credentials.py and the logging filter <!-- id:f3kp028 -->
   - The keyring wrapper, the masked-only ProviderStatus, and the secret-dropping filter applied to log records and to detail.
   - Blocked-by: f3kp027 (Write tests for credential storage and masking)
   - Stream: 2

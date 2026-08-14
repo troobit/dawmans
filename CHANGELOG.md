@@ -12,6 +12,31 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Providers, credentials and the state seam** (`api/answer-engine` phase 6,
+  `dawmans/answer/provider/` and `dawmans/answer/state/`). `provider/base.py` defines the seam:
+  `ProviderKind` with `requires_key` derived from the kind (6.4), the verbatim `SynthesisRequest`
+  with `max_words` fixed at 400, the masked-only `ProviderStatus` (no field can hold a full key),
+  the four-kind `ProviderFailure`, the `Provider` protocol whose `stream()` yields text deltas and
+  nothing else (Decision 4), and the single shared user-prompt renderer that keeps 6.2 structural.
+  `provider/anthropic.py` drives `AsyncAnthropic` against `claude-opus-5` with the pinned settings
+  table — thinking disabled at effort low, `max_retries=0`, a 30 s / 2 s-connect timeout so the
+  engine's watchdog fires first, `cache_control` on the last system block — the single-retry
+  rate-limit policy (retry only a stated interval ≤ 3 s, before any output, the value unrounded on
+  both branches and absent when unstated), connection/auth/status errors mapped to the failure
+  kinds, and `prompt_cache: unavailable` reported for models whose cache minimum the system prompt
+  does not clear. `provider/local.py` is an OpenAI-compatible httpx client that refuses any
+  non-loopback base URL at construction, so 6.14 holds by construction; `provider/shared.py` is
+  the stub behind the 6.15 disclosure gate. `provider/credentials.py` stores keys in the macOS
+  Keychain via keyring under service `dawmans`, account `anthropic` (Decision 6), returns only the
+  last-4 masked form on every read path but the client constructor, and ships the secret-dropping
+  `logging.Filter` whose predicate also scrubs CONTRACTS §4 `detail`. `state/base.py` and
+  `state/null.py` land the flat `StateValue` triple (Decision 7), `StateSnapshot`, the
+  `StateSource` protocol and the immediate-empty `NullStateSource` (8.3). Tests cover the pinned
+  SDK settings, the rate-limit branches, failure-kind mapping, loopback-by-construction with
+  networking poisoned, the disclosure gate, the same envelope shape through all three provider
+  classes, and credential storage/masking with keyring stubbed (the live Keychain path runs on a
+  developer machine only, per `prerequisites.md`). `httpx` is now an explicit member of the
+  `serve` extra.
 - **Prompt, parser, grounding and the outcome procedure** (`api/answer-engine` phase 5,
   `dawmans/answer/prompt.py`, `parse.py`, `ground.py`, `outcome.py` and the new
   `dawmans/triage/terms.py`). `prompt.py` assembles the turn in cache order — the static system

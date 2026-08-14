@@ -18,6 +18,7 @@ serve = [
     "bm25s",
     "numpy",
     "anthropic",
+    "httpx", # the local provider's own client; already a transitive dep of anthropic
     "starlette",
     "uvicorn",
     "keyring",

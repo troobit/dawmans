@@ -1,8 +1,8 @@
 # Answer engine (`src/dawmans/answer/`)
 
 Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
-corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries) and 5 (prompt, parser,
-grounding, outcome procedure) are done.
+corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries), 5 (prompt, parser,
+grounding, outcome procedure) and 6 (providers, credentials, state seam) are done.
 
 ## Package setup
 
@@ -186,3 +186,48 @@ grounding, outcome procedure) are done.
   presence on **resolution through the report**, not on the name containing `/` — a free-form
   `roland/tr-8s` yields no filename. Placeholders are always `(doctype, version, lang)`: a gap
   device is by definition one the engine has never seen a document for.
+
+## Providers and the state seam (`provider/`, `state/`)
+
+- `provider/base.py` holds the whole seam: `ProviderKind`, `requires_key(kind)` (derived, 6.4),
+  `mask(key)` (the "…"+last-4 form — defined here, not in credentials, because `ProviderStatus`
+  lives here), `SynthesisRequest`, `ProviderStatus`, `ProbeResult`, the four-kind
+  `ProviderFailure` (`timeout` is deliberately absent — that's the engine's own watchdog), the
+  `Provider` protocol, and `user_text(req)` — the **single** renderer of the varying prompt half
+  shared by every provider, so 6.2 stays structural (Decision 4).
+- **Known tension for phase 7:** `SynthesisRequest` is the design's verbatim shape (system,
+  passages, question, history, state, max_words) but carries no roster and no narrowing counter,
+  while `prompt.assemble()` handles both. The turn pipeline has to reconcile the two — either by
+  widening `SynthesisRequest` (spec edit) or by folding roster/terminal-direction text into the
+  fields it has. Nothing in phase 6 tests passage-block formatting, so `user_text` can change
+  shape freely then.
+- Anthropic provider: settings are pinned by tests (`thinking: disabled` + `effort: low`,
+  `max_retries=0`, `httpx.Timeout(30.0, connect=2.0)`, cache_control on the last system block,
+  model `claude-opus-5`). Token estimate for the cache-minimum check is **word count** — chars/4
+  lands at ~1048 and falsely clears Sonnet 5's 1024 minimum; the design's "~600-token" figure
+  tracks words (679). Rate-limit policy retries once only when a stated retry-after ≤ 3.0 s
+  **and nothing has been yielded yet** (a retry after partial output would re-yield from the
+  start; 6.10 owns that case as `incomplete`). `retry_after` is passed through unrounded and
+  absent stays absent. `detail` is always engine wording (`"rate limited (429)"` etc.), never
+  SDK exception text — that's what keeps raw payloads out of CONTRACTS §4 `detail`.
+- Local provider: raw `httpx.AsyncClient` against an OpenAI-compatible `/v1/chat/completions`
+  SSE stream (no `openai` dependency; `httpx` added to the serve extra explicitly). The
+  constructor **raises** on a non-loopback base URL (`LOOPBACK_HOSTS`), which is how 6.14 holds
+  by construction; tests additionally poison networking with a `MockTransport` that asserts
+  every request host is loopback. Structural 6.12: the Anthropic constructor takes a key but no
+  URL, the local one a URL but no key — asserted via `inspect.signature`.
+- Shared backend: a stub. `acknowledge()` flips the 6.15 gate; `status()` reports
+  `requires_disclosure_ack` until then; unacknowledged `stream()` raises as defence in depth
+  (the real refusal is `outcome.pre_flight` via `GateState.requires_ack/acknowledged`). Takes an
+  optional `script` so the 6.2 same-envelope test can drive all three classes with one stream.
+- `credentials.py`: keyring under service `dawmans`, account `anthropic` for KEYED_HOSTED
+  (per prerequisites.md — account is named for the provider, not the kind string); keyless kinds
+  have no account and every read returns None. `read_key` is the full value's only reader path
+  (called once, by a provider constructor); everything else goes through `masked_key`.
+  `SecretFilter` drops any log record whose `getMessage()` contains a stored secret;
+  `scrub_detail` applies the same predicate to `detail` and **drops rather than redacts** (a
+  partial redaction leaks length/shape). keyring is stubbed in tests — the live Keychain path
+  never runs in CI, only on a developer machine with the key stored (prerequisites.md).
+- `state/`: `StateValue` is the flat five-field triple of Decision 7, `NullStateSource` returns
+  an empty snapshot immediately. No behaviour to test here; the no-degradation guarantee is
+  asserted in the phase-7 turn-pipeline tests.
