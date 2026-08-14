@@ -12,6 +12,36 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Sectioning, layout and region assembly** (`dawmans/corpus/pdf/`, `data/manual-corpus` phase 5).
+  The stages that turn an annotated span model into the shared `Region[]`/`Unit[]` shape.
+  `sections.py` builds the section map from the document's own structure — embedded outline, printed
+  contents page, then heading styles, in that order and none of it per-manual configuration (6.6) —
+  and anchors each entry to the line its heading is printed on, so a page shared by two sections
+  splits between them rather than being attributed whole to one of them. Path C's quality gate fails
+  closed, because a title plus a strapline clearing a naive test yields two regions spanning 1009
+  pages and a wrong section on every citation inside them. A region carries its nearest two
+  ancestors, so `§28.21.1 Sidechain Parameters` — one of eight in Live's TOC — renders under the
+  device that owns it.
+- **Row, column and table assembly** (`dawmans/corpus/pdf/layout.py`). Rows cluster by y, columns by
+  x0, and every cell is placed by its horizontal position rather than by its index in the row (7.1,
+  7.6): Nitro Max p25 prints two ragged panels of 11 and 8 rows, and index placement mis-pairs the
+  tail. A heading printed across three physical lines is joined per column into
+  `Trigger | MIDI Note Number | Trigger | MIDI Note Number`; panel boundaries come from that repeated
+  heading sequence and never from a hardcoded x; and the page is never de-interleaved into per-panel
+  runs, which 7.2 forbids. All 19 trigger-to-note pairs are recoverable with their printed pairings.
+- **Unit assembly and the furniture drop** (`dawmans/corpus/pdf/units.py`). Stage 7 clears the
+  furniture mark inside detected tables, then drops what is still marked, ending the mark-then-clear
+  ordering: a numeric line inside Nitro Max's note table survives while the repeated page number does
+  not, and text is discarded exactly once. Table rows and numbered procedures are emitted `atomic`
+  (6.10, 7.4) and the joined heading `repeat_on_split` (7.5); a procedure broken across a page break
+  stays one unit carrying both page numbers; `has_figures` is set only where a placed image covers at
+  least 2% of the page (10.3); printed contents pages and non-English blocks contribute nothing.
+- **The vendor-manual load path** (`dawmans/corpus/pdf/loader.py`). `PdfLoader` behind the
+  `SourceLoader` protocol (12.4), running the stages in the order the design calls load-bearing —
+  extract, furniture mark, glyph repair, section map, language selection, unit assembly — and
+  deciding the three rejections that need a source to have been read: no text layer (3.3), over the
+  unmappable-character threshold (5.5), no English content (4.5). A rejected source still yields a
+  `SourceRecord` and an ingestion audit.
 - **Text conditioning: furniture, glyph repair and English selection** (`dawmans/corpus/pdf/`,
   `data/manual-corpus` phase 4). Three stages that annotate the span model rather than rewrite it.
   `furniture.py` marks running headers, running footers and standalone page numbers in the top and
@@ -93,6 +123,13 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Stage 7 and the load path are their own modules** (`data/manual-corpus` Decision 13, design
+  §Module placement). The design's module tree stopped at `pdf/layout.py`, leaving `Region[]`
+  assembly and the loader that sequences the stages without a home. `pdf/units.py` and
+  `pdf/loader.py` are added to the tree: `layout.py` keeps to geometry, so a table-detection
+  regression is not read against a page-break join in the same file, and `corpus/loader.py` stays
+  interfaces only — putting a PyMuPDF-importing class in the module `data/symptom-triage` imports
+  would breach the Decision 6 confinement outright.
 - **The language-neutral guard is confidence alone** (`data/manual-corpus` Decision 12, design
   §English selection). The design wrote it as low confidence *and* predominantly non-alphabetic
   tokens; run against the real APC guide, that conjunction selected its French and Italian pages as

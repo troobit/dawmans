@@ -231,6 +231,108 @@ Stage 6, `lingua` (models bundled in the package, so offline), constrained to `e
 - `lingua`'s `IsoCode639_1` is a Rust-backed class: attribute access works, subscripting and
   iteration do not.
 
+## Section map and regions — `corpus/pdf/sections.py`
+
+Stage 5. Three structure paths tried in order (embedded outline, printed contents page,
+heading styles), then anchoring, then regions.
+
+- **Path C's gate fails closed.** A style qualifies only when its spans start a line, run
+  under 60% of the modal line length, do not end in a full stop, and number ≥4 spread over
+  ≥40% of pages at ≥1 per ten pages. `cover_only` is the fixture: a title plus a strapline
+  clearing a naive "≥2 large spans" test yields two regions spanning 1009 pages, and every
+  citation inside them names a wrong section.
+- A document is *numbered* only when ≥60% of entries carry a parsed section number;
+  otherwise every region is unnumbered and no number is invented (6.4).
+- Anchoring resolves each entry to the line its heading is printed on: normalised prefix
+  match on the target page **at or after the previous entry's position**, then the page
+  either side, then top-of-page with `page-only` recorded. Without the "at or after" bound
+  two sections can start on the same line. Anchors are clamped monotonic, because regions
+  are half-open intervals between successive anchors.
+- A `Position` is `(page index, top, left)` — geometric, not an index into a list, because
+  stage 5 orders lines by reading order and stage 7 by row, and both must agree.
+- `RegionSpan.page_start/page_end` are the pages the region's **own lines** occupy, not the
+  pages its half-open span touches. A region ending at the next section's heading, printed
+  as the topmost line of a page, does not reach that page.
+- Anchoring clears `Line.furniture` on the line it resolves to — the stage-5 half of
+  mark-then-clear.
+
+## Layout — `corpus/pdf/layout.py`
+
+Stage 7's geometry half: `segments(page, lines=…)` returns `Table`s and `Prose` runs in
+printed order. It reads furniture marks not at all; `units.py` clears and drops them.
+
+- Rows cluster by top edge within 0.5 × the region's median line height. On Nitro Max p25
+  that separates the three-line heading (4.8pt apart, median 8.7) while keeping a row whose
+  cells sit 0.35pt apart. It is a genuinely tight margin — if a fixture ever regresses here,
+  this is why.
+- Columns cluster x0 within 0.02 × page width. Blank lines are dropped before either step:
+  the spacer between Nitro Max's panels is a blank span on every row and would otherwise
+  become a column with an empty heading, which breaks the panel repeat.
+- **Cells are placed by nearest column, never by index** (7.6), which is the whole point of
+  the ragged fixture.
+- A table run is seeded by ≥3 consecutive rows occupying ≥3 of the same columns with short
+  (≤6-word) cells, then grown over neighbouring rows holding **≥2** cells. The ≥2 bound is
+  what stops the section title printed above the table — one cell, and within column
+  tolerance of column 0 — being swallowed as a heading row.
+- Heading rows are the leading rows with no numeric cell (stopping at the first row matching
+  the majority occupied-column pattern where the table has no numeric column), joined per
+  column with a space: `MIDI Note` + `Number` → `MIDI Note Number`.
+- Panels come from the repeated heading sequence — the smallest divisor of the heading tuple
+  that tiles it — and never from an x. A table with no heading has one panel, so Nitro Max's
+  kit table on p26 serialises as four columns of one panel; only the note table on p25 gets
+  a `‖`.
+- Prose is ordered by (column, y) only where ≥2 columns each cover ≥60% of the run's height.
+  That threshold is what keeps a procedure's gutter of enumerators from being lifted out of
+  its steps and read as a column.
+
+## Unit assembly — `corpus/pdf/units.py`
+
+Stage 7 proper: `assemble(document, mapping)` → `Region[]`. The last stage that can discard
+anything.
+
+- Order inside the stage: segment the page (furniture marks still in place), clear the mark
+  inside every detected table, then drop what is still marked. A table cannot be detected
+  from what is left after its rows have been dropped.
+- Lines in non-English blocks and every line on a printed contents page contribute nothing.
+  The contents-page rule is what makes `live_contents_p13` yield no chunks while staying in
+  `page_count` and the 4.4 audit.
+- A table row and a numbered procedure are `atomic`; the joined heading is `repeat_on_split`
+  and `atomic`. Prose paragraphs are neither.
+- A paragraph runs to the end of its extracted block. A numbered procedure overrides that:
+  it runs while the enumerators count up, taking in continuation lines set at or right of
+  the first step's text indent. Two blocks per procedure is normal — Live extracts the step
+  text and the gutter enumerators separately.
+- A procedure broken by a page break is rejoined when the next unit's first step is the
+  previous unit's last + 1, giving one unit with `page_start` 158 and `page_end` 159 on
+  `live_procedure_pagebreak`. That is why `_Built` carries the step numbers alongside the
+  `Unit`.
+- `has_figures` is per page, from `Page.images` filtered to ≥2% of the page area. Unfiltered
+  it sets nearly everywhere on a screenshot-dense manual; chunk scope comes later, by OR
+  over the chunk's units.
+- A `Region`'s page range is the min/max over its **units**, falling back to the span's own
+  range when the region kept nothing.
+
+## The load path — `corpus/pdf/loader.py`
+
+`PdfLoader` is the `vendor-manual` half of the seam (12.4) and the one place the stage order
+is written down: extract → furniture mark → glyph repair → section map → language selection
+→ unit assembly. Glyph repair precedes language because mojibake skews the identifier;
+sectioning precedes selection because anchoring needs the whole document before anything is
+dropped.
+
+- Three rejections are decided here — `no-text-layer` (3.3), `unreadable-text` (5.5),
+  `no-english-content` (4.5). Each still returns a `SourceRecord` and an audit: the audit is
+  written whether a source committed a shard or was rejected.
+- `extract_document` opens and closes the PDF itself, so path 1 of glyph repair reopens it —
+  but only when the span model actually holds a symbol family, which is the 5.2 s the
+  `families` argument exists to avoid.
+- `chunk_count` is `UNCHUNKED` (0) and `ingested_at` is load time. The shard build owns both
+  final values; `now` is injectable so a test need not freeze the clock.
+- `hardware_applicability` is `assumed` for the filename's own product. 11.2 forbids
+  inferring it from content, and `rig.py` replaces it where `rig.yaml` declares one.
+- `assemble(…, spans=…)` takes stage 5's output back from the loader so the anchor-quality
+  audit does not cost a second walk over every line.
+
 ## Fixtures — `tests/fixtures/`, `tools/capture_fixture.py`, `make fixtures`
 
 The vendor PDFs are gitignored, so the guides enter the test suite as committed extraction

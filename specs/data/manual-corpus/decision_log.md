@@ -934,3 +934,55 @@ excluded [[7,22]]`, which is what §4 describes.
 
 `src/dawmans/corpus/pdf/language.py` (`_score_block`), the design's §English selection, and the
 `NEUTRAL_CONFIDENCE` constant's meaning. `tests/test_pdf_language.py` pins the measured case.
+
+---
+
+## Decision 13: Stage 7 and the load path are their own modules
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §Module placement names one module per stage through `pdf/layout.py` and then stops:
+`Region[]` assembly and the `SourceLoader` implementation that runs the stages in order have no
+module of their own in the tree. Implementing stage 7 made the gap concrete. Unit assembly is not
+row geometry — it is the furniture drop, the atomic and `repeat_on_split` flags, the figure flag and
+the page-break join — and the load path is not a stage at all but the order the stages run in, plus
+the three rejections that can only be decided once a source has been read.
+
+### Decision
+
+Add `src/dawmans/corpus/pdf/units.py` (stage 7: the annotated span model into `Region[]`) and
+`src/dawmans/corpus/pdf/loader.py` (`PdfLoader`), and record both in the design's module tree.
+`layout.py` keeps to geometry and returns tables and prose runs; nothing else moves.
+
+### Rationale
+
+The stage table already treats these as two things — stage 7 *writes* `Region[]` while the loader
+*is* the seam of 12.2 and 12.4 — and the ordering the design calls load-bearing has to be written
+down somewhere a reader can find it. Putting either into `layout.py` would give that module two
+jobs and make the AGPL-confined package's largest file the one with the least to do with PyMuPDF.
+Putting the loader into `units.py` would mean a test of the furniture drop imports the module that
+opens PDFs.
+
+### Alternatives Considered
+
+- **Both in `layout.py`**: One module for everything after sectioning - Rejected because row clustering and unit assembly fail differently and are tested differently; a table-detection regression should not be read against a page-break join in the same file.
+- **`PdfLoader` in `corpus/loader.py` beside the protocol**: Keep the seam and its implementation together - Rejected because `corpus/loader.py` is interfaces only and is imported by `data/symptom-triage`; putting a PyMuPDF-importing class in it breaches the Decision 6 confinement outright.
+- **No `units.py`, assemble inside `PdfLoader`**: Stage 7 as a private method of the loader - Rejected because stage 7's output is the shared shape and its tests want a `Document` in and `Region[]` out, with no store, no filename and no PDF.
+
+### Consequences
+
+**Positive:**
+- Each module states one thing: geometry, assembly, order.
+- Stage 7 is testable from a hand-built span model, which is how `tests/test_pdf_units.py` pins the furniture drop and the atomic flags without writing a PDF.
+- The stage order and its three rejections are documented in one docstring rather than spread across the stages they sequence.
+
+**Negative:**
+- Two modules the design did not name, so a reader comparing tree to package finds more than the tree lists until this entry is read.
+- `assemble()` takes an optional `spans` argument so the loader can reuse stage 5's output for its audit — a small seam between the two modules that would not exist if they were one.
+
+### Impact
+
+`src/dawmans/corpus/pdf/units.py`, `src/dawmans/corpus/pdf/loader.py`, design §Module placement.

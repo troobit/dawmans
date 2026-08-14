@@ -159,7 +159,7 @@ references:
 
 ## Phase 5: Sectioning, layout and region assembly
 
-- [ ] 18. Write tests for the section map and its three structure paths <!-- id:e7lsx2a -->
+- [x] 18. Write tests for the section map and its three structure paths <!-- id:e7lsx2a -->
   - Path A (embedded outline, >=2 entries), path B (a page >=60% dot-leader matches, with the number group optional), path C (heading styles) tried in that order; none is per-manual configuration.
   - Path C's quality gate is the dangerous one: against cover_only, a title plus strapline must fail the gate and yield one titled region, not two bogus regions spanning the whole document. A style qualifies only when its spans start a line, are under 60% of the modal line length, do not end in a full stop, and number >=4 spread over >=40% of pages at >=1 per ten pages.
   - A document is numbered when >=60% of entries carry a parsed section number; otherwise every region is unnumbered and no number is invented (apc_no_toc renders citations with no section number).
@@ -170,13 +170,13 @@ references:
   - Stream: 1
   - Requirements: [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.6](requirements.md#6.6)
 
-- [ ] 19. Implement corpus/pdf/sections.py section map <!-- id:e7lsx2b -->
+- [x] 19. Implement corpus/pdf/sections.py section map <!-- id:e7lsx2b -->
   - The three paths, the path C quality gate, the numbered-document threshold, and dot-leader page detection applied to every page of every document.
   - Blocked-by: e7lsx2a (Write tests for the section map and its three structure paths)
   - Stream: 1
   - Requirements: [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.6](requirements.md#6.6)
 
-- [ ] 20. Write tests for TOC anchoring, the parent chain and region derivation <!-- id:e7lsx2c -->
+- [x] 20. Write tests for TOC anchoring, the parent chain and region derivation <!-- id:e7lsx2c -->
   - Live averages 1.2 TOC entries per page, so page-granular attribution breaks the citation: against live_toc_slice, text on a page shared by two sections is attributed to the right one.
   - Anchor scan order - normalised prefix match at or after the previous entry's position on that page, then the target page +/-1, then top-of-page with `anchor: page-only` recorded so weak sectioning is visible rather than silent.
   - The parent chain is load-bearing: `Sidechain Parameters` occurs eight times in Live's TOC, so assert a region under 28.21 Glue Compressor carries the device name in section_path while Passage.section_title stays the leaf.
@@ -186,14 +186,14 @@ references:
   - Stream: 1
   - Requirements: [6.5](requirements.md#6.5), [6.6](requirements.md#6.6), [6.7](requirements.md#6.7)
 
-- [ ] 21. Implement anchoring and region derivation <!-- id:e7lsx2d -->
+- [x] 21. Implement anchoring and region derivation <!-- id:e7lsx2d -->
   - Anchoring clears the furniture mark on any line a section anchor resolves to (the stage 5 half of the mark-then-clear ordering).
   - Region.section_path holds the nearest two ancestors.
   - Blocked-by: e7lsx2c (Write tests for TOC anchoring, the parent chain and region derivation)
   - Stream: 1
   - Requirements: [6.5](requirements.md#6.5), [6.6](requirements.md#6.6), [6.7](requirements.md#6.7)
 
-- [ ] 22. Write tests for row, column and table assembly <!-- id:e7lsx2e -->
+- [x] 22. Write tests for row, column and table assembly <!-- id:e7lsx2e -->
   - Property - row integrity: for a generated cell grid with x/y jitter inside tolerance, recovered rows equal generated rows, including ragged rows. Cells are placed by x-position, never by index.
   - nitro_max_p25 is the acceptance fixture: all 19 trigger-to-note pairs recoverable with their printed pairings across two ragged panels (11 rows left, 8 right). Pairing by row index silently mis-associates every row past the eighth - assert that failure is caught.
   - The three-physical-line heading joins to `Trigger | MIDI Note Number | Trigger | MIDI Note Number`; the naive reading treats `MIDI Note` as a data row and loses `Number`.
@@ -203,13 +203,13 @@ references:
   - Stream: 1
   - Requirements: [7.1](requirements.md#7.1), [7.2](requirements.md#7.2), [7.3](requirements.md#7.3), [7.6](requirements.md#7.6)
 
-- [ ] 23. Implement corpus/pdf/layout.py <!-- id:e7lsx2f -->
+- [x] 23. Implement corpus/pdf/layout.py <!-- id:e7lsx2f -->
   - Row clustering by y-overlap at 0.5x median line height, column clustering of x0 at 0.02x page width, tabular classification at >=3 consecutive rows sharing >=3 columns with short cells, and heading-row joining per column.
   - Blocked-by: e7lsx2e (Write tests for row, column and table assembly)
   - Stream: 1
   - Requirements: [7.1](requirements.md#7.1), [7.2](requirements.md#7.2), [7.3](requirements.md#7.3), [7.6](requirements.md#7.6)
 
-- [ ] 24. Write tests for unit assembly and the furniture drop <!-- id:e7lsx2g -->
+- [x] 24. Write tests for unit assembly and the furniture drop <!-- id:e7lsx2g -->
   - Stage 7 clears the furniture mark inside detected table regions, then drops what is still marked - assert text is discarded exactly once, and that furniture_pages' in-table numeric line survives while the repeated page number does not.
   - A numbered procedure and a table row are emitted atomic; the joined table heading is emitted repeat_on_split.
   - has_figures uses page.get_images() filtered to a placed area >=2% of the page, or a screenshot-dense manual sets it almost everywhere and it stops discriminating.
@@ -219,7 +219,7 @@ references:
   - Stream: 1
   - Requirements: [3.5](requirements.md#3.5), [3.6](requirements.md#3.6), [6.7](requirements.md#6.7), [6.10](requirements.md#6.10), [7.4](requirements.md#7.4), [7.5](requirements.md#7.5), [10.3](requirements.md#10.3)
 
-- [ ] 25. Implement unit assembly and the vendor-manual load path <!-- id:e7lsx2h -->
+- [x] 25. Implement unit assembly and the vendor-manual load path <!-- id:e7lsx2h -->
   - Assemble Region[] from the annotated span model, and wire PdfLoader to the SourceLoader protocol: extract, furniture mark, glyph repair, section map, language selection, unit assembly.
   - Stage order is load-bearing - glyph repair before sectioning before language, because a run of mojibake inside English prose skews a language identifier and anchoring needs the whole document before anything is dropped.
   - The PDF-specific stages run for vendor-manual only (12.4).

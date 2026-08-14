@@ -145,6 +145,8 @@ src/dawmans/
     pdf/sections.py     outline / printed-TOC / heading-style → SectionMap, anchoring
     pdf/language.py     content-side English selection
     pdf/layout.py       row assembly, table detection, column ordering
+    pdf/units.py        stage 7: Region[]/Unit[], the furniture drop, the atomic flags
+    pdf/loader.py       PdfLoader — the vendor-manual half of the seam, and the stage order
     chunk.py            Region[] → Passage[]
     passage_id.py
     rig.py              rig.yaml, applicability, the two gap reports
