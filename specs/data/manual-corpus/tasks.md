@@ -269,7 +269,7 @@ references:
 
 ## Phase 7: Index build and commit
 
-- [ ] 30. Write tests for the embedding wrapper and offline enforcement <!-- id:e7lsx2m -->
+- [x] 30. Write tests for the embedding wrapper and offline enforcement <!-- id:e7lsx2m -->
   - With networking disabled and HF_HUB_OFFLINE=1 set in the ingestion process's own environment, ingestion of a fixture corpus succeeds with the model cache present.
   - With the cache absent it fails immediately, naming the model, the cache directory and `make fetch-model` - a failure, not a rejection, since no source is at fault and nothing can be embedded.
   - The model is loaded once per run, before iterating sources: assert the cold load is not paid per source. This is what makes 8.4 achievable at all - a 7.2 s cold load inside a 10 s budget leaves nothing.
@@ -278,27 +278,27 @@ references:
   - Stream: 2
   - Requirements: [8.5](requirements.md#8.5)
 
-- [ ] 31. Implement index/embed.py and the model-cache target <!-- id:e7lsx2n -->
+- [x] 31. Implement index/embed.py and the model-cache target <!-- id:e7lsx2n -->
   - fastembed wrapper over bge-small-en-v1.5 with cache_dir pointed at a gitignored models/ at the repository root.
   - `make fetch-model` populates it once per machine, deliberately outside the ingestion path.
   - Blocked-by: e7lsx2m (Write tests for the embedding wrapper and offline enforcement)
   - Stream: 2
   - Requirements: [8.5](requirements.md#8.5)
 
-- [ ] 32. Write tests for the lexical index and its tokeniser <!-- id:e7lsx2o -->
+- [x] 32. Write tests for the lexical index and its tokeniser <!-- id:e7lsx2o -->
   - `Dry/Wet`, `4th-gen`, `bge-small-en-v1.5` and bare numerals (38, 74) survive tokenisation as retrievable terms - this is the failure Decision 2 names and the one that is otherwise silent, because a default tokeniser drops them and nothing errors.
   - Exact-term and meaning-based matching must be available over the same set of passages; neither alone satisfies 8.8.
   - Blocked-by: e7lsx1v (Implement records.py and version.py)
   - Stream: 2
   - Requirements: [8.8](requirements.md#8.8)
 
-- [ ] 33. Implement index/lexical.py <!-- id:e7lsx2p -->
+- [x] 33. Implement index/lexical.py <!-- id:e7lsx2p -->
   - bm25s wrapper with a tokeniser that preserves hyphenated, slashed and numeric tokens; saved as the view's lexical/ directory.
   - Blocked-by: e7lsx2o (Write tests for the lexical index and its tokeniser)
   - Stream: 2
   - Requirements: [8.8](requirements.md#8.8)
 
-- [ ] 34. Write tests for shard build, the cache key and per-passage vector reuse <!-- id:e7lsx2q -->
+- [x] 34. Write tests for shard build, the cache key and per-passage vector reuse <!-- id:e7lsx2q -->
   - A shard is reused only when all four of fingerprint, ingestion_version, embedding.model and embedding.dim match. Assert both silent failures the fingerprint-only key allows: changing the embedding model must re-embed every shard rather than concatenating vectors from two models under a manifest declaring one, and bumping ingestion_version must re-ingest even though no PDF byte changed.
   - Authored per-passage reuse: editing one entry re-embeds that entry's passages and copies every other row by passage_id from the shard meta's vectors map; changing the embedding model re-embeds all of them. The shard is still rewritten wholesale, so 9.4 is unaffected.
   - ingested_at is the time the shard was built and is carried through reuse unchanged, so a skipped source does not look freshly ingested.
@@ -308,13 +308,13 @@ references:
   - Stream: 1
   - Requirements: [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.7](requirements.md#8.7), [9.3](requirements.md#9.3), [9.4](requirements.md#9.4)
 
-- [ ] 35. Implement index/build.py shard build and commit <!-- id:e7lsx2r -->
+- [x] 35. Implement index/build.py shard build and commit <!-- id:e7lsx2r -->
   - shards/<slug>.passages.jsonl, .vectors.npy, .sidecar.json and .meta.json, with meta carrying the full SourceRecord, the store name, the four-part cache key and the authored vectors map.
   - Blocked-by: e7lsx2q (Write tests for shard build, the cache key and per-passage vector reuse)
   - Stream: 1
   - Requirements: [8.3](requirements.md#8.3), [8.4](requirements.md#8.4), [8.7](requirements.md#8.7), [9.3](requirements.md#9.3), [9.4](requirements.md#9.4)
 
-- [ ] 36. Write tests for the merge, the manifest and the view commit <!-- id:e7lsx2s -->
+- [x] 36. Write tests for the merge, the manifest and the view commit <!-- id:e7lsx2s -->
   - manifest.sources is sorted by source_id, and sorting is load-bearing: filesystem iteration order could change row_start offsets between two runs over an identical source set while corpus_revision - hashed over sorted triples - stayed the same, leaving a consumer slicing the wrong rows.
   - Row i of vectors.npy corresponds to line i of passages.jsonl; row_start and row_count make source scoping a slice, not a scan (8.10).
   - Every Passage and SourceRecord field is readable from the view with no access to any source PDF, including kind, hardware_applicability and entry_location (8.9, 9.6, 11.6, 12.7); sources.json carries no filesystem path.
@@ -329,14 +329,14 @@ references:
   - Stream: 1
   - Requirements: [8.6](requirements.md#8.6), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [8.10](requirements.md#8.10), [8.11](requirements.md#8.11), [9.4](requirements.md#9.4), [9.6](requirements.md#9.6), [11.6](requirements.md#11.6), [12.7](requirements.md#12.7)
 
-- [ ] 37. Implement the merge, index/manifest.py and the atomic view commit <!-- id:e7lsx2t -->
+- [x] 37. Implement the merge, index/manifest.py and the atomic view commit <!-- id:e7lsx2t -->
   - The merged view is a plain concatenation of committed shards - re-ingestion replaces a source's shard wholesale, which is 9.4, because nothing merges from anywhere else.
   - Copy each shard's sidecar into views/<hex>/reports/<slug>.json; the two report directories are named differently on purpose, so a reader resolving the wrong one gets an error rather than a well-formed JSON document keyed by something else.
   - Blocked-by: e7lsx2s (Write tests for the merge, the manifest and the view commit)
   - Stream: 1
   - Requirements: [8.6](requirements.md#8.6), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [8.10](requirements.md#8.10), [8.11](requirements.md#8.11), [9.4](requirements.md#9.4), [9.6](requirements.md#9.6), [11.6](requirements.md#11.6), [12.7](requirements.md#12.7)
 
-- [ ] 38. Write the incremental-equivalence property test <!-- id:e7lsx2u -->
+- [x] 38. Write the incremental-equivalence property test <!-- id:e7lsx2u -->
   - For a random source set and a random add/edit/remove sequence, incremental ingestion yields the same merged passages as a full rebuild. This is the test that catches an incremental path that quietly diverges from the rebuild it is supposed to be an optimisation of.
   - Blocked-by: e7lsx2t (Implement the merge, index/manifest.py and the atomic view commit)
   - Stream: 1

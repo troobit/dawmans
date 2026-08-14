@@ -55,7 +55,7 @@ only spec ready for implementation; the other three still have no ledger.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
-| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks 🔨 (45, 29 done — phases 1–6) | 84 |
+| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks 🔨 (45, 38 done — phases 1–7) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ⬜ | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ | 154 |
@@ -77,8 +77,11 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
   the `dawmans` package scaffold, the CONTRACTS §1/§2 records and the loader seam — phase 2 — the
   filename grammar, both source stores and shard removal — phase 3 — PDF extraction, the span
   model and the committed extraction fixtures — phase 4 — furniture marking, glyph repair and
-  English selection — and phase 5 — the section map, TOC anchoring, row and table assembly, and
-  unit assembly behind the `PdfLoader` seam — are done; 20 tasks remain.
+  English selection — phase 5 — the section map, TOC anchoring, row and table assembly, and
+  unit assembly behind the `PdfLoader` seam — phase 6 — chunking and passage identity — and
+  phase 7 — the embedding wrapper and its offline pin, the lexical index, the per-source shard
+  with its four-part cache key, and the merge behind the manifest rename — are done; 7 tasks
+  remain, all in phase 8.
   `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
   `make fetch-model` once, and declare the Focusrite applicability mapping 11.7 makes mandatory.
 - Explicit non-goals include OCR, image understanding, non-English content, automatic manual
@@ -127,13 +130,19 @@ three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md`
 - One governing shared-contract document covering the seams between them.
 - Twelve cross-cutting ADRs in `DECISIONS.md` and 38 per-spec ADRs, all *accepted*.
 - One `tasks.md` ledger, for `data/manual-corpus`, with the `prerequisites.md` naming what no task
-  can do for itself. Its first six phases are implemented: the package, the shared records, both
+  can do for itself. Its first seven phases are implemented: the package, the shared records, both
   source stores, PDF extraction and the committed extraction fixtures, the text-conditioning
   stages — furniture marking, glyph repair and English content selection — the structural
   stages that turn a span model into `Region[]` (the section map and its three paths, TOC
-  anchoring, row and table assembly, unit assembly and the `vendor-manual` load path), and the
+  anchoring, row and table assembly, unit assembly and the `vendor-manual` load path), the
   chunker that turns `Region[]` into the `Passage` records the index is built from, with the
-  content-derived passage identity a retained citation resolves through.
+  content-derived passage identity a retained citation resolves through, and the index build
+  itself — the offline-pinned embedding wrapper, the lexical index whose tokeniser keeps
+  `Dry/Wet` and `4th-gen` retrievable, the per-source shard reused only when all four of
+  fingerprint, ingestion version and embedding model and dimension match, and the merge into a
+  fresh view committed by renaming `manifest.json` last. What remains is phase 8: the rig
+  inventory and its two gap reports, the per-run report and per-source audits, the CLI and run
+  orchestration, and the timing tests.
 
 **What is next**
 

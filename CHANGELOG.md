@@ -12,6 +12,55 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The embedding wrapper and its offline pin** (`dawmans/index/embed.py`, `data/manual-corpus`
+  phase 7). `fastembed` is the only network-capable dependency in the package, so ingestion pins
+  `HF_HUB_OFFLINE=1` in its **own process environment** — not as a library argument — and then
+  checks the `models/` cache, in that order: pinning afterwards would leave a run that recovered
+  from the failure able to reach the network next time. An absent cache raises a **failure**, not a
+  rejection (1.6's list has no member for it: no source is at fault and nothing can be embedded),
+  naming the model, the directory and `make fetch-model`. The model is loaded **once per run** and
+  passed to the shard build, because the ~7.2 s cold load against 8.4's 10 s budget for a whole new
+  source leaves nothing if it is paid per source. The wrapper owns float32, 384-wide and
+  L2-normalised output and rejects a backend of another width — vectors from a second model reaching
+  the view under a manifest declaring 384 change nothing about the on-disk shape, so `index_version`
+  cannot catch it.
+- **The lexical index and its tokeniser** (`dawmans/index/lexical.py`, requirement 8.8,
+  Decision 2). A `bm25s` index over the same passage ordering as the dense one, so document `i`,
+  row `i` and line `i` are one passage. The tokeniser keeps a compound **whole and then in parts** —
+  `Dry/Wet` yields `dry/wet`, `dry`, `wet` — which is the failure Decision 2 names and the one that
+  is otherwise silent: a default tokeniser drops the compound, nothing errors, and the query a user
+  is most confident about stops working. The tests assert the default *does* lose `Dry/Wet`,
+  `4th-gen` and `bge-small-en-v1.5` before asserting ours keeps them, so a regression to the default
+  cannot pass. No stopword list is applied: `bm25s`'s English list holds `on` but not `off`, which
+  would make one half of every On/Off control unretrievable and leave the other.
+- **The per-source shard and its four-part cache key** (`dawmans/index/build.py`, 8.3, 8.7, 9.3,
+  9.4). A shard is reused only when **all four** of fingerprint, `ingestion_version`,
+  `embedding.model` and `embedding.dim` match. Both failures the fingerprint alone allows are
+  asserted, and both are silent: changing the embedding model would concatenate vectors from two
+  models under a manifest declaring one, and a fix to table assembly or chunking changes no PDF byte
+  and would reach nothing. The authored shard carries a `passage_id` → row map so editing one entry
+  re-embeds that entry alone, while the shard is still rewritten wholesale (9.4). Artefacts are
+  written to `.tmp` beside their destinations and moved with `os.replace`, **meta last**, so a
+  partly committed set reads as no shard; a failed source's temporaries are deleted, its previous
+  shard is untouched, and a source that succeeded in the same run stays queryable.
+- **The merge, the manifest and the atomic view commit** (`dawmans/index/build.py`,
+  `dawmans/index/manifest.py`, 8.6, 8.8–8.11, 9.6, 11.6, 12.7). The view is a plain concatenation of
+  the committed shards **sorted by `source_id`** — filesystem order could otherwise shift
+  `row_start` offsets between two runs over an identical source set while `corpus_revision`, hashed
+  over sorted triples, stayed the same, leaving a consumer slicing the wrong rows. It is built into
+  a directory no reader can be holding and `manifest.json` is renamed into place last, so that
+  rename is the only switch; superseded views are collected at the **start** of the next run, so a
+  reader working from the previous manifest keeps its files. Each shard's sidecar is copied into
+  `views/<hex>/reports/<slug>.json` — a reused shard runs no loader, so a sidecar written only by
+  `load()` would be absent from every later view — while ingestion audits stay outside the views,
+  which is the two lifetimes the split exists for. A reader whose `index_version` differs refuses
+  to load rather than interpreting the files.
+- **The incremental-equivalence property** (`tests/test_incremental_equivalence.py`). A random
+  add/edit/remove script over a random source set, one ingestion per step, must produce the same
+  `passages.jsonl` bytes and the same `vectors.npy` rows as a full rebuild of the final state. This
+  is the test that catches an incremental path quietly diverging from the rebuild it is supposed to
+  be an optimisation of — a class of fault that produces no error, only a wrong index, and which
+  every single-run test is blind to.
 - **Passage identity** (`dawmans/corpus/passage_id.py`, `data/manual-corpus` phase 6). The digest
   covers the chunk's body text and nothing else (6.1, Decision 5), with `source_id` carried as a
   visible prefix rather than hashed, so cross-source collisions are impossible by construction and a

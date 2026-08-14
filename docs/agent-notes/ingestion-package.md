@@ -14,7 +14,9 @@ separate tree.
 - Dependencies arrive with the code that uses them. Declared so far: `pymupdf` (task 1,
   for the AGPL rule to have something to bite on), `fastembed` (needed by
   `make fetch-model`), and `fonttools` + `lingua-language-detector` (phase 4, glyph repair
-  and English selection). `bm25s` and `pyyaml` come with their phases.
+  and English selection), and `bm25s` + `numpy` (phase 7, the two index artefacts).
+  `numpy` is a transitive dependency of `fastembed` and is declared anyway, because
+  `index/build.py` writes `vectors.npy` itself. `pyyaml` comes with phase 8's `rig.yaml`.
 - `ruff format` rewrites Python code blocks **inside Markdown**, which would reflow the
   deliberately aligned samples in `specs/`. `extend-exclude = ["*.md"]` in `pyproject.toml`
   stops it; do not remove that line.
@@ -421,6 +423,91 @@ Things that are not obvious:
   *selection* machinery and never the language identifier (Decision 11).
 - Fixture JSON is written with leaf objects on one line, which halves the file against
   `indent=1` while staying diffable. `tests/test_pdf_fixtures.py` caps a fixture at 1 MB.
+
+## Embedding — `index/embed.py`
+
+`load_embedder()` is the only thing that touches the model, and it is called **once per
+run**, before iterating sources. The cold load is ~7.2 s against 8.4's 10 s budget for a
+whole new source, so `build_shard` takes an `Embedder` and never makes one.
+
+- Order inside `load_embedder`: `pin_offline()` (sets `HF_HUB_OFFLINE=1` in the process
+  environment), *then* the cache check, *then* `from fastembed import TextEmbedding`.
+  Pinning after the check would leave a run that recovered from the failure able to reach
+  the network on its next attempt.
+- `cache_is_populated` looks for any `tokenizer.json` under `models/`. The snapshot
+  directory carries a content hash, so the file is found rather than spelled — and it is
+  the same file `count_tokens` loads, so a cache that passes the check serves both halves.
+- A missing cache raises `ModelCacheMissing`, a **failure**: 1.6's rejection list has no
+  member for it, because no source is at fault and nothing can be embedded.
+- The wrapper owns float32, 384 wide and L2-normalised rather than trusting the backend,
+  and raises on a wrong width. A backend of another dimension reaching the view under a
+  manifest declaring 384 is invisible: the on-disk shape is unchanged.
+- `count_tokens` loads `tokenizers.Tokenizer` from the cache directly and lazily.
+  `fastembed`'s own tokeniser is not published surface, and laziness is what lets a test
+  construct an `Embedder` against a fake cache.
+- `Embedding` (model, dim, normalised) is the manifest block **and** three of the four
+  shard cache-key components. `Embedding.from_dict({})` is `None`, not a default: a shard
+  predating the block cannot be shown to match, so it is rebuilt.
+
+## Lexical index — `index/lexical.py`
+
+`bm25s` over the same passage ordering as `vectors.npy`. Document `i`, row `i` and line
+`i` are one passage, which is what lets `api/answer-engine` fuse the two rankings.
+
+- `tokenise` keeps a compound **whole and then in parts**: `Dry/Wet` → `dry/wet`, `dry`,
+  `wet`. Separators are `-/._`. A run of them collapses to the first, so `mid--side` is
+  what a user typing `mid-side` reaches.
+- `tests/test_lexical.py` asserts the *default* `bm25s.tokenize` loses `Dry/Wet`,
+  `4th-gen` and `bge-small-en-v1.5` before asserting ours keeps them. Without that half,
+  a regression to the default would pass a test written only against our own output.
+- **No stopword list**, deliberately: `bm25s`'s English list holds `on` but not `off`, so
+  applying it makes one half of every On/Off control unretrievable and leaves the other.
+- `bm25s` cannot index an empty vocabulary — `index([])` and `index([[]])` both raise — so
+  an empty corpus is indexed as one `\x00empty` placeholder document. No tokeniser output
+  can equal it (every real token starts alphanumeric) and `document_count`, stored beside
+  the index, keeps it out of every result.
+- `search` drops zero-scoring hits: `retrieve` pads its top-k, and padding is
+  indistinguishable from a match otherwise. Ranking beyond that ordering is Decision 2's
+  hand-off to `api/answer-engine`.
+
+## Shard build, merge and commit — `index/build.py`, `index/manifest.py`
+
+- **The shard's `passages.jsonl` is a cache, not the view's contract.** Its lines are
+  `{"passage": …, "header": …}`; the view's are the bare CONTRACTS §2 record. The header
+  has to be on disk somewhere — Decision 2 indexes it with the text, it contains
+  `Region.section_path`, and §2 has no field for that — and a reused shard runs no loader,
+  so it could not otherwise be re-indexed. `Shard.entries()` reads both, `passages()`
+  projects.
+- Reuse is `Shard.reusable(CacheKey)`: all four of fingerprint, `ingestion_version`,
+  `embedding.model`, `embedding.dim`. `read_shard` returns `None` for an absent *or
+  unparseable* meta — both mean "cannot be shown to match", and neither is fatal.
+- The `vectors` map (`passage_id` → row) is written for the **authored** shard only, by
+  the `vector_map` argument defaulting off the record's kind. The mechanism is kind-neutral;
+  the default follows the design's granularity note. `_embed` checks the three
+  non-per-passage components *before* consulting the map, so a model change re-embeds
+  everything.
+- Write order inside `build_shard`: passages, vectors, sidecar, meta — each to `.tmp`
+  beside its destination — then `os.replace` in that order, **meta last**. A partly
+  committed set carries no meta and reads as no shard. Any exception unlinks the pending
+  `.tmp` files and raises `ShardWriteFailed`.
+- `np.save` appends `.npy` to a filename that lacks it, which would turn
+  `x.vectors.npy.tmp` into `x.vectors.npy.tmp.npy`. Every call here writes through an open
+  file handle to avoid that.
+- `commit_view` sorts by `source_id` and refuses to merge a shard whose embedding differs
+  from the run's — the same silent failure the cache key guards, caught again where the
+  concatenation happens.
+- `view_name(revision, built_at, attempt)` folds in the timestamp, so two runs over
+  identical content get different directories; `attempt` covers the wreckage of a run that
+  died before renaming its manifest. `_fresh_view` never builds over an existing directory.
+- `collect_views` runs at the **start** of a run. A missing manifest collects nothing —
+  "names no view" must not mean "delete everything", or the first run after a failed one
+  empties the index.
+- `read_manifest` **raises** `IndexVersionMismatch` rather than returning `None`: absent
+  and unreadable are different answers and only one of them is a rebuild.
+- `tests/test_incremental_equivalence.py` is the test that catches an incremental path
+  quietly diverging from the rebuild it optimises. Its `ingest()` helper is the run order
+  `cli.py` (task 44) has to implement: collect views → discover → remove absent → ingest
+  only the sources whose key does not match → merge → rename.
 
 ## Synthetic PDFs — `tests/pdfgen.py`
 

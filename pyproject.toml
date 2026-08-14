@@ -13,6 +13,8 @@ dependencies = [
     "fastembed>=0.4",
     "fonttools>=4.63.0",
     "lingua-language-detector>=2.2.0",
+    "bm25s>=0.3.10",
+    "numpy>=2.5.2",
 ]
 
 [dependency-groups]
