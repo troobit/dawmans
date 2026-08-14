@@ -1,0 +1,138 @@
+# Infrastructure deploy — OpenTofu on Azure (preferred IaC + cloud stack).
+#
+# TEMPLATE: dormant until a derived repo adds `infrastructure/` with OpenTofu config.
+# Before first use, set these repository Variables (Settings → Secrets and variables →
+# Actions → Variables): ARM_SUBSCRIPTION_ID, ARM_CLIENT_ID, ARM_TENANT_ID — pointing at
+# a User-Assigned Managed Identity with OIDC federation to this repo. No client secret
+# is stored; auth is OIDC.
+name: Infrastructure Deployment
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "infrastructure/**"
+      - ".github/workflows/opentofu-deploy.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "infrastructure/**"
+      - ".github/workflows/opentofu-deploy.yml"
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "OpenTofu action to perform"
+        required: true
+        type: choice
+        options: [plan, apply, destroy]
+        default: plan
+
+jobs:
+  tofu:
+    name: Deploy Infrastructure
+    runs-on: ubuntu-latest
+    environment: prod
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    env:
+      WORKING_DIR: infrastructure
+      TF_ACTION: ${{ inputs.action || 'plan' }}
+      # OIDC auth for both the azurerm provider and the backend.
+      ARM_USE_OIDC: true
+      ARM_SUBSCRIPTION_ID: ${{ vars.ARM_SUBSCRIPTION_ID }}
+      ARM_CLIENT_ID: ${{ vars.ARM_CLIENT_ID }}
+      ARM_TENANT_ID: ${{ vars.ARM_TENANT_ID }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Azure Login
+        uses: azure/login@v2
+        with:
+          client-id: ${{ vars.ARM_CLIENT_ID }}
+          tenant-id: ${{ vars.ARM_TENANT_ID }}
+          subscription-id: ${{ vars.ARM_SUBSCRIPTION_ID }}
+
+      - name: Setup OpenTofu
+        uses: opentofu/setup-opentofu@v1
+        with:
+          tofu_version: "1.8.0"
+
+      - name: OpenTofu Format
+        id: fmt
+        working-directory: ${{ env.WORKING_DIR }}
+        run: tofu fmt -check -recursive -no-color # spelling-ignore (CLI flag)
+        continue-on-error: true
+
+      - name: OpenTofu Init
+        id: init
+        working-directory: ${{ env.WORKING_DIR }}
+        env:
+          ARM_OIDC_REQUEST_TOKEN: ${{ env.ACTIONS_ID_TOKEN_REQUEST_TOKEN }}
+          ARM_OIDC_REQUEST_URL: ${{ env.ACTIONS_ID_TOKEN_REQUEST_URL }}
+        # Add `-backend-config=environments/<env>-backend.hcl` if using partial backend config.
+        run: tofu init
+
+      - name: OpenTofu Validate
+        id: validate
+        working-directory: ${{ env.WORKING_DIR }}
+        run: tofu validate -no-color # spelling-ignore (CLI flag)
+
+      - name: OpenTofu Plan
+        id: plan
+        working-directory: ${{ env.WORKING_DIR }}
+        run: tofu plan -out=tfplan -detailed-exitcode -no-color # spelling-ignore (CLI flag)
+        continue-on-error: true
+
+      - name: Comment plan on PR
+        if: github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        env:
+          PLAN: "tofu\n${{ steps.plan.outputs.stdout }}"
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const marker = '<!-- opentofu-plan -->';
+            const body = `${marker}
+            #### OpenTofu Format 🖌 \`${{ steps.fmt.outcome }}\`
+            #### OpenTofu Init ⚙️ \`${{ steps.init.outcome }}\`
+            #### OpenTofu Validate 🤖 \`${{ steps.validate.outcome }}\`
+            #### OpenTofu Plan 📖 \`${{ steps.plan.outcome }}\`
+
+            <details><summary>Show Plan</summary>
+
+            \`\`\`
+            ${process.env.PLAN}
+            \`\`\`
+
+            </details>
+
+            *Pusher: @${{ github.actor }}, Working Directory: \`${{ env.WORKING_DIR }}\`*`;
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.user.type === 'Bot' && c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({ owner: context.repo.owner, repo: context.repo.repo, comment_id: existing.id, body });
+            } else {
+              await github.rest.issues.createComment({ owner: context.repo.owner, repo: context.repo.repo, issue_number: context.issue.number, body });
+            }
+
+      - name: OpenTofu Apply
+        working-directory: ${{ env.WORKING_DIR }}
+        if: |
+          github.event_name != 'pull_request' &&
+          env.TF_ACTION != 'destroy' &&
+          steps.plan.outputs.exitcode == '2'
+        run: tofu apply -auto-approve tfplan
+
+      - name: OpenTofu Destroy
+        working-directory: ${{ env.WORKING_DIR }}
+        if: env.TF_ACTION == 'destroy'
+        run: |
+          tofu plan -destroy -out=destroy.tfplan
+          tofu apply -auto-approve destroy.tfplan

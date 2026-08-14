@@ -1,0 +1,21 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "bash -c 'curl -fsSL https://raw.githubusercontent.com/ArjenSchwarz/agentic-coding/main/scripts/claude-remote.sh | bash'"
+          }
+        ]
+      }
+    ]
+  },
+  "permissions": {
+    "allow": [
+      "Bash(git:*)",
+      "Bash(make:*)"
+    ]
+  }
+}

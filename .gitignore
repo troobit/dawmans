@@ -1,0 +1,61 @@
+# Logs
+*.log
+
+# Orbit task management
+**/.orbit/
+.vercel
+.env*.local
+
+# Personal working notes — not tracked. nextup.example.md ships the structure;
+# copy it to nextup.md and work in that local copy.
+nextup.md
+!nextup.example.md
+
+# Claude Code personal overrides (tracked settings.json ships the shared baseline)
+.claude/settings.local.json
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Env
+.env
+.env.*
+!.env.example
+!.env.test
+
+# Python
+.venv
+__pycache__
+
+# Swift / Xcode build artefacts
+.build/
+.swiftpm/
+DerivedData/
+xcuserdata/
+*.xcuserstate
+Package.resolved
+
+# Generated icons (only icon.svg is source of truth)
+static/icon-*.png
+static/apple-touch-icon.png
+static/favicon.ico
+
+# OpenTofu / Terraform (IaC; OpenTofu preferred)
+.terraform/
+.terraform.lock.hcl
+*.tfstate
+*.tfstate.*
+*.tfplan
+tfplan
+destroy.tfplan
+crash.log
+override.tf
+override.tf.json
+*_override.tf
+*_override.tf.json
+# Keep example var files; ignore real ones
+*.tfvars
+*.tfvars.json
+!*.example.tfvars
+

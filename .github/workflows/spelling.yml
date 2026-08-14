@@ -1,0 +1,47 @@
+# Flags US-English spellings in changed files so Irish/British forms stay consistent.
+# Runs the linter in tools/check_spelling.sh over the diff for PRs into main and
+# pushes to main. A failing check blocks the merge (once required in branch rules).
+name: Spelling (Irish/British English)
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+jobs:
+  spelling:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # full history so we can diff against the base
+
+      - name: Determine changed files
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            BASE="${{ github.event.pull_request.base.sha }}"
+            HEAD="${{ github.event.pull_request.head.sha }}"
+          else
+            BASE="${{ github.event.before }}"
+            HEAD="${{ github.sha }}"
+          fi
+          # New branch / unknown base (all-zero SHA): fall back to scanning all files.
+          if ! git cat-file -e "${BASE}^{commit}" 2>/dev/null; then
+            git ls-files > changed.txt
+          else
+            git diff --name-only --diff-filter=ACMR "$BASE" "$HEAD" > changed.txt
+          fi
+          echo "Files to check:"
+          cat changed.txt
+
+      - name: Check spelling
+        run: |
+          mapfile -t files < <(grep -v '^$' changed.txt || true)
+          if [ ${#files[@]} -eq 0 ]; then
+            echo "No changed files to check."
+            exit 0
+          fi
+          bash tools/check_spelling.sh "${files[@]}"

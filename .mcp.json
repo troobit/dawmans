@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "devtools": {
+      "type": "stdio",
+      "command": "mcp-devtools",
+      "env": {
+        "ENABLE_ADDITIONAL_TOOLS": "sequential_thinking,gemini-agent,codex-agent"
+      }
+    }
+  }
+}
