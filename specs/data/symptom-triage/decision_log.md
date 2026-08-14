@@ -176,22 +176,41 @@ served with a mark.
 
 ### Decision
 
-Record each `(entry_key, pointer)` that resolves in `triage/.pointer-ledger.json` — machine-written,
-committed, never hand-edited. No ledger row means never verified, so an unresolved pointer is a
-rejection; a row present means it worked once, so an unresolved pointer is a flag plus `unbacked`.
-`dawmans validate` reads the ledger and never writes it.
+Record each **pointer** that resolves in `triage/.pointer-ledger.jsonl`, keyed on the pointer alone —
+`(source_id, section number, or normalised title)` — machine-written and committed. No ledger row
+means never verified, so an unresolved pointer is a rejection; a row present means it worked once,
+so an unresolved pointer is a flag plus `unbacked`. The file is newline-delimited JSON, one row per
+line sorted by pointer, with `merge=union` set in `.gitattributes`; rows are never pruned;
+`resolved_at` is written only on transition; an unparseable ledger fails the run. `dawmans validate`
+reads the ledger and never writes it.
 
 ### Rationale
 
 The distinction the requirements draw is about the author's presence, and the ledger is the only
 durable record of a moment when the author was present and the pointer worked. Committing it makes
 that record survive a clone and a rebuild, which is exactly when the 1 a.m. scenario 8.4 describes
-occurs. Keying on `entry_key` — the normalised symptom plus device set — rather than `passage_id`
-means editing a cause's wording does not lose the verification of the pointers that did not change,
-while a genuinely new pointer on an old entry correctly has no row and is rejected.
+occurs.
+
+The key is the pointer because **verification is a property of the pointer's target, not of the
+entry holding it**. Keying on the entry — its normalised symptom plus device set — turns a cosmetic
+edit into a mass rejection: adding a device to `devices:` changes the key, so every pointer in that
+entry loses its row, and any one that has since drifted becomes a 2.2 rejection instead of an 8.4
+flag. The entry is then withdrawn mid-session by an edit that had nothing to do with pointers. 2.2
+still does its work under pointer keying, because a row only ever records a pointer that *did*
+resolve, and a newly typed pointer has none.
+
+The format follows from the file being committed. A single JSON object cannot be merged by git, and
+"never hand-edited" is unenforceable in exactly the situation git demands it; one row per line plus
+a union merge makes two machines' additions combine without a conflict. Never pruning is what keeps
+the union merge sound — a merge strategy that only adds cannot be paired with a rule that deletes.
+Writing `resolved_at` only on transition keeps a no-change run's diff empty.
 
 ### Alternatives Considered
 
+- **Key on `entry_key`, the normalised symptom plus device set**: Survives a file rename and a
+  re-chunk, and detects the 1.9 duplicate with the same value - Rejected because a scope edit
+  changes the key and prunes the entry's rows, converting drift flags into rejections; the entry is
+  withdrawn for an unrelated edit. `entry_key` is retained as a report annotation only.
 - **Keep the memory in `index/`**: No new artefact, no repository noise - Rejected because a
   rebuild deletes it, so a drifted entry would be rejected rather than flagged in precisely the
   situation 8.4 was written for.
@@ -208,13 +227,21 @@ while a genuinely new pointer on an old entry correctly has no row and is reject
 
 **Positive:**
 - Both criteria are satisfied with one small file and no per-entry bookkeeping by the author.
-- The file is safe to delete: doing so re-arms 2.2 for everything, which is the correct degradation
-  when the claim that a pointer once worked has been lost.
+- No entry edit can change a ledger key, so no edit to an entry can convert a drift flag into a
+  rejection.
+- Deleting the file re-arms 2.2 for everything, which is the correct degradation when the claim that
+  a pointer once worked has been lost — and the deletion is reported rather than silent.
 
 **Negative:**
-- A machine-written file in the repository produces diff noise on ingestion runs and can conflict.
-- Verification is inherited across machines and clones: an entry verified once on the author's
+- Verification is coarser than the entry: a pointer verified by one entry counts as verified for a
+  different entry that later adopts the same pointer, so a genuinely new cause reusing a
+  known-good pointer gets an 8.4 flag where 2.2 would have rejected it. This is the price of not
+  keying on the entry, and it errs towards serving marked triage rather than withdrawing it.
+- Verification is also inherited across machines and clones: an entry verified once on the author's
   machine is treated as verified everywhere, even against a different copy of the manuals.
+- A machine-written file in the repository is in the merge path. Union merge resolves concurrent
+  additions but never deletes, so the file only grows and can retain a row for a pointer no entry
+  holds; and a corrupted file stops the run rather than degrading, which is loud but costs the run.
 - A pointer that resolved to the *wrong* section and was later corrected in the manual is flagged
   rather than rejected, because the ledger records that it resolved, not that it was right.
 
@@ -234,8 +261,9 @@ passage does not support is exactly what the flag exists to mark.
 
 ### Decision
 
-A `term-not-in-passage` miss is reported in the coverage report and leaves `unbacked` clear. 2.3 and
-8.4 remain the only two producers of `unbacked`.
+A `term-not-in-passage` miss is reported in the coverage report and leaves `unbacked` clear. 2.4 and
+8.5 remain the only two producers of `unbacked`. It does, however, make `dawmans validate` exit
+non-zero, so the check has consequences where the author is present and none where the user is.
 
 ### Rationale
 
@@ -262,7 +290,65 @@ sound entries and teach the user to ignore the caveat in the two cases where it 
 
 **Negative:**
 - An entry making a factual claim its pointer does not support is ingested, retrievable and cited
-  with no user-visible mark; only the coverage report shows it.
-- The flag is therefore only as useful as the author's habit of reading the report.
+  with no user-visible mark; only the coverage report and the `validate` exit code show it.
+- A false positive costs a non-zero `validate` and a re-read, so a noisy extractor becomes an
+  authoring irritation rather than a user-facing one.
+
+---
+
+## Decision 6: The closing statement is identified by position, not by a reserved title
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+1.3 makes "a closing statement of what to do when every cause is eliminated" an optional part of an
+entry, and 1.4 excludes it from the 2–6 cause count. Nothing in the requirements says how the parser
+tells it apart from a cause. Both are `##` sections in the same document, and the entry format has
+no reserved vocabulary anywhere else.
+
+### Decision
+
+The closing statement is the **final** `##` section carrying neither a `check:` line nor a fix line.
+No title is reserved. A section demoted to a closing statement by this rule always emits a
+`closing-statement-inferred` flag naming it.
+
+### Rationale
+
+A reserved title is a value the author must remember and spell exactly, in a format whose whole
+premise (Decision 1) is that the body needs no syntax. Position plus absence of both keyed lines
+uses what is already there. The rule's real cost is that it is silent when wrong: a final section
+meant as a cause that has lost *both* its check and its fix is read as a note, so an entry of three
+causes becomes two plus a note — inside 1.4's band, nothing rejects, the cause vanishes from the
+ranked list `api/answer-engine` 7.2 and 7.6 consume, and 1.5 forbids exactly that. The mandatory
+flag is what makes the inference visible; without it the rule would be unacceptable. Losing only the
+fix, the likelier slip, still rejects under 1.2 and never reaches this path.
+
+### Alternatives Considered
+
+- **A reserved title (`## Otherwise`, `## If none of these`)**: Unambiguous, no inference, no flag
+  needed - Rejected because it is a hand-maintained magic value in a format that otherwise has none,
+  and a misspelling turns the note into a cause that rejects for missing a check — a worse message
+  than the one it avoids.
+- **A frontmatter key (`closing: …`)**: Machine-exact, parsed by the same strict path as `devices` -
+  Rejected because it moves prose the author writes last into the block they write first, and puts
+  the one free-text paragraph of the entry behind YAML quoting, which Decision 1 rejected for the
+  cause text for the same reason.
+- **No closing statement construct at all**: Trailing prose folds into the last cause - Rejected
+  because 1.3 names it as an optional part, and folding it in attaches advice about *every* cause to
+  the least likely one, which is where a split entry would then carry it.
+
+### Consequences
+
+**Positive:**
+- The grammar keeps no reserved words, so nothing has to be remembered or spelled exactly.
+- The demotion is always reported, so 1.5's guarantee is auditable rather than assumed.
+
+**Negative:**
+- A well-formed entry whose author genuinely meant a closing statement still emits a flag, so the
+  flag is common and carries no severity — it is an inventory line, not a warning.
+- The rule is positional, so a closing statement written between two causes is parsed as a cause and
+  rejects for a missing check.
 
 ---
