@@ -12,6 +12,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Narrowing from triage entries** (`api/answer-engine` phase 4, `dawmans/answer/narrow.py`).
+  The engine-built entry path of Decision 9: `matched_entry` finds the first supplied passage
+  keying the triage sidecar, `expand_entry` takes the entry's first ≤ 4 causes in the author's
+  order and resolves each cause's fix pointers against the view — filtered through the turn's
+  source scope (Decision 10), bounded over resolved passages rather than pointers at the
+  12-passage cap, with excess dropped in cause order and within a cause in section order, and
+  passages retrieval already supplied cited without re-admission. `build_narrowing` constructs
+  the 7.2 candidate list (label from `check`, value from `statement`, no reorder/merge/add) with
+  7.8's state-value suppression behind a caller-supplied predicate, asking nothing when fewer
+  than two candidates survive; `build_causes` builds the 7.6 terminal `causes[]` with positional
+  ranks, the entry passage as `cites[]`, and scope-filtered `fix_cites[]` — empty `fix_cites[]`
+  reads as unbacked for the turn (the engine reads the authored flag, never sets it), and
+  out-of-scope holding sources are named for 2.3's suggestion path. 20 tests cover the
+  provenance, scope, bound, suppression and terminal-form properties.
 - **Retrieval and scoping** (`api/answer-engine` phase 3, `dawmans/answer/scope.py` and
   `dawmans/answer/retrieve.py`). `device_scope` derives the turn's device scope over source kind —
   the selected vendor manuals' `hardware_applicability.device` unioned with the

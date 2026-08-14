@@ -1,7 +1,7 @@
 # Answer engine (`src/dawmans/answer/`)
 
 Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
-corpus view) and 3 (retrieval and scoping) are done.
+corpus view), 3 (retrieval and scoping) and 4 (narrowing from triage entries) are done.
 
 ## Package setup
 
@@ -93,3 +93,28 @@ corpus view) and 3 (retrieval and scoping) are done.
   source lands *last* in `supplied`); a qualifying source that misses both depth-50 cuts still
   gets its floor slot (appended after the fused-ordered picks); cap arithmetic is
   `max(8, |qualifying|, 12 if narrowing)` in one place.
+
+## Narrowing (`narrow.py`)
+
+- Three functions plus a lookup: `matched_entry` (first sidecar hit in supplied/fused order),
+  `expand_entry` (sidecar lookup → first ≤4 causes → scope-filtered fix expansion under the
+  12-passage cap), `build_narrowing` (7.8 suppression → `Narrowing` or None), `build_causes`
+  (the 7.6 terminal `causes[]`). All entry-path; the `?narrow`/`?cause` sigils are the fallback
+  path and live in prompt/parse, not here.
+- `already_supplied` counts against the cap and is cited without re-admission; admission is
+  cause order then section order, so a cap can leave a lower cause with empty `fix_cites` —
+  which by the §4c rule also marks it unbacked for the turn. `unbacked_for_turn` is a derived
+  property (`not fix_cites`), never a mutation of the entry (Decision 10: the engine reads the
+  authored flag, never sets it).
+- Interpretation choices worth knowing: "excess drops in cause order" is implemented as
+  sequential admission (cause 1 keeps *all* its chunks before cause 2 gets any); a narrowing
+  question with fewer than 2 surviving candidates is not asked (7.2 fixes the band at 2–4, the
+  design only names the all-removed case); out-of-scope holding sources are read off the fix
+  *pointer's* `source_id`, so they are named even though the passage is never resolved.
+- 7.8's matching is deliberately not in the engine: `build_narrowing` takes a
+  `state_supplies(candidate) -> bool` predicate (default None — the NullStateSource MVP).
+  Deciding whether a state key/value "supplies a candidate's value" belongs to the caller once
+  a live StateSource exists.
+- Fix expansion applies `in_device_scope` for mask parity, but it is a no-op in practice:
+  only sidecar-keyed (authored) passages declare devices, and fix pointers target vendor
+  manuals — untestable until an authored passage can be a fix target.

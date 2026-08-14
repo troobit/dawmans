@@ -101,7 +101,7 @@ references:
 
 ## Phase 4: Narrowing from triage entries
 
-- [ ] 12. Write tests for narrowing candidates and the ranked-causes builder <!-- id:f3kp012 -->
+- [x] 12. Write tests for narrowing candidates and the ranked-causes builder <!-- id:f3kp012 -->
   - Narrowing provenance property (Decision 9): on the entry path the candidate list equals, in order, the entry's first 2-4 causes - label from `check`, value from `statement`; no reorder, merge or addition, and the model is not asked for candidates at all.
   - Fix pointers are resolved against the view then filtered through the turn's source scope mask (Decision 10): fix-pointer scope property - no fix passage admitted to supplied lies outside the selected set; an out-of-scope fix carries the cause as unbacked for this turn and names the holding source through the suggestion path.
   - The expansion bound is over resolved passages, not pointers - a section pointer resolves to every chunk it produced; excess drops in cause order, within a cause in section order.
@@ -112,7 +112,7 @@ references:
   - Stream: 1
   - Requirements: [1.13](requirements.md#1.13), [7.2](requirements.md#7.2), [7.6](requirements.md#7.6), [7.7](requirements.md#7.7), [7.8](requirements.md#7.8)
 
-- [ ] 13. Implement narrow.py <!-- id:f3kp013 -->
+- [x] 13. Implement narrow.py <!-- id:f3kp013 -->
   - Sidecar lookup by passage_id, candidate construction, scope-filtered fix expansion, state-value suppression, and the engine-built causes[] for the terminal form.
   - Blocked-by: f3kp012 (Write tests for narrowing candidates and the ranked-causes builder)
   - Stream: 1
