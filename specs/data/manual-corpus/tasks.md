@@ -9,7 +9,7 @@ references:
 
 ## Phase 1: Project scaffold and shared records
 
-- [ ] 1. Scaffold the Python package and build tooling <!-- id:e7lsx1t -->
+- [x] 1. Scaffold the Python package and build tooling <!-- id:e7lsx1t -->
   - src/ layout, one installable package `dawmans`, managed with uv; pytest + hypothesis + ruff as dev dependencies.
   - Makefile: replace the unconfigured build/test/lint/clean targets, and add `fetch-model` (one-off model cache population) and `bench` (the 8.1 full-corpus timing, skipped when manuals/ is empty).
   - Create the package directory tree of design 'Module placement' with empty modules; gitignore index/ and models/.
@@ -18,7 +18,7 @@ references:
   - Requirements: [8.5](requirements.md#8.5)
   - References: specs/data/manual-corpus/design.md
 
-- [ ] 2. Write tests for the SourceRecord and Passage constructors <!-- id:e7lsx1u -->
+- [x] 2. Write tests for the SourceRecord and Passage constructors <!-- id:e7lsx1u -->
   - Assert the constructor refuses a value for a field CONTRACTS 1 marks not applicable to the record's kind: vendor, product, doctype, lang, doc_version, page_count and low_text on an authored-triage source.
   - Assert an authored-triage SourceRecord carries source_id exactly `authored/triage` and hardware_applicability `assumed`, and that a Passage from a pageless source has section_number, page_start and page_end absent rather than defaulted.
   - Assert no field outside the CONTRACTS 1/2 tables can be set - the record shape is the contract.
@@ -26,14 +26,14 @@ references:
   - Requirements: [9.1](requirements.md#9.1), [12.1](requirements.md#12.1), [12.5](requirements.md#12.5), [12.8](requirements.md#12.8)
   - References: specs/CONTRACTS.md
 
-- [ ] 3. Implement records.py and version.py <!-- id:e7lsx1v -->
+- [x] 3. Implement records.py and version.py <!-- id:e7lsx1v -->
   - dawmans/records.py: frozen dataclasses SourceRecord and Passage, CONTRACTS 1 and 2 verbatim, kind-dependent fields typed `| None`.
   - dawmans/version.py: INGESTION_VERSION integer, with a comment stating it is bumped by hand whenever extraction through chunking could alter a chunk's text or metadata.
   - Blocked-by: e7lsx1u (Write tests for the SourceRecord and Passage constructors)
   - Stream: 1
   - Requirements: [9.1](requirements.md#9.1), [12.1](requirements.md#12.1), [12.5](requirements.md#12.5), [12.8](requirements.md#12.8)
 
-- [ ] 4. Define the loader seam types <!-- id:e7lsx1w -->
+- [x] 4. Define the loader seam types <!-- id:e7lsx1w -->
   - dawmans/corpus/loader.py: SourceLoader protocol (discover/load), Discovered, LoadResult, Region, Unit, UnitFlags, Rejection - the design's Components and Interfaces section verbatim.
   - Unit carries page_start and page_end as two fields so a procedure spanning p11-p12 keeps both ends.
   - The protocol is the seam that makes 12.2 structural: everything from Region onwards is shared code. TriageLoader is implemented by data/symptom-triage and is not written here.

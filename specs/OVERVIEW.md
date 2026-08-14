@@ -55,7 +55,7 @@ only spec ready for implementation; the other three still have no ledger.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
-| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
+| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks 🔨 (45, 4 done — phase 1) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ⬜ | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ | 154 |
@@ -73,8 +73,9 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - 12 requirement sections, 84 anchored criteria. Owns `SourceRecord` and `Passage` from
   [`CONTRACTS.md`](CONTRACTS.md) §1–§2, and publishes the filename grammar two other specs now
   reconstruct (2.7). Reference corpus: roughly 1107 pages across four manuals.
-- **Ledger:** 45 tasks over 8 phases, test-then-implement throughout, two work streams, none
-  started. `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
+- **Ledger:** 45 tasks over 8 phases, test-then-implement throughout, two work streams. Phase 1 —
+  the `dawmans` package scaffold, the CONTRACTS §1/§2 records and the loader seam — is done; 41
+  tasks remain. `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
   `make fetch-model` once, and declare the Focusrite applicability mapping 11.7 makes mandatory.
 - Explicit non-goals include OCR, image understanding, non-English content, automatic manual
   acquisition, and inferring hardware applicability from a document's contents.

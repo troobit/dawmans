@@ -1,0 +1,55 @@
+[project]
+name = "dawmans"
+version = "0.1.0"
+description = "Ingestion over a local corpus of DAW and hardware manuals"
+readme = "README.md"
+requires-python = ">=3.12"
+dependencies = [
+    # AGPL-3.0-or-later. Importable only under `dawmans/corpus/pdf/` — see
+    # specs/data/manual-corpus/decision_log.md Decision 6 and the banned-api rule below.
+    "pymupdf>=1.24",
+    # Embedding. Network-capable, so ingestion runs it with HF_HUB_OFFLINE=1 against a
+    # `models/` cache populated once by `make fetch-model` (requirement 8.5).
+    "fastembed>=0.4",
+]
+
+[dependency-groups]
+dev = [
+    "pytest>=8.0",
+    "hypothesis>=6.100",
+    "ruff>=0.6",
+]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/dawmans"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+addopts = "--strict-markers"
+markers = [
+    "bench: the full-corpus timing of requirement 8.1; run by `make bench`, never by `make test`",
+]
+
+[tool.ruff]
+line-length = 100
+src = ["src", "tests"]
+# Ruff formats Python blocks inside Markdown. The specs' samples are prose with
+# deliberate alignment, so they are not ruff's to rewrite.
+extend-exclude = ["*.md"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "TID"]
+
+# AGPL confinement (Decision 6): PyMuPDF may only be imported under `dawmans/corpus/pdf/`.
+# `tests/test_agpl_confinement.py` asserts the same rule so `make test` catches it too.
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"fitz" = { msg = "PyMuPDF is AGPL and confined to dawmans/corpus/pdf/ (Decision 6)." }
+"pymupdf" = { msg = "PyMuPDF is AGPL and confined to dawmans/corpus/pdf/ (Decision 6)." }
+
+[tool.ruff.lint.per-file-ignores]
+"src/dawmans/corpus/pdf/*" = ["TID251"]
+"tests/test_agpl_confinement.py" = ["TID251"]

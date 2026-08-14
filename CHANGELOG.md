@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The `dawmans` Python package, scaffolded** (`data/manual-corpus` phase 1). `src/` layout managed
+  with uv, the module tree of the design's Module placement, and the Makefile targets that were
+  still erroring: `build`, `test`, `lint`, `clean`, plus `fetch-model` (the one-off model cache
+  population that keeps requirement 8.5's ingestion offline) and `bench` (the 8.1 full-corpus
+  timing, which skips when `manuals/` is empty). `index/` and `models/` are gitignored.
+- **The AGPL confinement is enforced, not just documented.** PyMuPDF may be imported only under
+  `dawmans/corpus/pdf/` (`data/manual-corpus` Decision 6). A ruff banned-api rule catches the import
+  form and `tests/test_agpl_confinement.py` walks the package AST, so `make test` catches the
+  dynamic form the linter cannot see.
+- **`SourceRecord` and `Passage` — CONTRACTS §1 and §2 as code.** Frozen, keyword-only records whose
+  field set is asserted against the contract tables. The constructors refuse a field the record's
+  kind marks not applicable rather than defaulting one into place (9.1, 12.5), pin an
+  `authored-triage` source to the constant `authored/triage` and `assumed` applicability, and keep a
+  pageless passage's section and page fields absent while requiring its `entry_location` (12.8).
+- **The loader seam** (`dawmans/corpus/loader.py`): `SourceLoader`, `Discovered`, `LoadResult`,
+  `Region`, `Unit`, `UnitFlags` and the closed `Rejection` reason set. Interfaces only —
+  `TriageLoader` is `data/symptom-triage`'s to write, and everything from `Region` onwards is the
+  shared code that makes 12.2 structural.
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
   itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite
