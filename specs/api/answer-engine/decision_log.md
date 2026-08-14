@@ -169,7 +169,7 @@ ten tokens and of provider uniformity.
 
 ### Context
 
-`CONTRACTS.md` §6 is a closed set of seventeen outcomes and every turn must yield exactly one. Most
+`CONTRACTS.md` §6 is a closed set of sixteen outcomes and every turn must yield exactly one. Most
 are mechanical — an empty scope, an unconfigured provider, a timeout. Six are judgements about the
 answer: `answered`, `partially-answered`, `needs-narrowing`, `refused-not-covered`, `out-of-domain`,
 `no-manual-for-device`.
@@ -182,9 +182,14 @@ question, not of a score.
 
 ### Decision
 
-Split §6 disjointly. Eleven outcomes are engine-determined by gates evaluated in a fixed order
-before or around the provider call. Six content outcomes are chosen by the synthesis model and
-carried as the bare first line of its stream, validated against a six-member enum.
+Split §6. **Ten** outcomes are engine-determined by gates — four pre-flight, six in-flight. Six
+content outcomes are chosen by the synthesis model and carried as the bare first line of its stream,
+validated against a six-member enum. The split is disjoint on every path but one: where the model's
+first line is not a valid outcome, the engine derives `answered` or `refused-not-covered` from its
+own coverage signal.
+
+A question over 1000 characters is **not** among the sixteen: it is rejected before a turn exists
+(9.12), which is exactly what makes it distinguishable from every member of §6.
 
 ### Rationale
 
@@ -229,7 +234,7 @@ alongside: an `authored-triage` passage that matches means never out-of-domain.
   both the question and the passages.
 
 **Negative:**
-- Six of seventeen outcomes are decided by a model and are therefore not reproducible across model
+- Six of sixteen outcomes are decided by a model and are therefore not reproducible across model
   versions. `out-of-domain` versus `refused-not-covered` in particular will move when the model
   moves, and the only defence is the evaluation set's outcome-labelled bands.
 - A model that emits an invalid first line degrades to the engine's coverage-derived default, which
@@ -497,3 +502,196 @@ own shape rather than from a rule the engine has to know about each implementati
 - A rich source must flatten a hierarchy into dotted keys, which loses structure a future feature
   might want — for example, iterating every track's monitor state.
 - Scalar-only values cannot express a list or a nested record without encoding it into a string.
+
+---
+
+## Decision 8: Count the history token budget locally, never with a provider endpoint
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+10.8 bounds carried conversation history to a fixed 800-token budget, truncated oldest-first. An
+earlier draft of this design enforced that budget with `client.messages.count_tokens`, described as
+"checked rather than estimated" — accurate about the count, wrong about the cost.
+
+`messages.count_tokens` is an HTTP endpoint, not a local tokeniser. Two independent reviews of this
+design reached that finding first and independently of each other.
+
+### Decision
+
+Count the history budget locally, with the BGE tokeniser already resident for retrieval, and enforce
+the 800-token budget with a 10% safety margin against under-count. No provider SDK call occurs
+anywhere in a turn before `stream()`. `count_tokens` is used only in offline `make bench`
+calibration of that margin.
+
+### Rationale
+
+The endpoint call fails three separate obligations at once, and no amount of caching fixes it. It is
+an unbudgeted network round trip inside 4.3's 150 ms engine-overhead cap, on every turn, before the
+provider call that the budget exists to protect. It breaks 6.14, which requires *no outbound network
+request for the whole turn* on a local provider. And it would ship question and history text to a
+hosted provider on a turn the user configured as local, or as a shared backend whose disclosure they
+have not acknowledged — defeating 6.15's gate by a mechanism the user cannot see.
+
+It also made prompt assembly provider-specific, which Decision 4 exists to prevent: a component that
+counts tokens through the Anthropic client cannot serve a local provider unchanged.
+
+The resident tokeniser is a different tokeniser from any provider's, so its count is an estimate. The
+margin is the price of that, and it is a cheap price: 800 tokens is a self-imposed budget, not a
+model limit, so being 10% conservative costs a little history and risks nothing.
+
+### Alternatives Considered
+
+- **Keep `count_tokens`, cache the result per turn**: Caching does not help — history changes every
+  turn, so the call happens every turn. It addresses none of the three failures.
+- **Characters-per-token estimate with no tokeniser**: Simpler and dependency-free, but the error
+  bound is much wider than a real tokeniser's, so the margin would have to be large enough to waste
+  a meaningful share of the 800 tokens.
+- **Drop the token budget and bound history by turn count alone (10.1's six turns)**: Rejected
+  because turns vary in length by an order of magnitude, so a six-turn bound does not bound tokens,
+  which is the thing that costs prefill latency.
+
+### Consequences
+
+**Positive:**
+- 6.14's no-outbound-request guarantee becomes structural: there is no SDK call to make before
+  `stream()`, so a local turn cannot leak by oversight.
+- The engine-overhead cap loses a network round trip it could not have absorbed.
+- Prompt assembly is provider-agnostic, as Decision 4 requires.
+
+**Negative:**
+- The count is an estimate, so the 800-token budget is enforced approximately rather than exactly.
+- The 10% margin is a guess until `make bench` calibrates it against a real tokeniser.
+- Retrieval's tokeniser is now load-bearing for prompt assembly, coupling two stages that were
+  otherwise independent.
+
+---
+
+## Decision 9: Build narrowing candidates in the engine from the triage entry, not from model output
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+The answer framing gives the model a `?narrow` sigil plus `* ` lines, hoisted into the envelope's
+`narrowing`. The narrowing section separately specifies that the engine derives candidates from the
+triage sidecar: label from each cause's `check`, value from its `statement`, in the entry's own
+order. Both cannot be true, and the design did not say which wins.
+
+7.2 requires that "that entry's ranked causes and their confirming checks SHALL be the source of the
+candidates, taken in the entry's own order"; 7.6 requires the ranking be preserved; and
+`ui/ask-and-source-picker` 6.2 forbids the surface reordering, merging or adding candidates. Model
+output satisfies none of these by construction.
+
+### Decision
+
+Where a triage entry matched, the engine constructs `narrowing` from the sidecar and the model is
+not asked for candidates at all; `?narrow` is used **only** on the no-entry fallback path.
+
+### Rationale
+
+Candidates are not prose — they are selectable controls that decide the next retrieval. Promoting
+model-authored text into an actionable affordance is the one place in this design where model output
+would escape the `supplied`-set check that makes 3.6 airtight everywhere else. A hallucinated cause
+would be indistinguishable from an authored one at the point the user acts on it.
+
+Constructing candidates in the engine is also what makes 7.8 executable. That criterion requires
+suppressing a candidate whose value session state already supplies, and suppressing the whole
+question when every candidate goes — the engine cannot suppress a question the model has already
+chosen to ask and begun streaming.
+
+The asymmetry with the fallback path is honest rather than awkward: the entry path is the one the
+requirements call satisfiable, and it is the one that gets the structural guarantee.
+
+### Alternatives Considered
+
+- **Let the model emit `?narrow` and reconcile its lines against the entry afterwards**: Requires
+  matching free text to causes, which is the fuzzy judgement the sidecar exists to avoid, and it
+  cannot recover the ranking when the match is partial.
+- **Put the entry's causes in the prompt and instruct the model to echo them verbatim**: Cheaper to
+  build, but "the model reliably echoes" is not a guarantee, and 6.2's no-reorder rule would rest on
+  an instruction rather than on construction.
+- **Always use the model path, dropping the sidecar derivation**: Rejected outright — it contradicts
+  7.2's text and removes the only mechanism that makes narrowing satisfiable against the real corpus.
+
+### Consequences
+
+**Positive:**
+- 7.2, 7.6 and UI 6.2 hold by construction rather than by prompt discipline.
+- 7.8's suppression becomes implementable, and the "all candidates removed ⇒ no question" case works.
+- A candidate is always traceable to an authored cause, so it can always carry that cause's citation.
+
+**Negative:**
+- Two code paths produce `narrowing`, and the fallback path keeps only prompt-level guarantees.
+- The engine now decides `needs-narrowing` on the entry path while the model decides it on the
+  fallback path, which is a second exception to Decision 3's clean split.
+- A narrowing question the model would have phrased better is not available; the wording comes from
+  the author's `check` text, so a badly written entry produces a badly worded question.
+
+---
+
+## Decision 10: Filter triage fix pointers through the turn's source scope, carrying the cause as unbacked
+
+**Date**: 2026-08-14
+**Status**: accepted
+
+### Context
+
+A triage entry's causes carry `fix[].passage_ids` pointing into vendor manuals. Narrowing expansion
+resolves those pointers and admits the passages to `supplied` so the fix can be cited. The design
+did so without checking the turn's source scope.
+
+Selecting only the authored triage source is not an exotic scope — it is the ordinary diagnostic
+one, and 5.4 covers it explicitly. On that scope, unfiltered expansion injects vendor-manual passages
+into synthesis from sources the user deselected.
+
+### Decision
+
+Resolve fix pointers, then filter the result through the same source scope mask retrieval uses. Where
+a cause's fix passage is out of scope, carry the cause as if `unbacked` **for that turn** and name
+the holding source through 2.3's suggestion path.
+
+### Rationale
+
+1.1, 5.1 and 2.4 all say the selected sources are the complete grounding scope for a turn, and this
+design's own scope-soundness invariant states that no returned passage's `source_id` lies outside the
+selected set. Unfiltered expansion breaks all four, and it corrupts `contributing_sources[]`, which
+CONTRACTS §4 defines over *selected* sources — the user would be told a source contributed that they
+had switched off.
+
+The `unbacked` treatment is the right degradation because it is the one the user already understands:
+CONTRACTS §2 defines `unbacked` as a cause resting on no vendor-manual passage, and the UI marks it
+inline. A cause whose fix is out of scope is, for this turn, exactly that. The suggestion path then
+tells the user which source to select, which turns a silent gap into a one-activation fix.
+
+Marking it per-turn rather than mutating the flag matters: the engine reads `unbacked` and never sets
+it (1.13, 3.3), and the entry itself is not broken — only out of scope.
+
+### Alternatives Considered
+
+- **Admit fix passages regardless of scope, as a deliberate carve-out**: Defensible on the grounds
+  that the user asked a diagnostic question and wants the fix. Rejected because it would require
+  reconciling 1.1, 2.4, 5.1 and CONTRACTS §4 simultaneously, and because a citation to a manual the
+  user deselected is exactly the surprise source scoping exists to prevent.
+- **Drop the cause entirely when its fix is out of scope**: Rejected as a worse answer — the cause
+  may still be the right one, and the check is still observable; only the documented fix is missing.
+- **Auto-widen scope to include the pointed-at source**: Rejected because it overrides a deliberate
+  narrowing without asking, which §3 of the UI spec treats as the failure mode to avoid.
+
+### Consequences
+
+**Positive:**
+- Scope soundness holds on every path, including the narrowing expansion that previously bypassed it.
+- `contributing_sources[]` stays truthful to its CONTRACTS §4 definition.
+- The user is told what to select rather than silently given an uncited fix.
+
+**Negative:**
+- A triage-only scope yields causes whose fixes are all unbacked, which reads as a weaker answer than
+  the corpus could actually give.
+- `unbacked` now has two meanings at the point of rendering — genuinely unbacked, and out of scope
+  for this turn — and the UI cannot currently distinguish them.
+- The suggestion path carries more weight than 2.3 was written for, since it is now the mechanism
+  that recovers a fix rather than merely proposing a better source.
