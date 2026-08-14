@@ -24,11 +24,11 @@ corpus inventory.
 | Field | Owner | Notes |
 |---|---|---|
 | `kind` | corpus | `vendor-manual` or `authored-triage`, per §4a. **Must reach the user** — see §3. No source is indexed without one. |
-| `source_id` | corpus | For `vendor-manual`, derived from the filename as `<vendor>/<product>`, stable while the filename is. For `authored-triage`, derived from the source's own content and **independent of any filename**. |
+| `source_id` | corpus | For `vendor-manual`, derived from the filename as `<vendor>/<product>`, stable while the filename is. For `authored-triage`, the **constant** `authored/triage` — the source is a store, not a document, so its identity does not vary with its contents. It must not be content-derived: `source_id` prefixes `passage_id`, so a digest that moved on every edit would orphan the whole citation history. |
 | `vendor`, `product`, `doctype`, `lang` | corpus | From the filename fields for `vendor-manual`. Not applicable to `authored-triage`. |
 | `doc_version` | corpus | From the filename for `vendor-manual`. **Must reach the user** — see §3. Not applicable to `authored-triage`. |
 | `display_name` | corpus | Human-readable, for the picker and citations. Both kinds. |
-| `hardware_applicability` | corpus | Which hardware revision this source describes, and whether that is *confirmed* or *assumed*. **Never inferred automatically** — see §5. |
+| `hardware_applicability` | corpus | Which hardware revision this source describes, and whether that is *confirmed* or *assumed*. **Never inferred automatically** — see §5. On `authored-triage` the source-level value is fixed at `assumed`; applicability varies per entry, and an entry's declared devices are passage-level data, not a property of the store. |
 | `page_count` | corpus | `vendor-manual` only; a pageless source reports it as not applicable. |
 | `ingested_at`, `chunk_count` | corpus | Inventory only. Both kinds. |
 | `low_text` | corpus | Text layer present but sparse. Ingested, not rejected. `vendor-manual` only; inventory and picker marking only. |
