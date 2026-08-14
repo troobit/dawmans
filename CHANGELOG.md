@@ -12,6 +12,59 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- `ui/ask-and-source-picker` design and decision log (7 ADRs) — the fourth and last design.
+  A SvelteKit SPA served same-origin by the answer-engine process; append-only streaming
+  with block type fixed by a block's first line (4.2); one window-level keyboard router
+  owning the 1–4 arming rule (1.11); numeric citation markers with detail in a list, so
+  CONTRACTS §3's five inline obligations fit inside the 25-word reading budget (11.7).
+- `data/manual-corpus` criteria 8.8–8.11 defining what "a queryable index" means — both
+  kinds of matching over the same passages, every `Passage` and `SourceRecord` field
+  readable without a source PDF, restriction to a chosen subset of sources, and
+  self-describing artefacts. Closes the requirements gap that design named as defect 3.
+- `api/answer-engine` decision log entries 8–10: count the history token budget locally
+  rather than with a provider endpoint; build narrowing candidates in the engine from the
+  triage entry rather than from model output; filter triage fix pointers through the turn's
+  source scope, carrying an out-of-scope cause as `unbacked`.
+- A *Requirements defects to reconcile* section in the `api/answer-engine` design, matching
+  its two sibling designs. Six open contract defects, each found from both ends of its seam.
+
+### Fixed
+
+- `api/answer-engine` design, repaired against two independent reviews:
+  - History token counting used `client.messages.count_tokens`, a provider HTTP endpoint —
+    an unbudgeted round trip inside the 150 ms engine-overhead cap that also broke 6.14's
+    no-outbound-request guarantee on a local provider and bypassed 6.15's disclosure gate.
+  - Triage fix pointers were admitted to the grounding set with no scope check, so a
+    triage-only scope injected passages from deselected sources, breaking 1.1, 2.4 and 5.1
+    and corrupting `contributing_sources[]`.
+  - The triage sidecar was read as `authored-triage.json`; the corpus writes
+    `authored_triage.json`. `data/symptom-triage` names this exact spelling as a silent
+    failure leaving every entry in scope for every turn. Now derived by the slug rule and
+    failing loudly when absent.
+  - `incomplete` was unreachable: a mid-stream failure matched the "any other provider
+    error" gate first. Gates are now split pre-flight and in-flight, with "has any output
+    been streamed" evaluated ahead of every error-kind gate.
+  - The loopback `Origin` guard rejected the browser surface's own origin. Resolved by
+    serving the built surface same-origin, with the dev proxy rewriting `Origin` as well
+    as `Host`.
+  - Retrieval masked after top-k rather than before it; the lexical relevance arm and
+    per-source qualification were global, so a small guide beside the 1009-page Live manual
+    could never fire 5.6's floor.
+  - Device scope had no defined value for the `authored-triage` source, so a triage-only
+    turn filtered out its whole starter set.
+  - `GET /passages/{id}` read a stale view after a re-ingest, breaching 3.5.
+  - Outcome arithmetic: sixteen outcomes, ten engine-determined and six content — not
+    seventeen and eleven — in both the design and Decision 3.
+  - The 3.7 ungrounded rule missed uncited procedure steps, which 3.1 counts as substantive.
+  - `timings` carried a parser status; `framing` is now its own event and `timings` carries
+    the five stages 4.11 names.
+  - Dangling `§Outcome` reference, and the inverted claim that the state timeout was the
+    shortest member of the `asyncio.gather`.
+- `specs/OVERVIEW.md` regenerated: it still recorded all four specs as "requirements
+  complete, design not started" when three designs existed.
+
+### Added
+
 - DAWMans MVP requirements: four specs totalling 398 anchored EARS criteria —
   `data/manual-corpus` (vendor PDF ingestion into a citable corpus),
   `data/symptom-triage` (an authored symptom-to-cause source), `api/answer-engine`
