@@ -6,11 +6,23 @@ rendering — plus device scope validation (tasks 11–12, stream 2). Pointer
 resolution, the ledger, the term check, emission and the loader are still
 outstanding.
 
-**Phase 2 is blocked on `data/manual-corpus`**, not deferred: its first task
-extracts section fixtures from a locally built index, and that spec is complete
-only through its task 17 — no chunker, passage-id scheme or index builder exists
-yet. Scope validation was reachable because it reads the rig and the corpus's
-identity vocabulary, neither of which needs a built index.
+**Phase 2 is blocked on `data/manual-corpus`**, not deferred: task 4 extracts the
+section fixtures from a locally built index, and 5–8 are blocked on 4. The gate
+is a committed `views/<hex>/passages.jsonl` — `manual-corpus` task 37, the atomic
+view commit — plus the human prerequisites in its `prerequisites.md` (the one-off
+`make fetch-model`, and the Scarlett mapping in `rig.yaml`). A task count is the
+wrong thing to check here; check for that file. Scope validation was reachable
+because it reads the rig and the corpus's identity vocabulary, neither of which
+needs a built index.
+
+**Phase 4 is blocked too, and `rune` does not show it.** Its blocked-by names only
+task 3, so `rune streams --available` reports task 13 ready; in fact it needs
+`corpus.passage_id` and `manual-corpus` 12.5's `SourceRecord` constructor, which
+CONTRACTS §1 forbids this spec redefining. Cross-spec dependencies are not
+expressible in the ledger — every remaining task here has one. `corpus/passage_id.py`,
+`corpus/chunk.py`, `records.py` and the loader seam types do now exist, but on the
+unmerged `orbit-impl-1/manual-corpus` branch; Phase 4 becomes reachable when that
+merges, ahead of Phase 2 and without waiting for an index.
 
 ## Modules
 

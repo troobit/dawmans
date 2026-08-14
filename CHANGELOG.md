@@ -10,6 +10,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **Corrected the `data/symptom-triage` blocked-work note.** `docs/agent-notes/triage-entry-grammar.md`
+  claimed `data/manual-corpus` was complete only through its task 17 and that no chunker or
+  passage-id scheme existed; both now exist. The note names the real gate for Phase 2 — a committed
+  `views/<hex>/passages.jsonl` from that spec's task 37, plus its human prerequisites — rather than a
+  task count that goes stale, and records that Phase 4 is blocked too even though `rune` reports its
+  first task ready: cross-spec dependencies are not expressible in the ledger, and every remaining
+  task in this spec has one.
+
 ### Added
 
 - **`data/symptom-triage` device scope validation (tasks 11–12).** `dawmans.triage.scope` applies the
