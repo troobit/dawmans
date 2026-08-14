@@ -338,5 +338,3 @@ Before opening a change for review:
 - [ ] Code matches requirements + design; units/safety/security paths honoured.
 - [ ] `decision_log.md` has any load-bearing decisions (Enhanced Nygard ADR format).
 - [ ] `OVERVIEW.md` updated (status + links); `DECISIONS.md` updated if cross-cutting.
-</content>
-</invoke>
