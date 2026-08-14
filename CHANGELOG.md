@@ -12,6 +12,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/` — the browser surface scaffold** (`ui/ask-and-source-picker` Phase 1). A SvelteKit SPA
+  built to static assets with `adapter-static` (`ssr = false`, `prerender = true`), for the engine
+  to mount at `/` so the page shares its origin (Decision 1). The Vite dev proxy forwards `/turn`,
+  `/passages`, `/sources` and `/provider` to `$ENGINE_ORIGIN` and rewrites `Origin` as well as
+  `Host` in a `proxyReq` hook, since the engine's rebinding guard rejects a forwarded
+  `localhost:5173` origin. Test tooling installed: vitest, @testing-library/svelte, Playwright,
+  axe-core. Makefile gains `web-install` / `web-build` / `web-test` and a `make dev` pairing.
+- **`web/src/lib/engine/records.ts` — CONTRACTS §1–§4e, §6 and §6a as types**, the only place this
+  surface writes them down: `SourceRecord`, `Passage` and `Citation` (the source-kind variants as
+  discriminated unions), `AnswerEnvelope`, `Cause`, `required_manual`, the 16-event turn stream,
+  the §4d block set, `outcome` as the union of §6's 17 members and `reason` as §6a's five. Absent
+  is absent — never empty string, zero or empty array.
+- **Design tokens and their enforced floors** (Decision 6). One CSS file of custom properties —
+  background, surface, body/secondary text, accent with its 13.8 interactive-state variants, focus
+  ring, the four state colours, and the 11.1 type scale — with a unit test computing WCAG contrast
+  and luminance from the declared values: body ≥ 7:1, every other text element ≥ 4.5:1, non-text
+  indicators and focus ring ≥ 3:1, background luminance ≤ 0.08, and the 11.3-versus-11.5
+  resolution held as two enforced bounds (background ≥ 0.03, body text short of maximal white).
+
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
   itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite

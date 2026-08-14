@@ -9,7 +9,7 @@ references:
 
 ## Phase 1: Scaffold, contract types and design tokens
 
-- [ ] 1. Scaffold the SvelteKit surface and its tooling <!-- id:f9ae010 -->
+- [x] 1. Scaffold the SvelteKit surface and its tooling <!-- id:f9ae010 -->
   - web/ with pnpm; adapter-static, `ssr = false` and `prerender = true` in +layout.ts so the static shell paints before any network call — that headroom is what 8.7's 150 ms acknowledgement budget spends (Decision 1).
   - Vite dev proxy for /turn, /passages, /sources, /provider that rewrites `Origin` as well as `Host` in a proxyReq hook: `changeOrigin: true` alone forwards the browser's Origin and the engine's rebinding guard rejects it (Decision 1).
   - vitest + @testing-library/svelte + Playwright + axe-core as dev dependencies; Makefile targets for web install/build/test and the `make dev` pairing that runs both processes.
@@ -18,7 +18,7 @@ references:
   - Requirements: [8.7](requirements.md#8.7)
   - References: specs/ui/ask-and-source-picker/design.md
 
-- [ ] 2. Implement records.ts contract types <!-- id:f9ae011 -->
+- [x] 2. Implement records.ts contract types <!-- id:f9ae011 -->
   - CONTRACTS §1–§4e as types, the only place they are written down: SourceRecord, Passage, Citation, AnswerEnvelope, Cause, required_manual; `outcome` as the union of §6's 17 members and `reason` as the union of §6a.
   - Optionality follows the contract's own rules, and absent is absent — never empty string, zero or empty array; an empty `suggested_sources[]` would claim the engine looked and found nothing, a different claim from making no suggestion.
   - Types only — no behaviour, so no preceding test task.
@@ -27,7 +27,7 @@ references:
   - Requirements: [9.4](requirements.md#9.4)
   - References: specs/CONTRACTS.md
 
-- [ ] 3. Write the token contrast and luminance tests <!-- id:f9ae012 -->
+- [x] 3. Write the token contrast and luminance tests <!-- id:f9ae012 -->
   - WCAG relative luminance and contrast computed from the declared token values in a unit test that fails the build on a breach — the floors are arithmetic, and leaving them observational is the silent-drift risk the requirements name (Decision 6).
   - Body text ≥ 7:1 and every other text element ≥ 4.5:1 (11.3); non-text indicators and the focus ring ≥ 3:1 (11.4); background relative luminance ≤ 0.08 with text lighter than background (11.5); interactive-state token variants included so 13.8 holds at rest and in hover/focus/active/disabled.
   - Assert the 11.3-versus-11.5 resolution as two enforced bounds: background at the lighter end of its band, body text short of maximal white.
@@ -36,7 +36,7 @@ references:
   - Stream: 2
   - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [13.2](requirements.md#13.2), [13.8](requirements.md#13.8)
 
-- [ ] 4. Implement the design tokens <!-- id:f9ae013 -->
+- [x] 4. Implement the design tokens <!-- id:f9ae013 -->
   - One CSS file of custom properties: background, surface, body text, secondary text, accent, the four state colours, focus ring, and the type scale — components consume tokens and declare no colours of their own, or the floors become uncheckable in principle.
   - Blocked-by: f9ae012 (Write the token contrast and luminance tests)
   - Stream: 2

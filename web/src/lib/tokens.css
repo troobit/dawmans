@@ -1,0 +1,46 @@
+/*
+ * The design tokens — the one place a colour or a size is declared. Components
+ * consume these custom properties and declare no colours of their own, or the
+ * §11 floors become uncheckable in principle (Decision 6). Every colour here is
+ * asserted against the 11.3/11.4/11.5 floors by tokens.test.ts.
+ *
+ * The background sits at the lighter end of 11.5's band (relative luminance
+ * ≈ 0.046, band ≤ 0.08) so body text reaches its contrast floor without going
+ * to maximal white — the recorded 11.3-versus-11.5 resolution.
+ */
+:root {
+	/* Surfaces */
+	--colour-bg: #3c3c40;
+	--colour-surface: #46464b;
+
+	/* Text. Disabled text holds 11.3's 4.5:1 floor; disabledness is carried by
+	 * a non-contrast channel (label, shape, absence of a focus ring), per the
+	 * recorded 13.8-versus-11.3 trade-off. */
+	--colour-text: #e4e4e4;
+	--colour-text-secondary: #b8b8bc;
+	--colour-text-disabled: #b8b8bc;
+
+	/* Interactive accent, with its 13.8 state variants. */
+	--colour-accent: #8fc4ff;
+	--colour-accent-hover: #a5cfff;
+	--colour-accent-active: #7abaff;
+
+	/* Focus ring (13.2): ≥ 3:1 against both surfaces, and never the only channel. */
+	--colour-focus-ring: #8fc4ff;
+
+	/* The four state colours. Working/finished/broken are 8.4's indicator states;
+	 * caveat carries the !caveat / !conflict blocks of CONTRACTS §4d. None is
+	 * ever the only channel for its distinction (11.6). */
+	--colour-state-working: #ffc65c;
+	--colour-state-finished: #7ddb8a;
+	--colour-state-broken: #ff8a80;
+	--colour-state-caveat: #ffb74d;
+
+	/* Type scale (11.1): body inside 16–22 px, nothing needed to act on an
+	 * answer below 16 px, secondary metadata no lower than 14 px. The band is
+	 * verified by the stand-back loop, not asserted in the token test. */
+	--font-size-body: 18px;
+	--font-size-heading: 22px;
+	--font-size-control: 16px;
+	--font-size-secondary: 14px;
+}

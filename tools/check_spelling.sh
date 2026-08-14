@@ -65,6 +65,9 @@ for f in "${FILES[@]}"; do
     abs="$(cd "$(dirname "$f")" && pwd)/$(basename "$f")"
     [[ "$abs" == "$SELF" ]] && continue          # skip self (holds the word list)
     case "$f" in .git/*) continue ;; esac
+    # Generated lockfiles carry external package names (e.g. css-color-parser)
+    # that cannot be respelled and cannot carry a spelling-ignore marker.
+    case "$(basename "$f")" in pnpm-lock.yaml|package-lock.json|yarn.lock) continue ;; esac
     # grep -I skips binary files; -n line numbers; -E extended regex (case-sensitive).
     # Lines containing "spelling-ignore" are exempt — use sparingly, for unavoidable
     # external identifiers (e.g. API event names, CLI flags like -no-color).
