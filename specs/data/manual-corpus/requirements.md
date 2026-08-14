@@ -33,8 +33,9 @@ it is searched or rendered.
   source is trusted for downstream, and which fields of the shared records apply to it (12.5,
   12.8); it does not change how the source is retrieved or cited.
 - **Source ID** — the stable identifier for a source: derived from the filename for a
-  `vendor-manual`, and from the source's own content, independent of any filename, for an
-  `authored-triage` source ([`CONTRACTS.md`](../../CONTRACTS.md) §1).
+  `vendor-manual`, and the constant `authored/triage` for the authored source, which is a store
+  rather than a document and so does not vary with its contents
+  ([`CONTRACTS.md`](../../CONTRACTS.md) §1).
 - **Chunk** — the smallest indexed unit of text, carrying the metadata needed to cite it. A chunk
   is the `Passage` record of [`CONTRACTS.md`](../../CONTRACTS.md) §2.
 - **Passage ID** — the content-derived identifier every chunk carries, stable across
@@ -415,9 +416,10 @@ answerable without a second pipeline and without pretending the manufacturer sai
 5. <a name="12.5"></a>The filename convention in [2.1](#2.1)–[2.3](#2.3), and the derivation of
    identity from a filename in [2.4](#2.4), SHALL apply to `vendor-manual` sources only. An
    `authored-triage` source SHALL carry the identity fields CONTRACTS §1 marks as applying to its
-   kind — a stable source ID derived from its own content and independent of any filename, a
-   display name, and a hardware applicability — so that its citations render by the same rules as
-   any other source. The fields that table marks as not applicable to it — vendor, product,
+   kind — the constant source ID `authored/triage`, a display name, and a hardware applicability
+   of `assumed` — so that its citations render by the same rules as any other source. The source ID
+   SHALL NOT be derived from the source's contents: it prefixes every passage ID, so an identifier
+   that moved whenever an entry was edited would orphan every retained citation. The fields that table marks as not applicable to it — vendor, product,
    document type, declared language, document version and page count — SHALL NOT be synthesised
    to satisfy a rule written for a PDF.
 6. <a name="12.6"></a>The content, structure and validation of an `authored-triage` source are
