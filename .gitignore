@@ -62,3 +62,9 @@ override.tf.json
 
 # Reference manuals — third-party PDFs, not redistributable, ~110MB
 manuals/*.pdf
+
+# Orbit run configuration (per-machine agent/model selection)
+.orbit.yaml
+
+# Claude Code agent worktrees
+.claude/worktrees/
