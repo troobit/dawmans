@@ -423,3 +423,80 @@ not mentioned.
   one line.
 
 ---
+
+## Decision 8: Scope recognition matches documented device identities, not source ids alone
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Design 'Device scope' classifies each declared device against two vocabularies: `rig.yaml`'s device
+ids, and what the corpus has indexed. The tasks phrase the second as "indexed source ids", and taken
+literally that is `SourceRecord.source_id`.
+
+The two are not the same vocabulary. `data/manual-corpus` §Rig inventory carries the worked case:
+the Focusrite guide's filename product is `scarlett-solo-4g` and the rig device id is
+`scarlett-solo`, joined by a `source_applicability` declaration. Under the literal reading, an entry
+declaring `focusrite/scarlett-solo` — the identity `rig.yaml` publishes and 4.2 tells the author to
+use — matches no source id, so it takes the 4.4 row and is reported as applying to an undocumented
+device while its guide sits in the corpus. That contradicts this design's own statement that the
+owned-but-undocumented set "is empty today ... this was written of the Scarlett Solo, whose guide
+has since been ingested", and it contradicts `manual-corpus`'s rule that both gap reports compute
+over `source_applicability.device` rather than over `source_id`.
+
+### Decision
+
+`validate_scope`'s `indexed` argument is the set of every identity the corpus documents: each
+indexed vendor-manual `source_id` **and** the device id that source declares under
+`source_applicability`. A declared device is documented if it is in that set.
+
+### Rationale
+
+It is the reading under which the design's own claims about today's rig hold, and it is the same
+key `manual-corpus` computes its two gap reports over — one vocabulary for "what the corpus
+documents", used by both specs. Keeping the source ids in the set as well costs nothing and honours
+4.2: `focusrite/scarlett-solo-4g` names a real ingested source, and an author who writes it has
+named something that exists, not made a typo.
+
+Matching stays exact in both halves (4.2). The union is a wider vocabulary, never a fuzzier match.
+
+### Alternatives Considered
+
+- **Source ids only, as the task text reads literally**: The narrowest input and the least this spec
+  has to know about the corpus - Rejected because it makes today's Scarlett declaration take the 4.4
+  row, producing a standing false report of an undocumented device and, by 4.5's "neither" wording,
+  turning a rig-absent device documented under a generation-marked source id into a spurious
+  `unknown-device` flag.
+- **Applicability device ids only, dropping the source ids**: Exactly `manual-corpus`'s gap-report
+  key, with no union - Rejected because `focusrite/scarlett-solo-4g` is an ingested source and 4.5
+  flags a declaration that is "neither in the rig inventory nor an ingested source". Naming a real
+  source is not the typo 4.5 exists to catch.
+- **Resolve the declaration through the mapping before matching**: Map a declared id to its
+  applicability device, then compare - Rejected because it is a resolution step, not a match, and
+  4.2's point is that the identities are shared so no such step is needed. It also has no answer
+  where a device is documented by two sources.
+
+### Consequences
+
+**Positive:**
+- The design's stated fact — an empty owned-but-undocumented set today — holds against the
+  implementation rather than against a reading of it.
+- `undocumented-claim-invalid` catches the 2.3 claim whether the author names the device or the
+  source documenting it, so the carve-out cannot be taken by naming the other identity.
+- Both specs compute "what the corpus documents" the same way, so the two gap reports and this
+  spec's 4.4 row cannot disagree.
+
+**Negative:**
+- The caller must build the set from the corpus rather than passing `sources.json`'s keys, so the
+  wiring in the loader (task 18) carries a small assembly step this spec has to get right.
+- A `source_applicability` declaration missing its generation marker silently narrows the
+  vocabulary, and the symptom is a 4.4 report rather than an error — the same failure mode
+  `manual-corpus` accepts for its indexed-but-not-owned report.
+
+### Impact
+
+`triage/scope.py` and the loader wiring that supplies its `indexed` argument. No change to the
+rejection or flag vocabularies, and none to `rig.yaml` or `manual-corpus`.
+
+---

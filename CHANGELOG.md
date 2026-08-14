@@ -12,6 +12,19 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` device scope validation (tasks 11–12).** `dawmans.triage.scope` applies the
+  six rows of the design's Device scope table: a declared device in the rig inventory with no
+  ingested manual scopes and reports `undocumented-device-scope` (4.4); one the corpus documents but
+  the rig does not scopes silently, because 4.5's condition is "neither"; an unrecognised identity
+  flags `unknown-device` and still ingests, unless *every* declared device is unrecognised, which is
+  the `all-devices-unrecognised` rejection — the recorded deviation from 4.5, since a flag would
+  leave the entry embedded and reachable by no turn. Identities are matched exactly (4.2), and
+  `@revision` is compared after casefolding and stripping non-alphanumerics, quoting the rig's value
+  verbatim on a mismatch (4.6). The 2.3 `undocumented:` claim rejects where it names a device absent
+  from the rig, or one the corpus documents. Recorded as Decision 8: "indexed" means every identity
+  the corpus documents — source ids **and** the device ids they declare under
+  `source_applicability` — not source ids alone, or today's `focusrite/scarlett-solo` declaration
+  would be reported as undocumented while its guide sits in the corpus.
 - **`data/symptom-triage` Phase 1 — the entry model and the entry grammar.** `dawmans.triage.model`
   holds the frozen `Entry`, `Cause`, `DeviceRef`, `Pointer` and `Unresolved` records of the design's
   Components and Interfaces, together with the closed rejection and flag vocabularies of its Error

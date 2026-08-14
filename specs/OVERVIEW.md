@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-14 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 33 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4 (166 tasks, 3 done)
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 34 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4 (166 tasks, 5 done)
 
 ---
 
@@ -51,13 +51,14 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 All four are at **requirements and design complete**, each design reviewed and repaired, and all
 four now carry a `tasks.md` ledger — 166 tasks in total. Implementation has started on exactly one:
-`data/symptom-triage`, whose Phase 1 (the entry model and the entry grammar) is done. The other
-three ledgers are complete and unstarted.
+`data/symptom-triage`, whose Phase 1 (the entry model and the entry grammar) is done, along with
+device scope validation from its second work stream. The other three ledgers are complete and
+unstarted.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
-| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, 3 done) · **implementing** | 60 |
+| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, 5 done) · **implementing** | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, none started) | 154 |
 
@@ -82,7 +83,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/data/symptom-triage/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs), `tasks.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (8 ADRs), `tasks.md`.
 - **Missing:** `prerequisites.md` — its Phase 2 fixture task depends on a locally built index, which
   is `data/manual-corpus`'s prerequisite rather than one of its own.
 - 8 requirement sections, 60 anchored criteria. Header declares status *draft*.
@@ -93,8 +94,15 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
   carries the entry model, the entry grammar and the canonical rendering. Decision 7 was added
   during that work: keyed-line continuation splits by value kind, because one uniform rule folded a
   note written under a fix pointer into the pointer.
+- **Device scope validation is done** (tasks 11–12, the second work stream): `scope.py` applies the
+  six rows of the design's Device scope table, the exact-match rule, revision comparison and the 2.3
+  `undocumented:` claim. Decision 8 was added during that work: "indexed" means every identity the
+  corpus documents — source ids and the device ids they declare under `source_applicability` — since
+  matching source ids alone would report today's Focusrite declaration as undocumented while its
+  guide sits in the corpus.
 - Phase 2 is blocked on a locally built index: its section fixtures are extracted from the real
-  corpus once and committed, so CI never opens a PDF.
+  corpus once and committed, so CI never opens a PDF. Tasks 9–10 (the term check) and 13 onwards are
+  blocked behind it, so scope validation was the only startable work in the ledger.
 
 ### `specs/api/answer-engine/`
 
@@ -129,12 +137,13 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Twelve cross-cutting ADRs in `DECISIONS.md` and 33 per-spec ADRs, all *accepted*.
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 34 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers — 166 tasks — with `prerequisites.md` for `data/manual-corpus` and
   `api/answer-engine` naming what no task can do for itself.
 - **The first code in the repository.** `data/symptom-triage` Phase 1: `dawmans.triage.model`,
   `parse` and the fix-pointer grammar of `pointers`, under a `src/` layout managed with uv, with
-  pytest + hypothesis and ruff wired into `make test` and `make lint`.
+  pytest + hypothesis and ruff wired into `make test` and `make lint`. Since joined by
+  `dawmans.triage.scope`, the ledger's second work stream.
 
 **What is next**
 

@@ -94,7 +94,7 @@ references:
   - Stream: 2
   - Requirements: [2.5](requirements.md#2.5), [2.6](requirements.md#2.6)
 
-- [ ] 11. Write tests for device scope validation <!-- id:f3stq0b -->
+- [x] 11. Write tests for device scope validation <!-- id:f3stq0b -->
   - The six-row table of design 'Device scope': in rig and indexed scopes normally; in rig with no indexed source scopes and reports undocumented-device-scope (4.4 - exercised against a fixture rig, since no live device can produce it); indexed but not in rig scopes with no flag; some-unrecognised flags naming the declaration (4.5); all-unrecognised is the all-devices-unrecognised rejection (the recorded 4.5 deviation - an entry no turn can retrieve is withdrawn at the desk, not embedded unreachable).
   - Identities are matched exactly against rig.yaml device ids and indexed source ids, never fuzzily (4.2); undocumented-claim-invalid rejects an undocumented: line naming a device absent from the rig or one that is indexed (2.3).
   - Revision comparison is exact after casefold and stripping non-alphanumerics: `@mk2` matches `revision: mk2`, `@12-standard` matches `"12 Standard"`, `@suite` does not and flags revision-mismatch (4.6) quoting the rig's value verbatim.
@@ -102,7 +102,7 @@ references:
   - Stream: 2
   - Requirements: [2.3](requirements.md#2.3), [4.2](requirements.md#4.2), [4.4](requirements.md#4.4), [4.5](requirements.md#4.5), [4.6](requirements.md#4.6)
 
-- [ ] 12. Implement scope.py validation <!-- id:f3stq0c -->
+- [x] 12. Implement scope.py validation <!-- id:f3stq0c -->
   - Device declarations against rig.yaml and the corpus's indexed source ids; the flag and rejection vocabulary of design 'Error Handling'.
   - Blocked-by: f3stq0b (Write tests for device scope validation)
   - Stream: 2

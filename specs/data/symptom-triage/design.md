@@ -303,6 +303,13 @@ Frontmatter `devices` → validated → published per `passage_id` in the sideca
 | in neither, and **every** declared device is unrecognised | rejection (`all-devices-unrecognised`) |
 | `@revision` differing from the rig device's `revision` | flag (4.6) |
 
+"Indexed" in that table means **every identity the corpus documents** — each indexed `vendor-manual`
+`source_id` together with the device id it declares under `source_applicability` — not the source
+ids alone (Decision 8). The two differ wherever a filename carries a generation marker the rig id
+does not, which is `manual-corpus` §Rig inventory's worked Focusrite case, and matching source ids
+alone would put today's `focusrite/scarlett-solo` declaration on the second row while its guide sits
+in the corpus.
+
 The third row exists because 4.5's condition is "neither in the rig inventory **nor** an ingested
 source", and an ingested source absent from `rig.yaml` satisfies neither branch of the flag: it is a
 device removed under 8.7, or a manual added ahead of its rig entry. Flagging it would be a warning

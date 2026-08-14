@@ -2,8 +2,15 @@
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
 Phase 1 of that ledger is implemented — the model, the grammar and the canonical
-rendering. Pointer resolution, the ledger, the term check, device scope, emission
-and the loader are Phases 2–7 and are not written yet.
+rendering — plus device scope validation (tasks 11–12, stream 2). Pointer
+resolution, the ledger, the term check, emission and the loader are still
+outstanding.
+
+**Phase 2 is blocked on `data/manual-corpus`**, not deferred: its first task
+extracts section fixtures from a locally built index, and that spec is complete
+only through its task 17 — no chunker, passage-id scheme or index builder exists
+yet. Scope validation was reachable because it reads the rig and the corpus's
+identity vocabulary, neither of which needs a built index.
 
 ## Modules
 
@@ -12,6 +19,7 @@ and the loader are Phases 2–7 and are not written yet.
 | `model.py` | the five frozen dataclasses of design 'Components and Interfaces', plus `RejectionReason`, `FlagName`, `EntryRejection` and `Flag` |
 | `parse.py` | `parse_entry(source_file, data) -> ParseResult`, and `render(entry) -> str` |
 | `pointers.py` | `parse_pointer(text, line) -> Pointer \| None`. `SectionIndex` and `resolve` are Phase 2 |
+| `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult` — design 'Device scope' |
 
 The design's 'Module placement' names only behaviour modules. `model.py` is an
 addition, and it earns its place: the rejection and flag vocabularies are needed
@@ -65,6 +73,39 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   property will have to reconcile that; the design states there is no second
   canonical form.
 
+## Device scope (`scope.py`)
+
+- **`indexed` is not a set of source ids.** It is every identity the corpus
+  documents: each indexed vendor-manual `source_id` *and* the device id it
+  declares under `source_applicability`. Those differ wherever a filename
+  carries a generation marker the rig id does not — `focusrite/scarlett-solo-4g`
+  against `focusrite/scarlett-solo` — and matching source ids alone would report
+  the Scarlett as owned-but-undocumented while its guide sits in the corpus, the
+  one case the design says is empty today. Decision 8 records it.
+
+- **`RigDevice` is a `Protocol`, not a record.** `rig.yaml` and its type belong
+  to `data/manual-corpus` (its `corpus/rig.py`, still a stub). Stating the two
+  fields read here structurally means the concrete record satisfies it on
+  arrival with no adapter and no second definition of the same data.
+
+- **Recognition and documentation are separate questions.** In the rig *and*
+  indexed is silent; in the rig only is `undocumented-device-scope` (4.4) and
+  still scopes; indexed only is silent too, because 4.5's condition is
+  "neither"; in neither flags, unless *every* declared device is in neither,
+  which is a rejection. That last row is the recorded deviation from 4.5's
+  literal text — a flag would leave the entry embedded and unreachable.
+
+- **Revision comparison strips to alphanumerics after casefolding.** Not
+  either-contains: that would let `@12` and even `@s` satisfy `12 Standard`,
+  which is exactly 4.6's mk1/mk2 case. The flag quotes the rig's value verbatim
+  so the fix is a copy. A revision on a device the rig does not hold compares
+  against nothing and never flags.
+
+- **Two rows of the table have no live instance.** Every rig device is
+  documented today, so `tests/triage/fixture_rig.py` carries an invented
+  `elektron/digitakt` and a `roland/tr-8s`. Tests against the real inventory
+  would also break every time a manual is added.
+
 ## Tooling
 
 - `make test` → `uv run pytest`; `make lint` → spelling, `ruff check`,
@@ -73,8 +114,10 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   It formats fenced Python inside Markdown, and left unrestricted it rewrites the
   design documents under the implementation.
 - `tools/check_spelling.sh` bans US spellings in every tracked file, code
-  included. `normalise`, not `normalize`. Note that `\b` means an identifier like
-  `normalized_title` slips through on the underscore — do not rely on that.
+  included — write `normalise`, never the `-ize` form. Its pattern is
+  word-bounded, so an identifier burying a US spelling before an underscore
+  slips through; do not rely on that. A line containing `spelling-ignore` is
+  exempt, for unavoidable external identifiers only.
 - The full package scaffold (whole module tree, `fetch-model`, `bench`, PyMuPDF
   confinement) is `data/manual-corpus` task 1 and is still outstanding. What is
   here is only what Phase 1 needed.
