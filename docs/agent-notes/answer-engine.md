@@ -2,7 +2,8 @@
 
 Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
 corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries), 5 (prompt, parser,
-grounding, outcome procedure) and 6 (providers, credentials, state seam) are done.
+grounding, outcome procedure), 6 (providers, credentials, state seam) and 7 (conversation state,
+turn pipeline) are done.
 
 ## Package setup
 
@@ -189,6 +190,11 @@ grounding, outcome procedure) and 6 (providers, credentials, state seam) are don
 
 ## Providers and the state seam (`provider/`, `state/`)
 
+- **Phase-7 resolution of the SynthesisRequest tension (Decision 11):** the request gained one
+  optional field, `user: str | None` — the varying prompt half pre-rendered by `prompt.assemble`.
+  `user_text(req)` returns it verbatim when set and falls back to its own rendering otherwise, so
+  phase-6 provider tests stand. The pipeline is the only caller of `assemble`; a request built
+  without `user` silently loses the roster and the 7.5 terminal direction.
 - `provider/base.py` holds the whole seam: `ProviderKind`, `requires_key(kind)` (derived, 6.4),
   `mask(key)` (the "…"+last-4 form — defined here, not in credentials, because `ProviderStatus`
   lives here), `SynthesisRequest`, `ProviderStatus`, `ProbeResult`, the four-kind
@@ -231,3 +237,55 @@ grounding, outcome procedure) and 6 (providers, credentials, state seam) are don
 - `state/`: `StateValue` is the flat five-field triple of Decision 7, `NullStateSource` returns
   an empty snapshot immediately. No behaviour to test here; the no-degradation guarantee is
   asserted in the phase-7 turn-pipeline tests.
+
+## Conversation state (`conversation.py`)
+
+- `Conversation` holds (question, answer) pairs for the last 6 **content-outcome** turns only —
+  engine-determined outcomes (timeout, cancelled, incomplete, gates) never enter history and never
+  touch the narrowing counter. There is deliberately nowhere to store a passage: 10.2/10.5 hold
+  structurally (a test asserts no attribute name contains "passage").
+- Carried scope is `{source_id: display_name}` — display names are captured at `set_scope` time
+  because 5.11's `scope_dropped` reports a *removed* source, which the pruning view can no longer
+  be asked for a name.
+- 7.4 query assembly: `retrieval_query(q)` returns `f"{symptom_question} {q}"` only while
+  `_awaiting_narrowing` (last content turn was needs-narrowing); `symptom_question` is pinned at
+  the *first* narrowing turn of a run, so a second narrowing answer still carries the original
+  symptom, not the intermediate answer.
+- `ConversationStore.get(None)` mints a uuid; an unknown id creates a fresh conversation under
+  that id (the honest post-restart reading of 10.7 — a stale id simply starts over).
+
+## Turn pipeline (`turn.py`)
+
+- `TurnPipeline.turn()` is a **sync** method returning the async generator: the supersede signal
+  for 9.13 is sent at call time, not at first read, so an in-flight turn is cancelled the moment
+  the new question arrives. `_inflight` maps conversation id → `_Handle(supersede, finished,
+  started)`; the new turn awaits the old handle's `finished` only when `started` (a never-pulled
+  generator would deadlock the wait; it emits cancelled+done whenever finally read).
+- Streaming loop: per delta, `asyncio.wait({anext_task, supersede_wait}, timeout=watchdog-if-no-
+  first-token)`. On supersede/watchdog the anext task is cancelled *and awaited* before
+  `stream.aclose()` — aclose on a generator with an in-flight anext raises RuntimeError. Cancelling
+  the anext task finalises the provider generator (its `finally` runs), which is what makes the
+  250 ms release a close-not-drain.
+- Event emission is incremental on the parsed path only: outcome after line 1, direct_answer after
+  line 2, `body_delta` per body line via `FramingParser(on_body_line=...)` (a phase-7 addition —
+  the callback fires for body-bound lines only, never hoisted sigils, so envelope fields cannot
+  leak into deltas). The unparsed path emits everything at close (outcome from coverage, raw text
+  as one body_delta) — the honest degradation for a provider that ignored the framing.
+- Delta marker-stripping uses a local `_clean_delta` (marker removal only, no whitespace
+  collapse) — `ground.strip_unknown` collapses/strips whitespace, which would destroy a caveat
+  continuation's two-space indent and re-type the block client-side.
+- Abnormal terminations re-emit `outcome` (cancelled: outcome+done; failures: outcome+timings+
+  done) — the design names this shape explicitly for 9.13 ("emits outcome: cancelled then done"),
+  so §4b's "outcome precedes every other event" describes the normal shape only.
+- On ranked-causes the engine back-fills `citations[]` for every `cites[]`/`fix_cites[]` id the
+  model didn't cite, rebuilding the entry citation with `unbacked_for_turn=True` when any cause
+  has empty `fix_cites` (one citation record per passage — last write wins on the unbacked mark).
+- 8.8's "note that state was unavailable" has **no envelope field or §4b event** (closed set), so
+  it is logged at INFO on `dawmans.answer.turn` — carries the fault only, never question text
+  (9.11). Tests assert via caplog.
+- Timings: retrieval/state measured inside their gather members; `engine_overhead_ms = total −
+  gather_wall − provider_time`, clamped ≥ 0; `completion_ms` absent on failed turns;
+  `corpus_reload_ms` read off the watcher (run-level).
+- Test trap: a `ScriptedProvider(endless=True)` bound to the pipeline serves *every* turn — a
+  "new question cancels old turn" test must switch the binding to a finite provider before the
+  second turn or `collect()` never terminates.

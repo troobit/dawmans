@@ -41,7 +41,14 @@ def mask(key: str) -> str:
 @dataclass(frozen=True)
 class SynthesisRequest:
     """One turn's synthesis input. `system` is the cache prefix; passages,
-    history and state vary per turn and sit after the breakpoint."""
+    history and state vary per turn and sit after the breakpoint.
+
+    `user` is the varying half pre-rendered by `prompt.assemble` — the one
+    renderer that also carries the unselected-source roster and the 7.5
+    terminal direction, which the structured fields cannot (Decision 11).
+    Where it is set, providers send it verbatim and the structured fields
+    document what went into it.
+    """
 
     system: str
     passages: tuple[Mapping[str, Any], ...]
@@ -49,6 +56,7 @@ class SynthesisRequest:
     history: tuple[str, ...] = ()
     state: Any | None = None  # StateSnapshot-shaped; never citable (8.6)
     max_words: int = MAX_WORDS
+    user: str | None = None
 
 
 @dataclass(frozen=True)
@@ -115,7 +123,11 @@ class Provider(Protocol):
 def user_text(req: SynthesisRequest) -> str:
     """The varying half of the prompt, rendered once for every provider —
     a second per-provider renderer is exactly the drift Decision 4 forbids.
-    Ordering is the cache layout: passages → state → history → question."""
+    A pre-assembled `user` is returned verbatim (Decision 11); the fallback
+    rendering below serves requests built without prompt assembly, in the
+    same cache layout: passages → state → history → question."""
+    if req.user is not None:
+        return req.user
     blocks: list[str] = []
     if req.passages:
         lines = ["## Passages", "Cite with the marker exactly as given."]

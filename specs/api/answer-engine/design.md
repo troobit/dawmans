@@ -647,6 +647,7 @@ class SynthesisRequest:
     history: tuple[Turn, ...]
     state: StateSnapshot | None
     max_words: int         # 400; see the note on 1.6 below
+    user: str | None       # the varying half pre-rendered by prompt.assemble; Decision 11
 
 class Provider(Protocol):
     kind: ProviderKind
@@ -669,6 +670,12 @@ validator bound, not a redesign. Recorded so the clause is not read as implement
 The interface carries **text deltas and nothing else** — no citations, no structure, no outcome.
 Framing, parsing, citation resolution and grounding are engine-side for every provider, which is
 what makes 6.2 structural rather than a per-provider obligation. [Decision 4](decision_log.md).
+
+**`user` is how the roster and the terminal direction reach the provider.** Prompt assembly needs
+the view's source records and the resident tokeniser, which the provider seam must not hold, so the
+pipeline renders the varying half once with `prompt.assemble` and carries the string; providers
+send it verbatim and the structured fields document what went into it.
+[Decision 11](decision_log.md).
 
 ### The three kinds
 

@@ -21,7 +21,7 @@ reported through framing — a block already emitted is never re-typed.
 from __future__ import annotations
 
 import re
-from collections.abc import Mapping
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any, Literal
 
@@ -132,9 +132,17 @@ class ParsedAnswer:
 class FramingParser:
     """Feed text chunks in arrival order; every complete line is handled
     as it lands, so the turn pipeline can stream deltas while this class
-    accumulates the structure. close() flushes, result() reads out."""
+    accumulates the structure. close() flushes, result() reads out.
 
-    def __init__(self) -> None:
+    `on_body_line` is the streaming seam: it is called with every line that
+    lands in `body` — including blank separators and the continuations of a
+    multi-line block — and never with a hoisted sigil line or the framing
+    header, so a delta emitter built on it cannot leak an envelope field
+    into `body_delta`.
+    """
+
+    def __init__(self, on_body_line: Callable[[str], None] | None = None) -> None:
+        self._on_body_line = on_body_line
         self._buffer = ""
         self._raw: list[str] = []
         self._line_number = 0
@@ -156,6 +164,31 @@ class FramingParser:
         self._conflict: tuple[str, list[Reading]] | None = None
         self._collecting_narrow = False
         self._pending_cause: str | None = None
+
+    # -- streaming reads -------------------------------------------------
+
+    @property
+    def line_one(self) -> str | None:
+        """Line 1 once complete — the outcome token, or the unparsed tell."""
+        return self._line_one
+
+    @property
+    def hoisting(self) -> bool:
+        """Whether line 1 named a content outcome (the parsed path)."""
+        return self._hoisting
+
+    @property
+    def line_count(self) -> int:
+        return self._line_number
+
+    @property
+    def direct_answer_line(self) -> str | None:
+        return self._direct_answer
+
+    @property
+    def raw_text(self) -> str:
+        """Everything fed so far — the unparsed path's whole-stream body."""
+        return "".join(self._raw)
 
     # -- feeding ---------------------------------------------------------
 
@@ -197,6 +230,7 @@ class FramingParser:
     def _body_line(self, line: str) -> None:
         if not line.strip():
             self._flush_open()
+            self._emit_body(line)
             return
 
         # Continuations of the open multi-line forms come ahead of
@@ -206,6 +240,7 @@ class FramingParser:
             if line.startswith("- "):
                 text = line[2:]
                 self._conflict[1].append(Reading(text=text, markers=markers_in(text)))
+                self._emit_body(line)
                 return
             self._flush_open()
         if self._collecting_narrow and line.startswith("* "):
@@ -216,12 +251,14 @@ class FramingParser:
             return
         if self._caveat is not None and line.startswith("  "):
             self._caveat.append(line.strip())
+            self._emit_body(line)
             return
 
         if line.startswith("## "):
             self._flush_open()
             text = line[3:].strip()
             self._blocks.append(Heading(text=text, markers=markers_in(text)))
+            self._emit_body(line)
             return
         step = _STEP.match(line)
         if step:
@@ -233,25 +270,34 @@ class FramingParser:
                     markers=markers_in(step.group(2)),
                 )
             )
+            self._emit_body(line)
             return
         if line.startswith("- "):
             self._flush_open()
             text = line[2:].strip()
             self._blocks.append(Bullet(text=text, markers=markers_in(text)))
+            self._emit_body(line)
             return
         if line.startswith("!caveat "):
             self._flush_open()
             self._caveat = [line[len("!caveat "):].strip()]
+            self._emit_body(line)
             return
         if line.startswith("!conflict "):
             self._flush_open()
             self._conflict = (line[len("!conflict "):].strip(), [])
+            self._emit_body(line)
             return
         if self._hoisting and self._sigil_line(line):
             return
         # Anything else — including an unknown wrapper, and every sigil on
         # the unparsed path — is paragraph prose, never dropped.
         self._paragraph.append(line.strip())
+        self._emit_body(line)
+
+    def _emit_body(self, line: str) -> None:
+        if self._on_body_line is not None:
+            self._on_body_line(line)
 
     def _sigil_line(self, line: str) -> bool:
         if line.startswith("~uncovered "):

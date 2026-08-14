@@ -248,7 +248,7 @@ references:
 
 ## Phase 7: Conversation and the turn pipeline
 
-- [ ] 29. Write tests for conversation state <!-- id:f3kp029 -->
+- [x] 29. Write tests for conversation state <!-- id:f3kp029 -->
   - Last 6 turns retained and used to interpret a follow-up; in-memory per process, gone on restart; starting a new conversation discards prior turns.
   - The carried scope persists until the caller changes it; a mid-conversation change applies from the next turn and passages from now-deselected sources are not retained.
   - Retrieval re-runs every turn: a narrowing answer re-retrieves with the original question plus the answer and never reuses the previous turn's passages unchanged.
@@ -258,14 +258,14 @@ references:
   - Stream: 1
   - Requirements: [5.11](requirements.md#5.11), [7.4](requirements.md#7.4), [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.4](requirements.md#10.4), [10.5](requirements.md#10.5), [10.6](requirements.md#10.6), [10.7](requirements.md#10.7)
 
-- [ ] 30. Implement conversation.py <!-- id:f3kp030 -->
+- [x] 30. Implement conversation.py <!-- id:f3kp030 -->
   - History, carried scope, the narrowing counter, and the corpus-change scope prune.
   - Follow-up query assembly lives here: a turn answering a narrowing question retrieves with the original question plus the narrowing answer - the 7.4 construction the pipeline hands to retrieve.py, never a reuse of the previous turn's passages.
   - Blocked-by: f3kp029 (Write tests for conversation state)
   - Stream: 1
   - Requirements: [5.11](requirements.md#5.11), [7.4](requirements.md#7.4), [10.1](requirements.md#10.1), [10.4](requirements.md#10.4), [10.5](requirements.md#10.5), [10.6](requirements.md#10.6), [10.7](requirements.md#10.7)
 
-- [ ] 31. Write tests for the turn pipeline <!-- id:f3kp031 -->
+- [x] 31. Write tests for the turn pipeline <!-- id:f3kp031 -->
   - Retrieval runs under asyncio.to_thread gathered with StateSource.snapshot under wait_for(0.100) - synchronous numpy work in a bare coroutine would never yield, the state task would not be scheduled, and the timeout could not fire; assert state is acquired concurrently, not serially.
   - A state failure, timeout or malformed snapshot degrades the turn to manual-only with a note and never fails it; with the null source there is no degradation in latency, citation quality or refusal behaviour.
   - The 10 s first-token watchdog abandons the turn naming the provider; cancellation stops streaming and releases the provider within 250 ms - a close, not a drain; cancellation property - for any stream prefix, cancelling yields cancelled, retains the partial, and emits nothing after done.
@@ -278,7 +278,7 @@ references:
   - Stream: 1
   - Requirements: [4.4](requirements.md#4.4), [4.9](requirements.md#4.9), [4.10](requirements.md#4.10), [4.11](requirements.md#4.11), [5.7](requirements.md#5.7), [5.9](requirements.md#5.9), [6.3](requirements.md#6.3), [6.5](requirements.md#6.5), [6.9](requirements.md#6.9), [6.10](requirements.md#6.10), [8.2](requirements.md#8.2), [8.8](requirements.md#8.8), [8.9](requirements.md#8.9), [9.13](requirements.md#9.13)
 
-- [ ] 32. Implement the turn pipeline <!-- id:f3kp032 -->
+- [x] 32. Implement the turn pipeline <!-- id:f3kp032 -->
   - src/dawmans/answer/turn.py - the design's Module placement list names no pipeline module, so it is pinned here rather than landing ad hoc in http/app.py; the gather, the gates, prompt assembly, the provider call with watchdog and cancellation, the parser pass, the grounding check, and timings.
   - Emits contributing_sources[] as the set of source_id over supplied on every answer (5.9).
   - Blocked-by: f3kp031 (Write tests for the turn pipeline)

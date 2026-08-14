@@ -12,6 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **Conversation and the turn pipeline** (`api/answer-engine` phase 7,
+  `dawmans/answer/conversation.py` and `dawmans/answer/turn.py`). `conversation.py` holds one
+  conversation's in-memory state: the last 6 content-outcome turns rendered for the prompt's
+  context-only history block (10.1), the carried scope with display names captured at set time so
+  5.11's turn-time prune can report a source the view no longer names, the per-symptom
+  consecutive-narrowing counter that 7.5's terminal direction rides on (incremented by
+  needs-narrowing, reset by an answer, untouched by engine failures), and 7.4's follow-up query
+  assembly — a turn answering a narrowing question retrieves with the original symptom question
+  plus the answer, never the previous turn's passages, and there is structurally nowhere to retain
+  a passage. `turn.py` is the pipeline the design pins there: retrieval under `asyncio.to_thread`
+  gathered with `StateSource.snapshot` under `wait_for(0.100)` so the state task genuinely runs
+  alongside synchronous numpy work (4.4, 8.9), the pre-flight and in-flight gates, engine-side
+  narrowing/`causes[]` construction on the entry path with back-filled citations and the per-turn
+  `unbacked` reading, prompt assembly carried to providers as the new pre-rendered
+  `SynthesisRequest.user` (Decision 11 — the roster and the terminal direction reach every
+  provider through the one renderer), the 10 s first-token watchdog naming the provider (4.9),
+  supersede-based per-conversation cancellation whose old stream emits `outcome: cancelled` then
+  `done` before the new one opens with the provider released by a close, not a drain (4.10, 9.13),
+  incremental §4b event emission with unresolvable markers stripped from the streamed text,
+  mid-stream failure degrading to `incomplete` with the partial retained (6.10), state faults
+  degrading to manual-only with the note logged (8.8 — the closed event set has no field for it),
+  supplied-derived `contributing_sources[]` (5.9), and `timings` as durations only for the five
+  stages (4.11). `parse.py` gains the streaming seam (`on_body_line` plus read-only header
+  properties) so deltas can flow without envelope fields leaking into `body`. Tests cover the
+  concurrency shape by wall clock, every degradation path, the watchdog, the cancellation
+  property over arbitrary stream prefixes, provider switching without restart, cross-source
+  citation with the small guide under the floor, and the scope prune to `no-sources-selected`.
 - **Providers, credentials and the state seam** (`api/answer-engine` phase 6,
   `dawmans/answer/provider/` and `dawmans/answer/state/`). `provider/base.py` defines the seam:
   `ProviderKind` with `requires_key` derived from the kind (6.4), the verbatim `SynthesisRequest`

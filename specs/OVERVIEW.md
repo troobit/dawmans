@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 32 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 33 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4
 
 ---
 
@@ -53,13 +53,14 @@ All four are at **requirements and design complete**. Each design has been revie
 All four now carry a `tasks.md` ledger; implementation has begun on `api/answer-engine`, whose
 phases 1 (package scaffold and the envelope records), 2 (the corpus view), 3 (retrieval and
 scoping), 4 (narrowing from triage entries), 5 (prompt, parser, grounding and the outcome
-procedure) and 6 (providers, credentials and the state seam) are done.
+procedure), 6 (providers, credentials and the state seam) and 7 (conversation and the turn
+pipeline) are done.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, none started) | 60 |
-| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, 28 done) | 111 |
+| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, 32 done) | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, none started) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
@@ -92,13 +93,14 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/api/answer-engine/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs), `tasks.md`,
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (11 ADRs), `tasks.md`,
   `prerequisites.md`.
 - **Ledger:** 45 tasks; phases 1 (package scaffold and the envelope records, tasks 1–3), 2
   (the corpus view, tasks 4–5), 3 (retrieval and scoping, tasks 6–11), 4 (narrowing from
   triage entries, tasks 12–13), 5 (prompt, parser, grounding and the outcome procedure,
-  tasks 14–21) and 6 (providers, credentials and the state seam, tasks 22–28) are done — the
-  first implemented code in the repository.
+  tasks 14–21), 6 (providers, credentials and the state seam, tasks 22–28) and 7
+  (conversation and the turn pipeline, tasks 29–32) are done — the first implemented code in
+  the repository.
 - 10 requirement sections, 111 anchored criteria. Header declares status *draft*.
 - Produces `Citation` and `AnswerEnvelope` ([`CONTRACTS.md`](CONTRACTS.md) §3–§4) and may emit only
   the outcomes in §6 of that file. Must define `StateSource` while shipping a null implementation
@@ -113,7 +115,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
   full, dim room) outranks feature richness in any trade-off.
 
-Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross-cutting ones in
+Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross-cutting ones in
 [`DECISIONS.md`](DECISIONS.md) — and every spec carries a `tasks.md`; `data/manual-corpus` and
 `api/answer-engine` also carry a `prerequisites.md`. There are no `specs/bugfixes/` folders and no
 `smolspec.md` files.
@@ -128,7 +130,7 @@ Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Twelve cross-cutting ADRs in `DECISIONS.md` and 32 per-spec ADRs, all *accepted*.
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 33 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers, one per spec; `data/manual-corpus` and `api/answer-engine` each carry a
   `prerequisites.md` naming what no task can do for itself.
 - The first implemented code: the `src/dawmans` package scaffold with the ingest/serve dependency
@@ -140,8 +142,12 @@ Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross
   assembly (with the `dawmans.triage.terms` extraction primitives it reuses), the fixed-order
   outcome procedure, and the provider layer — the text-deltas-only `Provider` seam, the Anthropic,
   local and shared-backend providers, Keychain-backed credentials with masked reads and the
-  secret-dropping log filter, and the `StateSource` seam with its null implementation — with their
-  tests: phases 1–6 of that ledger, 28 of 45 tasks.
+  secret-dropping log filter, and the `StateSource` seam with its null implementation — plus
+  conversation state (bounded history, carried scope with the turn-time prune, the narrowing
+  counter and follow-up query assembly) and the turn pipeline itself (the retrieval-and-state
+  gather, the pre-flight and in-flight gates, the first-token watchdog, supersede-based
+  cancellation, incremental event emission and per-turn timings) — with their tests: phases 1–7
+  of that ledger, 32 of 45 tasks.
 
 **What is next**
 
@@ -150,7 +156,7 @@ Every spec carries a `decision_log.md` — 32 per-spec ADRs against the 12 cross
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
 - The **task phase is complete** — all four specs carry a ledger — and implementation has begun:
-  `api/answer-engine` phase 7 (conversation and the turn pipeline) is the next
+  `api/answer-engine` phase 8 (the local HTTP surface) is the next
   unstarted work on that ledger, with the other three ledgers unstarted.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
