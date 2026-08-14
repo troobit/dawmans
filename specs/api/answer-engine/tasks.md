@@ -287,7 +287,7 @@ references:
 
 ## Phase 8: The local HTTP surface
 
-- [ ] 33. Write tests for binding and the loopback guard <!-- id:f3kp033 -->
+- [x] 33. Write tests for binding and the loopback guard <!-- id:f3kp033 -->
   - A configured non-loopback bind exits non-zero naming the address and the constraint; there is no fallback bind; the service listens on loopback only.
   - Host: evil.example is 403 - the Host check is what closes DNS rebinding, since a hostname resolving to 127.0.0.1 reaches the socket carrying the attacker's Host; Origin: null (a file:// page) is 403; 127.0.0.1, localhost and [::1] with the port pass.
   - A cross-port Origin: http://localhost:5173 is 403 - what the dev proxy's Origin rewrite exists to avoid, and what a same-port-only test would miss.
@@ -296,13 +296,13 @@ references:
   - Stream: 1
   - Requirements: [9.1](requirements.md#9.1), [9.2](requirements.md#9.2), [9.3](requirements.md#9.3)
 
-- [ ] 34. Implement http/guard.py and the bind check <!-- id:f3kp034 -->
+- [x] 34. Implement http/guard.py and the bind check <!-- id:f3kp034 -->
   - The Host/Origin middleware and the pre-uvicorn loopback address check.
   - Blocked-by: f3kp033 (Write tests for binding and the loopback guard)
   - Stream: 1
   - Requirements: [9.1](requirements.md#9.1), [9.2](requirements.md#9.2), [9.3](requirements.md#9.3)
 
-- [ ] 35. Write tests for fetch-passage, list-sources and the gap relay <!-- id:f3kp035 -->
+- [x] 35. Write tests for fetch-passage, list-sources and the gap relay <!-- id:f3kp035 -->
   - GET /passages/{id} is a dict lookup routed on the source_id prefix; an unknown id, or one whose source is no longer in the corpus, returns a 404 not-found body and never a substitute; the route runs the same stat change check as a turn, so a passage removed by a re-ingest stops resolving immediately rather than at the next question.
   - GET /sources returns, for every source of both kinds: source_id, display_name, kind, doc_version where the kind carries one, and hardware_applicability including confirmed/assumed - a field this operation omits reaches nobody.
   - Both gap reports are relayed alongside, never derived: owned-but-undocumented returned as an empty list rather than omitted - it is the sole resolver of a canonical device id and refills the day a device is declared ahead of its manual; documented-but-unconfirmed names the assumed APC guide.
@@ -311,13 +311,13 @@ references:
   - Stream: 1
   - Requirements: [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [9.5](requirements.md#9.5), [9.6](requirements.md#9.6), [9.7](requirements.md#9.7)
 
-- [ ] 36. Implement the passage and sources routes <!-- id:f3kp036 -->
+- [x] 36. Implement the passage and sources routes <!-- id:f3kp036 -->
   - GET /passages/{passage_id} and GET /sources with both gap reports on http/app.py.
   - Blocked-by: f3kp035 (Write tests for fetch-passage, list-sources and the gap relay)
   - Stream: 1
   - Requirements: [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [9.5](requirements.md#9.5), [9.6](requirements.md#9.6), [9.7](requirements.md#9.7)
 
-- [ ] 37. Write tests for the provider configuration routes <!-- id:f3kp037 -->
+- [x] 37. Write tests for the provider configuration routes <!-- id:f3kp037 -->
   - GET /provider, PUT /provider, PUT and DELETE /provider/credential, POST /provider/test: every response carries at most the masked form; the raw key appears in no response body and no log record from any of these operations.
   - PUT /provider to shared-backend returns requires_disclosure_ack: true and records nothing; test-provider reports reachability without synthesising a turn.
   - Question, answer and passage text log at DEBUG only; credentials at no level.
@@ -325,13 +325,13 @@ references:
   - Stream: 1
   - Requirements: [9.4](requirements.md#9.4), [9.8](requirements.md#9.8), [9.11](requirements.md#9.11)
 
-- [ ] 38. Implement the provider routes <!-- id:f3kp038 -->
+- [x] 38. Implement the provider routes <!-- id:f3kp038 -->
   - The five provider operations on http/app.py, masked-only throughout.
   - Blocked-by: f3kp037 (Write tests for the provider configuration routes)
   - Stream: 1
   - Requirements: [9.4](requirements.md#9.4), [9.8](requirements.md#9.8), [9.11](requirements.md#9.11)
 
-- [ ] 39. Write tests for serve-document <!-- id:f3kp039 -->
+- [x] 39. Write tests for serve-document <!-- id:f3kp039 -->
   - A known vendor-manual returns its PDF inline - Content-Type application/pdf, no Content-Disposition filename (an attachment disposition downloads the file and silently defeats #page=N), Range honoured so a 96 MB manual pages without being fetched whole.
   - An authored-triage id, an unknown id and a renamed file each 404, so the caller degrades the citation to its string form rather than a broken action; no request body or path parameter can reach the filesystem - the loaded index is the allowlist - and a realpath outside the manuals root is refused.
   - Filename round-trip: for every ingested vendor-manual, rebuilding `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` from its SourceRecord fields names the ingested file - doc_version arrives without the leading v, so there is one reconstruction rule and no `_vv1.0_`.
@@ -340,13 +340,13 @@ references:
   - Stream: 1
   - Requirements: [9.4](requirements.md#9.4)
 
-- [ ] 40. Implement the serve-document route <!-- id:f3kp040 -->
+- [x] 40. Implement the serve-document route <!-- id:f3kp040 -->
   - GET /sources/{source_id}/document: resolve against sources.json, rebuild the filename, realpath-confine to the manuals root, stream with Range.
   - Blocked-by: f3kp039 (Write tests for serve-document)
   - Stream: 1
   - Requirements: [9.4](requirements.md#9.4)
 
-- [ ] 41. Write tests for the turn stream <!-- id:f3kp041 -->
+- [x] 41. Write tests for the turn stream <!-- id:f3kp041 -->
   - POST /turn streams SSE over the POST response (EventSource cannot POST); stream completeness property - every envelope field the engine produced is carried by exactly one of the sixteen CONTRACTS 4b events, no event outside that set is emitted, and done occurs exactly once carrying {"complete": true} - a payload-free terminator is never dispatched by a conforming reader and a completed turn would be indistinguishable from a truncated one.
   - Ordering: scope_dropped before outcome; outcome before every other event; direct_answer before the first body_delta, so 1.8 holds on the wire; cause events in rank order; ungrounded after the last body_delta; done last.
   - dawmans/turn-stream/1 is declared in a response header readable before the first body byte.
@@ -357,7 +357,7 @@ references:
   - Stream: 1
   - Requirements: [1.8](requirements.md#1.8), [4.5](requirements.md#4.5), [9.10](requirements.md#9.10), [9.12](requirements.md#9.12), [9.14](requirements.md#9.14), [9.15](requirements.md#9.15)
 
-- [ ] 42. Implement POST /turn and the SSE emitter <!-- id:f3kp042 -->
+- [x] 42. Implement POST /turn and the SSE emitter <!-- id:f3kp042 -->
   - The request validator, the SSE event writer for the CONTRACTS 4b set, the version header, and the static mount.
   - Blocked-by: f3kp041 (Write tests for the turn stream)
   - Stream: 1

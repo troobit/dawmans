@@ -2,8 +2,8 @@
 
 Implements `specs/api/answer-engine/`. Phases 1 (package scaffold + envelope records), 2 (the
 corpus view), 3 (retrieval and scoping), 4 (narrowing from triage entries), 5 (prompt, parser,
-grounding, outcome procedure), 6 (providers, credentials, state seam) and 7 (conversation state,
-turn pipeline) are done.
+grounding, outcome procedure), 6 (providers, credentials, state seam), 7 (conversation state,
+turn pipeline) and 8 (the local HTTP surface) are done.
 
 ## Package setup
 
@@ -289,3 +289,49 @@ turn pipeline) are done.
 - Test trap: a `ScriptedProvider(endless=True)` bound to the pipeline serves *every* turn — a
   "new question cancels old turn" test must switch the binding to a finite provider before the
   second turn or `collect()` never terminates.
+
+## The local HTTP surface (`http/guard.py`, `http/app.py`)
+
+- `guard.py`: `ensure_loopback_bind` raises `SystemExit` with a string (exit status 1) naming the
+  address and the constraint — addresses only, so `localhost` (a resolvable name) is refused as a
+  *bind* even though it is accepted as a *Host*. `HostOriginGuard` is pure ASGI, port-derived sets:
+  Hosts `{127.0.0.1, localhost, [::1]}:port`, Origins `http://` + the same. Absent Origin passes;
+  `null` and cross-port loopback (the Vite dev server) are 403 `{"rejected": ..., host/origin}` —
+  machine-readable, no `outcome` field.
+- `create_app(watcher, port, registry=None, secrets=..., manuals_root=None, pipeline=None,
+  static_dir=None)` registers each route group only when its component is supplied, so phase-8
+  tests drive slices; the phase-9 serve wiring supplies everything. Static mount is last so API
+  routes win.
+- `ProviderRegistry` (in `app.py`): mutable selection the routes write and a turn reads once via
+  `binding()` (6.3). `factory(kind, model) -> Provider | None` — None means unconstructable
+  (keyed kind, no stored key), which pre-flight maps to provider-unconfigured/missing-credential.
+  `select()` returns False (recording *nothing*) for shared-backend without `disclosure_ack`;
+  with the ack it also calls the instance's `acknowledge()` so the provider's own defence-in-depth
+  gate matches the registry. `refresh()` re-constructs the keyed provider after a credential
+  change. Credential routes always operate on KEYED_HOSTED — the only keyed kind.
+- GET /sources reports `manifest_fault` as a **fixed notice**, never the raw `ViewLoadError`
+  string — that string embeds the manifest path and no filesystem path may appear in any payload.
+- serve-document: rebuilds `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` (doc_version
+  arrives stripped of its leading v), realpath-confines to the manuals root, `FileResponse`
+  with `media_type="application/pdf"` and **no filename** (a filename adds a Content-Disposition,
+  which downloads and defeats `#page=N`). Starlette's FileResponse handles Range natively.
+- POST /turn: request-time validation (422 `{"rejected": "question-too-long", limit, received}`
+  with no outcome — a request rejection, not a turn), then `pipeline.turn()` is called **in the
+  handler**, so the 9.13 supersede fires at request time. Headers before the first body byte:
+  `dawmans-turn-stream: dawmans/turn-stream/1` (9.15) and `dawmans-conversation-id` — the minted
+  id has no other way to reach the caller (no §4b event carries it).
+- SSE emitter: per-event payload mapping in `_event_payload` (asdict + drop-None for
+  outcome/citation/timings/required_*; `{text}` wrappers for deltas; `done` passes through
+  `{"complete": true}`). StrEnums serialise as their values through `json.dumps` (str subclass).
+- **Disconnect chain (9.10), three links all needed:** Starlette's `StreamingResponse` never
+  finalises its body iterator, so `_TurnStreamResponse.__call__` acloses it in a finally; `_sse`'s
+  finally acloses the pipeline generator; `TurnPipeline._run`'s finally acloses `_events` (async
+  for never closes sub-iterators). And in `_events`' provider finally: an external close can land
+  with an `anext` task in flight — `stream.aclose()` then raises "generator is already running"
+  and was silently swallowed — so the fetch task is cancelled and awaited *before* aclose.
+  Without any one link the provider is only released at GC.
+- Test notes: httpx `ASGITransport` buffers the whole response, so incrementality and disconnect
+  are tested by driving the raw ASGI app (capturing `http.response.body` messages as sent, receive
+  returning `http.disconnect` on cue). `tests/answer/http_fixtures.py` holds the StubWatcher
+  (swap-on-check + `manifest_fault`), the shared corpus fixture and the request helpers; passage
+  ids in URLs need `quote(pid, safe="/")` for the `#`.

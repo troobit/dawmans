@@ -168,6 +168,7 @@ class TurnPipeline:
         previous: _Handle | None,
         handle: _Handle,
     ) -> AsyncIterator[TurnEvent]:
+        events = self._events(question, sources, conversation, handle)
         try:
             # 9.13: the old stream finishes — cancelled, then done — before
             # this one opens. An old turn whose generator never ran emits
@@ -175,9 +176,13 @@ class TurnPipeline:
             if previous is not None and previous.started and not previous.finished.is_set():
                 await previous.finished.wait()
             handle.started = True
-            async for event in self._events(question, sources, conversation, handle):
+            async for event in events:
                 yield event
         finally:
+            # 9.10: closing this generator (a caller disconnect) must
+            # finalise the turn — releasing the provider stream — now,
+            # not at garbage collection.
+            await events.aclose()
             handle.finished.set()
             if self._inflight.get(conversation.id) is handle:
                 del self._inflight[conversation.id]
@@ -300,6 +305,7 @@ class TurnPipeline:
         stream = binding.provider.stream(request)
         issued = time.perf_counter()
         supersede_wait = asyncio.ensure_future(handle.supersede.wait())
+        fetch: asyncio.Future | None = None
         try:
             while True:
                 fetch = asyncio.ensure_future(anext(stream))
@@ -333,6 +339,13 @@ class TurnPipeline:
                     yield event
         finally:
             supersede_wait.cancel()
+            if fetch is not None and not fetch.done():
+                # An external close — the caller disconnected (9.10) —
+                # lands here with an anext in flight; aclose on a running
+                # generator raises, so the task is cancelled and awaited
+                # first, which finalises the provider generator itself.
+                fetch.cancel()
+                await asyncio.gather(fetch, return_exceptions=True)
             try:
                 # 4.10: release the provider — a close, not a drain.
                 await stream.aclose()

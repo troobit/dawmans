@@ -12,6 +12,35 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The local HTTP surface** (`api/answer-engine` phase 8, `dawmans/answer/http/guard.py` and
+  `dawmans/answer/http/app.py`). `guard.py` holds the two 9.1–9.3 guards: `ensure_loopback_bind`
+  refuses a non-loopback bind before uvicorn exists — exiting non-zero naming the address and the
+  constraint, no fallback bind — and `HostOriginGuard` is the pure-ASGI middleware rejecting any
+  request whose `Host` is not the loopback service with the port (the check that closes DNS
+  rebinding) or whose `Origin` falls outside the same set, including `null` and the cross-port
+  dev-server origin; rejection is 403 with a machine-readable reason and no `outcome`. `app.py`
+  carries the design's route table: `GET /passages/{id}` as a dict lookup routed on the source_id
+  prefix running the same stat change check as a turn (3.4), `GET /sources` relaying every 9.5
+  field for both kinds plus both gap reports verbatim — owned-but-undocumented as an empty list,
+  never an omission (9.6–9.7) — and reporting an unreadable new manifest as a fixed notice with no
+  filesystem path in any payload; the five provider operations over a new `ProviderRegistry`
+  (masked-only throughout per 9.8, shared-backend selection recording nothing until the 6.15
+  disclosure is acknowledged, credential changes re-constructing the keyed provider so 6.3 holds,
+  test-provider probing reachability without synthesising a turn); serve-document rebuilding
+  `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` from the record's own fields,
+  realpath-confined to the manuals root, served inline with Range honoured and no
+  Content-Disposition filename so `#page=N` survives (9.4); and `POST /turn` streaming the
+  CONTRACTS §4b sixteen-event set over SSE with per-event payload mapping, `done` carrying
+  `{"complete": true}` (9.14), the `dawmans/turn-stream/1` version header plus the minted
+  conversation id readable before the first body byte (9.15), the 9.12 over-length rejection as a
+  422 with no outcome and no turn started, and the `web/build` static mount that makes the surface
+  same-origin. A caller disconnect now cancels the turn deterministically (9.10): the response
+  finalises its body iterator, the encoder closes the turn generator, `TurnPipeline._run` closes
+  its inner event generator, and the provider release cancels an in-flight `anext` before
+  `aclose` — previously the provider stream was only released at garbage collection. Tests cover
+  the guard matrix, the gap relay, credential masking against captured logs, filename round-trip
+  and confinement probes, stream completeness against the pipeline's own event sequence, §4b
+  ordering on the wire, and incremental delivery and disconnect at the raw ASGI layer.
 - **Conversation and the turn pipeline** (`api/answer-engine` phase 7,
   `dawmans/answer/conversation.py` and `dawmans/answer/turn.py`). `conversation.py` holds one
   conversation's in-memory state: the last 6 content-outcome turns rendered for the prompt's
