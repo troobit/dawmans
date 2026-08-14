@@ -78,7 +78,7 @@ references:
 
 ## Phase 3: PDF extraction and fixtures
 
-- [ ] 9. Write tests for PDF extraction and the span model <!-- id:e7lsx21 -->
+- [x] 9. Write tests for PDF extraction and the span model <!-- id:e7lsx21 -->
   - Extraction of a screenshot-dense fixture page yields no type-1 block and no image key carrying bytes - TEXT_PRESERVE_IMAGES must be cleared, which is what makes 10.1 and 10.4 hold at once.
   - Zero extracted non-furniture spans across every page is the no-text-layer rejection (3.3); a sparse but present layer sets low_text and is ingested.
   - low_text is words / page_count computed on extracted text before language selection - assert a multilingual guide is not flagged for having translations.
@@ -88,14 +88,14 @@ references:
   - Stream: 1
   - Requirements: [3.1](requirements.md#3.1), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.4](requirements.md#10.4)
 
-- [ ] 10. Implement corpus/pdf/extract.py <!-- id:e7lsx22 -->
+- [x] 10. Implement corpus/pdf/extract.py <!-- id:e7lsx22 -->
   - page.get_text("dict", flags=...) per page into Page/Line/Span, with the default flag set minus TEXT_PRESERVE_IMAGES.
   - Physical 1-based page indices are what is recorded, not printed page numbers.
   - Blocked-by: e7lsx21 (Write tests for PDF extraction and the span model)
   - Stream: 1
   - Requirements: [3.1](requirements.md#3.1), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.4](requirements.md#10.4)
 
-- [ ] 11. Add the fixture-capture tool and commit the extraction snapshots <!-- id:e7lsx23 -->
+- [x] 11. Add the fixture-capture tool and commit the extraction snapshots <!-- id:e7lsx23 -->
   - manuals/ is gitignored, so no test may open a reference PDF: fixtures are committed extraction snapshots that pin the extractor's output as an explicit input to every downstream test.
   - Write a developer command that dumps a page range's span geometry, font names and text to JSON, with a redaction mode that keeps bbox, font and a language label only.
   - Capture the nine fixtures named in design 'Fixtures': nitro_max_p25, apc_p3_arrows, apc_pages (redacted - full span text for 24 pages would commit substantially the whole guide), live_toc_slice, live_contents_p13, live_procedure_pagebreak, apc_no_toc, cover_only, furniture_pages.

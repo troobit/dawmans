@@ -8,7 +8,8 @@ separate tree.
 
 - `src/` layout, `pyproject.toml` at the repo root, hatchling build backend. Everything
   runs through the Makefile: `build` (`uv sync`), `test` (`uv run pytest`), `lint`
-  (spelling + `ruff check` + `ruff format --check`), `clean`, `fetch-model`, `bench`.
+  (spelling + `ruff check` + `ruff format --check`), `clean`, `fetch-model`, `fixtures`,
+  `bench`.
 - uv resolved to Python 3.12 (`requires-python = ">=3.12"`).
 - Dependencies arrive with the code that uses them. Declared so far: `pymupdf` (task 1,
   for the AGPL rule to have something to bite on) and `fastembed` (needed by
@@ -130,3 +131,79 @@ its own `StoreScan`; tests here build one by hand to stand in for `TriageLoader`
 `pytest -m bench`. Pytest exits 5 when no test matches the marker; the target treats
 that as "no benchmark registered yet" and succeeds. Requirement 8.1 needs the real
 PDFs, so CI cannot verify it.
+
+## Extraction — `corpus/pdf/extract.py`
+
+Stage 2, and the **only** module that opens a PDF. Everything after it annotates the
+model it returns rather than re-reading the document, so `Line.furniture`,
+`Span.unmappable` and `Block.lang`/`Block.english` are extraction-time defaults that
+later stages set. That is why `Span`, `Line`, `Block` and `Page` are mutable dataclasses
+and only `TocEntry` is frozen.
+
+- `EXTRACT_FLAGS = TEXTFLAGS_DICT & ~TEXT_PRESERVE_IMAGES`. Not tidiness: with the
+  default set, PyMuPDF decodes every image into a type-1 block carrying an `image` key of
+  raw bytes. Measured on Live's p471, 52 ms with the flag against 3 ms without.
+  `PRESERVE_IMAGES` is re-exported so a test can name the bit without importing PyMuPDF,
+  which the AGPL rule bans outside this package.
+- Images are still recorded, as `Page.images` — placement rectangles from
+  `page.get_image_info()`, which reports geometry without decoding pixels. The 2%-of-page
+  figure threshold (10.3) is **not** applied here; it belongs to the stage that needs it.
+- `Document.has_text_layer` counts non-blank spans on **non-furniture** lines, so its
+  value changes once stage 3 has run. That is deliberate — it is the 3.3 definition, and
+  the case it catches is a scanned manual whose only extractable text is a stamped page
+  number.
+- `Document.low_text` divides by the document's own `page_count`, which is preserved even
+  when only a page range was extracted (fixture capture does exactly that).
+- `Document.to_dict`/`from_dict` is the fixture format. Annotations are written only when
+  set, so a fresh extraction snapshot carries none of them and a hand-written fixture can
+  set them. `SNAPSHOT_SCHEMA` is checked on load.
+
+Measured against the real corpus (2026-08-15): 1107 pages in 3.99 s, of which Live 12 is
+3.45 s. Requirement 8.2 allows 5 s for the corpus, so the headroom is 25% and it slopes
+with page count — the design's ~1 s estimate was extrapolated from a *layout* extraction
+and is corrected in §Build budget.
+
+## Fixtures — `tests/fixtures/`, `tools/capture_fixture.py`, `make fixtures`
+
+The vendor PDFs are gitignored, so the guides enter the test suite as committed extraction
+snapshots. `capture_fixture.FIXTURES` is the record of which pages of which guide each
+fixture is and what it asserts; the same note is copied into each file's header.
+`tests/test_pdf_fixtures.py` asserts every fixture still holds what it was captured for,
+which matters because the stages that consume them are phases 4 and 5.
+
+Things that are not obvious:
+
+- **Every manual in the corpus has an embedded outline** — Live 1054 entries, APC 38,
+  Nitro Max 28, Scarlett 72 — so section-map paths B and C have no live instance. The
+  design said the APC had neither outline nor contents page; it was wrong. `apc_no_toc`
+  and `cover_only` are captured with `--toc none` (decision_log Decision 10).
+- **Live's contents pages have no dot leaders.** The page numbers are a separate
+  right-hand column of bare numerals, extracted ahead of the titles. Path B's grammar
+  detects the Nitro Max contents page and not Live's, and the exclusion of contents pages
+  from chunking cannot rest on leaders alone.
+- **`live_procedure_pagebreak` (Live pp158–159) extracts its enumerators after the step
+  text.** `1.`–`4.` are set in a left gutter and come out as their own lines at the end of
+  the page. Any chunker reading extraction order alone loses the pairing; only row
+  assembly on geometry recovers it.
+- **`apc_p14_arrows`, not `apc_p3_arrows`.** p3 of the v1.0 guide carries no symbol font,
+  and no page holds both the Wingdings3 run and a genuine Spanish `ñ`. p14 is better than
+  what the design asked for: U+00F4 appears on it twice, once as a Wingdings3 arrow and
+  once inside a French word in the body face, so character-keyed repair provably corrupts
+  the second.
+- **Redaction masks character classes** (letters → `x`/`X`, digits → `0`) rather than
+  dropping the text, and the test is `str.isalpha()` so accented characters go too —
+  `[a-zA-Z]` would leave the very characters that identify a line's language. The
+  language labels in a redacted fixture are hand-written ground truth, so it exercises the
+  *selection* machinery and never the language identifier (Decision 11).
+- Fixture JSON is written with leaf objects on one line, which halves the file against
+  `indent=1` while staying diffable. `tests/test_pdf_fixtures.py` caps a fixture at 1 MB.
+
+## Synthetic PDFs — `tests/pdfgen.py`
+
+The extraction tests cannot open a reference PDF and cannot build one with PyMuPDF (the
+AGPL ban applies to `tests/` too), so `pdfgen.py` writes minimal PDFs by hand:
+uncompressed streams, base-14 fonts, one xref table. Text is positioned from the **top**
+of the page, the way PyMuPDF reports bboxes, with a `Text`'s `y` being its baseline.
+`Image(resolution=N)` writes N×N uncompressed RGB pixels, which is how the 10.4 test makes
+one file a hundred times larger than another with the same text layer. Task 45's timing
+tests want synthetic PDFs too.

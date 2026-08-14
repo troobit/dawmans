@@ -12,6 +12,24 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **PDF extraction and the span model** (`dawmans/corpus/pdf/extract.py`, `data/manual-corpus`
+  phase 3). `page.get_text("dict")` per page into `Page`/`Block`/`Line`/`Span`, each span keeping its
+  bbox, font name, size and flags so glyph repair can key on the font, row assembly on geometry and
+  language selection per block. The dict flags clear `TEXT_PRESERVE_IMAGES`: PyMuPDF's default
+  materialises every image's bytes into type-1 blocks, which is both 10.1's "image content is not
+  extracted" and, against Live 12's 96 MB of screenshots, a seventeen-fold cost on the page measured.
+  Images survive as placement rectangles only, which is what 10.3's figure test needs and all it
+  needs. Page numbers are physical 1-based indices. `has_text_layer` (3.3) and `low_text` (3.4) are
+  derived from the model, the latter over the whole text layer **before** language selection — after
+  it, every multilingual guide would be flagged for having translations.
+- **The committed extraction fixtures** (`tests/fixtures/`, `tools/capture_fixture.py`,
+  `make fixtures`). `manuals/` is gitignored, so no test may open a reference PDF: the nine vendor
+  fixtures are snapshots of what the extractor returned for a named page range, which also pins its
+  output as an explicit input to every downstream stage. The APC guide is committed redacted — text
+  masked to its character classes, one language label per block — because 24 pages of it verbatim
+  would be substantially the whole guide, and because the measurements the language stage makes are
+  measurements of shape. Three synthetic rejection fixtures cover no-text-layer, over-threshold
+  unmappable characters, and the two filename rejections.
 - **Source discovery and identity** (`dawmans/corpus/discover.py`, `data/manual-corpus` phase 2).
   The filename grammar of 2.1–2.3 as one anchored expression, with `SourceIdentity.filename` as its
   exact inverse: `api/answer-engine` rebuilds a name from a `SourceRecord`'s own fields to serve the
@@ -63,6 +81,15 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **The design's account of the corpus, corrected against the corpus** (`data/manual-corpus`
+  design §Section map and §Build budget, Decisions 10 and 11). Capturing the fixtures read the PDFs
+  rather than describing them, and three claims did not survive: every manual carries an embedded
+  outline, so paths B and C of the section map have no live instance and the APC Key 25 is not the
+  outline-less document the design took it for; Live's printed contents pages carry no dot leaders,
+  so path B's grammar does not detect them; and extraction of the full corpus measures 3.99 s
+  against 8.2's 5 s budget, not the ~1 s the estimate extrapolated from a layout extraction. Neither
+  path is dropped — they are what the next manual needs — and their fixtures are captured with the
+  outline withheld.
 - **The last corpus gap is closed, and four mechanisms went dormant with it** (DECISIONS Decision
   12). The Focusrite Scarlett Solo 4th Gen guide is ingested, so every device in the rig is
   documented and the owned-but-undocumented report is empty. Nine files still said otherwise:

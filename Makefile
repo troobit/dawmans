@@ -2,7 +2,7 @@
 # and lint; the targets wrap `uv run …` rather than replacing it.
 
 .DEFAULT_GOAL := help
-.PHONY: help build test lint spelling clean fetch-model bench
+.PHONY: help build test lint spelling clean fetch-model fixtures bench
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
@@ -27,6 +27,15 @@ clean: ## Remove build artefacts
 
 fetch-model: ## Populate the gitignored models/ cache (one-off, needs network)
 	uv run python tools/fetch_model.py
+
+fixtures: ## Recapture tests/fixtures/ from manuals/; needs the vendor PDFs locally
+	@if ! ls manuals/*.pdf >/dev/null 2>&1; then \
+		echo "manuals/ holds no PDFs - see specs/data/manual-corpus/prerequisites.md."; \
+		echo "Writing the synthetic rejection fixtures only."; \
+		uv run python tools/capture_fixture.py --rejections; \
+	else \
+		uv run python tools/capture_fixture.py --all; \
+	fi
 
 bench: ## Time a full-corpus rebuild (requirement 8.1); skipped when manuals/ is empty
 	@if ! ls manuals/*.pdf >/dev/null 2>&1; then \

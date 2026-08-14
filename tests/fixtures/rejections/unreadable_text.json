@@ -1,0 +1,99 @@
+{
+ "asserts": "unmappable characters over 2% of the extracted text layer is the `unreadable-text` rejection (5.5). The denominator is every extracted character, counted after furniture suppression and before language selection",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 1,
+ "toc": [],
+ "pages": [
+  {
+   "number": 1,
+   "width": 595.0,
+   "height": 842.0,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [72.0, 100.0, 520.0, 300.0],
+     "lines": [
+      {
+       "bbox": [72.0, 100.0, 520.0, 111.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 100.0, 500.0, 111.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 114.0, 520.0, 125.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 114.0, 500.0, 125.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 128.0, 520.0, 139.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 128.0, 500.0, 139.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 142.0, 520.0, 153.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 142.0, 500.0, 153.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 156.0, 520.0, 167.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 156.0, 500.0, 167.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 170.0, 520.0, 181.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 170.0, 500.0, 181.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 184.0, 520.0, 195.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 184.0, 500.0, 195.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 198.0, 520.0, 209.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 198.0, 500.0, 209.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 212.0, 520.0, 223.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 212.0, 500.0, 223.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 226.0, 520.0, 237.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 226.0, 500.0, 237.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 240.0, 520.0, 251.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 240.0, 500.0, 251.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 254.0, 520.0, 265.0],
+       "spans": [
+        {"text": "Connect the interface and set the input gain until the meter stays green. ", "bbox": [72.0, 254.0, 500.0, 265.0], "font": "Helvetica", "size": 10.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [72.0, 280.0, 100.0, 291.0],
+       "spans": [
+        {"text": "ðñôõðñôõðñôõðñôõðñôõðñôõðñôõðñôõ", "bbox": [72.0, 280.0, 100.0, 291.0], "font": "Wingdings3", "size": 10.0, "flags": 0}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

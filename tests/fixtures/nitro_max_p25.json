@@ -1,0 +1,508 @@
+{
+ "captured_from": "alesis_nitro-max_user-guide_v1.1_en.pdf",
+ "captured_pages": [25],
+ "redacted": false,
+ "asserts": "all 19 trigger-to-note pairs recoverable with their printed pairings; the heading joined from three physical lines; ragged rows placed by x-position (7.1-7.3, 7.6)",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 35,
+ "toc": [[2, "(5.2) Pad MIDI Note Numbers", 25]],
+ "pages": [
+  {
+   "number": 25,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [361.8, 38.6, 364.02, 47.91],
+     "lines": [
+      {
+       "bbox": [361.8, 38.6, 364.02, 47.91],
+       "spans": [
+        {"text": " ", "bbox": [361.8, 38.6, 364.02, 47.91], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [355.14, 562.01, 368.87, 576.02],
+     "lines": [
+      {
+       "bbox": [367.2, 562.01, 368.87, 569.0],
+       "spans": [
+        {"text": " ", "bbox": [367.2, 562.01, 368.87, 569.0], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [355.14, 569.03, 361.83, 576.02],
+       "spans": [
+        {"text": "25", "bbox": [355.14, 569.03, 361.83, 576.02], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 46.22, 183.34, 76.83],
+     "lines": [
+      {
+       "bbox": [28.8, 46.22, 31.02, 55.53],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 46.22, 31.02, 55.53], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 55.14, 183.34, 67.54],
+       "spans": [
+        {"text": "(5.2) Pad MIDI Note Numbers ", "bbox": [28.8, 55.14, 183.34, 67.54], "font": "Gotham-Book", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 67.52, 31.02, 76.83],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 67.52, 31.02, 76.83], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 79.25, 334.58, 98.73],
+     "lines": [
+      {
+       "bbox": [31.5, 84.05, 64.15, 93.93],
+       "spans": [
+        {"text": "Trigger ", "bbox": [31.5, 84.05, 64.15, 93.93], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 79.25, 147.74, 89.13],
+       "spans": [
+        {"text": "MIDI Note ", "bbox": [104.22, 79.25, 147.74, 89.13], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 88.85, 139.71, 98.73],
+       "spans": [
+        {"text": "Number ", "bbox": [104.22, 88.85, 139.71, 98.73], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 84.38, 184.5, 93.9],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 84.38, 184.5, 93.9], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [218.28, 84.05, 250.93, 93.93],
+       "spans": [
+        {"text": "Trigger ", "bbox": [218.28, 84.05, 250.93, 93.93], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 79.25, 334.58, 89.13],
+       "spans": [
+        {"text": "MIDI Note ", "bbox": [291.06, 79.25, 334.58, 89.13], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 88.85, 326.55, 98.73],
+       "spans": [
+        {"text": "Number ", "bbox": [291.06, 88.85, 326.55, 98.73], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 103.24, 299.95, 111.93],
+     "lines": [
+      {
+       "bbox": [31.5, 103.24, 49.02, 111.93],
+       "spans": [
+        {"text": "Kick ", "bbox": [31.5, 103.24, 49.02, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 103.24, 115.15, 111.93],
+       "spans": [
+        {"text": "36 ", "bbox": [104.22, 103.24, 115.15, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 103.59, 184.24, 111.78],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 103.59, 184.24, 111.78], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 103.24, 236.65, 111.93],
+       "spans": [
+        {"text": "Ride ", "bbox": [218.28, 103.24, 236.65, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 103.24, 299.95, 111.93],
+       "spans": [
+        {"text": "51 ", "bbox": [291.06, 103.24, 299.95, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 116.44, 302.41, 125.13],
+     "lines": [
+      {
+       "bbox": [31.5, 116.44, 54.1, 125.13],
+       "spans": [
+        {"text": "Snare ", "bbox": [31.5, 116.44, 54.1, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 116.44, 115.02, 125.13],
+       "spans": [
+        {"text": "38 ", "bbox": [104.22, 116.44, 115.02, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 116.79, 184.23, 124.98],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 116.79, 184.23, 124.98], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 116.44, 245.81, 125.13],
+       "spans": [
+        {"text": "Crash 1 ", "bbox": [218.28, 116.44, 245.81, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 116.44, 302.41, 125.13],
+       "spans": [
+        {"text": "49 ", "bbox": [291.06, 116.44, 302.41, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 129.64, 301.62, 138.33],
+     "lines": [
+      {
+       "bbox": [31.5, 129.64, 70.32, 138.33],
+       "spans": [
+        {"text": "Snare Rim ", "bbox": [31.5, 129.64, 70.32, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 129.64, 116.05, 138.33],
+       "spans": [
+        {"text": "40 ", "bbox": [104.22, 129.64, 116.05, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 130.0, 184.24, 138.19],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 130.0, 184.24, 138.19], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 129.64, 247.51, 138.33],
+       "spans": [
+        {"text": "Crash 2 ", "bbox": [218.28, 129.64, 247.51, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 129.64, 301.62, 138.33],
+       "spans": [
+        {"text": "57 ", "bbox": [291.06, 129.64, 301.62, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 142.84, 302.41, 151.53],
+     "lines": [
+      {
+       "bbox": [31.5, 142.84, 54.62, 151.53],
+       "spans": [
+        {"text": "Tom 1 ", "bbox": [31.5, 142.84, 54.62, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 142.84, 115.45, 151.53],
+       "spans": [
+        {"text": "48 ", "bbox": [104.22, 142.84, 115.45, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 143.19, 184.24, 151.38],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 143.19, 184.24, 151.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 142.84, 265.27, 151.53],
+       "spans": [
+        {"text": "Hi-Hat Open ", "bbox": [218.28, 142.84, 265.27, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 142.84, 302.41, 151.53],
+       "spans": [
+        {"text": "46 ", "bbox": [291.06, 142.84, 302.41, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 156.04, 301.63, 164.73],
+     "lines": [
+      {
+       "bbox": [31.5, 156.04, 70.86, 164.73],
+       "spans": [
+        {"text": "Tom 1 Rim ", "bbox": [31.5, 156.04, 70.86, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 156.04, 115.63, 164.73],
+       "spans": [
+        {"text": "50 ", "bbox": [104.22, 156.04, 115.63, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 156.4, 184.23, 164.58],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 156.4, 184.23, 164.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 156.04, 282.57, 164.73],
+       "spans": [
+        {"text": "Hi-Hat Half-Open ", "bbox": [218.28, 156.04, 282.57, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 156.04, 301.63, 164.73],
+       "spans": [
+        {"text": "23 ", "bbox": [291.06, 156.04, 301.63, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 169.24, 302.05, 177.93],
+     "lines": [
+      {
+       "bbox": [31.5, 169.24, 56.3, 177.93],
+       "spans": [
+        {"text": "Tom 2 ", "bbox": [31.5, 169.24, 56.3, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 169.24, 115.32, 177.93],
+       "spans": [
+        {"text": "45 ", "bbox": [104.22, 169.24, 115.32, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 169.6, 184.23, 177.79],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 169.6, 184.23, 177.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 169.24, 270.27, 177.93],
+       "spans": [
+        {"text": "Hi-Hat Closed ", "bbox": [218.28, 169.24, 270.27, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 169.24, 302.05, 177.93],
+       "spans": [
+        {"text": "42 ", "bbox": [291.06, 169.24, 302.05, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 182.44, 302.59, 191.13],
+     "lines": [
+      {
+       "bbox": [31.5, 182.44, 72.53, 191.13],
+       "spans": [
+        {"text": "Tom 2 Rim ", "bbox": [31.5, 182.44, 72.53, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 182.44, 115.21, 191.13],
+       "spans": [
+        {"text": "47 ", "bbox": [104.22, 182.44, 115.21, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 182.79, 184.23, 190.98],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 182.79, 184.23, 190.98], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 182.44, 265.73, 191.13],
+       "spans": [
+        {"text": "Hi-Hat Pedal ", "bbox": [218.28, 182.44, 265.73, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 182.44, 302.59, 191.13],
+       "spans": [
+        {"text": "44 ", "bbox": [291.06, 182.44, 302.59, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 195.64, 299.88, 204.33],
+     "lines": [
+      {
+       "bbox": [31.5, 195.64, 56.42, 204.33],
+       "spans": [
+        {"text": "Tom 3 ", "bbox": [31.5, 195.64, 56.42, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 195.64, 115.33, 204.33],
+       "spans": [
+        {"text": "43 ", "bbox": [104.22, 195.64, 115.33, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 195.99, 184.23, 204.18],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 195.99, 184.23, 204.18], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 195.64, 257.22, 204.33],
+       "spans": [
+        {"text": "HH Splash ", "bbox": [218.28, 195.64, 257.22, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 195.64, 299.88, 204.33],
+       "spans": [
+        {"text": "21 ", "bbox": [291.06, 195.64, 299.88, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 208.84, 293.01, 217.53],
+     "lines": [
+      {
+       "bbox": [31.5, 208.84, 72.61, 217.53],
+       "spans": [
+        {"text": "Tom 3 Rim ", "bbox": [31.5, 208.84, 72.61, 217.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 208.84, 115.02, 217.53],
+       "spans": [
+        {"text": "58 ", "bbox": [104.22, 208.84, 115.02, 217.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.05, 209.19, 293.01, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [291.05, 209.19, 293.01, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 209.19, 220.22, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 209.19, 220.22, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.27, 209.19, 184.22, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [182.27, 209.19, 184.22, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 222.04, 293.01, 230.73],
+     "lines": [
+      {
+       "bbox": [31.5, 222.04, 56.84, 230.73],
+       "spans": [
+        {"text": "Tom 4 ", "bbox": [31.5, 222.04, 56.84, 230.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 222.04, 113.53, 230.73],
+       "spans": [
+        {"text": "41 ", "bbox": [104.22, 222.04, 113.53, 230.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 222.4, 293.01, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [291.06, 222.4, 293.01, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 222.4, 220.22, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 222.4, 220.22, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.27, 222.4, 184.23, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [182.27, 222.4, 184.23, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 235.24, 293.01, 255.87],
+     "lines": [
+      {
+       "bbox": [31.5, 235.24, 73.03, 243.93],
+       "spans": [
+        {"text": "Tom 4 Rim ", "bbox": [31.5, 235.24, 73.03, 243.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 235.24, 115.15, 243.93],
+       "spans": [
+        {"text": "39 ", "bbox": [104.22, 235.24, 115.15, 243.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 235.6, 293.01, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [291.06, 235.6, 293.01, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 235.6, 220.23, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 235.6, 220.23, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 235.6, 184.23, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 235.6, 184.23, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 246.56, 31.02, 255.87],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 246.56, 31.02, 255.87], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

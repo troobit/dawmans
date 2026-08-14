@@ -1,0 +1,1860 @@
+{
+ "captured_from": "alesis_nitro-max_user-guide_v1.1_en.pdf",
+ "captured_pages": [23, 24, 25, 26],
+ "redacted": false,
+ "asserts": "a repeated page number in the band is suppressed; the numeric cells inside p25's detected table are not (3.6)",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 35,
+ "toc": [[2, "(4.5) Connecting to a Bluetooth® Device", 23], [1, "(5.0) Appendix", 24], [2, "(5.1) Velocity Curves", 24], [2, "(5.2) Pad MIDI Note Numbers", 25], [2, "(5.3) Kits", 26]],
+ "pages": [
+  {
+   "number": 23,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [361.8, 38.6, 364.02, 47.91],
+     "lines": [
+      {
+       "bbox": [361.8, 38.6, 364.02, 47.91],
+       "spans": [
+        {"text": " ", "bbox": [361.8, 38.6, 364.02, 47.91], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [355.14, 562.01, 368.87, 576.02],
+     "lines": [
+      {
+       "bbox": [367.2, 562.01, 368.87, 569.0],
+       "spans": [
+        {"text": " ", "bbox": [367.2, 562.01, 368.87, 569.0], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [355.14, 569.03, 361.83, 576.02],
+       "spans": [
+        {"text": "23", "bbox": [355.14, 569.03, 361.83, 576.02], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 45.95, 274.2, 106.23],
+     "lines": [
+      {
+       "bbox": [28.8, 45.95, 31.19, 55.83],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 45.95, 31.19, 55.83], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 55.44, 239.09, 67.85],
+       "spans": [
+        {"text": "(4.5) Connecting to a Bluetooth® Device ", "bbox": [28.8, 55.44, 239.09, 67.85], "font": "Gotham-Book", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 67.55, 31.19, 77.43],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 67.55, 31.19, 77.43], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 77.15, 35.3, 87.08],
+       "spans": [
+        {"text": "1.", "bbox": [28.8, 77.15, 33.63, 87.03], "font": "Gotham-Book", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [33.6, 77.48, 35.3, 87.08], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 77.15, 274.2, 87.03],
+       "spans": [
+        {"text": "Press and release the Power button to power on the ", "bbox": [42.3, 77.15, 274.2, 87.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 86.75, 274.04, 96.63],
+       "spans": [
+        {"text": "Nitro Max drum module. When no Bluetooth device is ", "bbox": [42.3, 86.75, 274.04, 96.63], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 96.35, 237.14, 106.23],
+       "spans": [
+        {"text": "connected, the Bluetooth button LED will be oﬀ. ", "bbox": [42.3, 96.35, 237.14, 106.23], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 108.95, 274.24, 128.43],
+     "lines": [
+      {
+       "bbox": [28.81, 108.95, 274.24, 118.88],
+       "spans": [
+        {"text": "2.", "bbox": [28.81, 108.95, 35.56, 118.83], "font": "Gotham-Book", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.59, 109.28, 37.29, 118.88], "font": "Arial", "size": 7.98, "flags": 4},
+        {"text": "Press the Bluetooth button to enter pairing mode. The ", "bbox": [42.31, 108.95, 274.24, 118.83], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 118.55, 170.54, 128.43],
+       "spans": [
+        {"text": "Bluetooth button LED will ﬂash. ", "bbox": [42.3, 118.55, 170.54, 128.43], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 131.15, 274.13, 160.23],
+     "lines": [
+      {
+       "bbox": [28.81, 131.15, 274.05, 141.07],
+       "spans": [
+        {"text": "3.", "bbox": [28.81, 131.15, 35.68, 141.03], "font": "Gotham-Book", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.65, 131.48, 37.34, 141.07], "font": "Arial", "size": 7.98, "flags": 4},
+        {"text": "Navigate to your device’s Bluetooth settings and select ", "bbox": [42.31, 131.15, 274.05, 141.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.32, 140.75, 274.13, 150.63],
+       "spans": [
+        {"text": "Alesis Nitro Max. Once your device has been paired, the ", "bbox": [42.32, 140.75, 274.13, 150.63], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.32, 150.35, 191.03, 160.23],
+       "spans": [
+        {"text": "Bluetooth button LED will be fully lit. ", "bbox": [42.32, 150.35, 191.03, 160.23], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 162.95, 274.27, 297.63],
+     "lines": [
+      {
+       "bbox": [42.3, 162.95, 274.05, 172.83],
+       "spans": [
+        {"text": "Note: If the Bluetooth button is pressed again, pairing ", "bbox": [42.3, 162.95, 274.05, 172.83], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 172.55, 274.11, 182.43],
+       "spans": [
+        {"text": "mode will be canceled, and the LED will return to the ", "bbox": [42.3, 172.55, 274.11, 182.43], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 182.15, 273.99, 192.03],
+       "spans": [
+        {"text": "previous state (paired with the previous device or no ", "bbox": [42.3, 182.15, 273.99, 192.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [42.3, 191.75, 76.22, 201.63],
+       "spans": [
+        {"text": "device). ", "bbox": [42.3, 191.75, 76.22, 201.63], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 201.35, 31.19, 211.23],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 201.35, 31.19, 211.23], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 210.95, 274.27, 220.83],
+       "spans": [
+        {"text": "To disconnect a paired device, press and hold the ", "bbox": [28.8, 210.95, 274.27, 220.83], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 220.55, 127.06, 230.43],
+       "spans": [
+        {"text": "Bluetooth button again. ", "bbox": [28.8, 220.55, 127.06, 230.43], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 230.15, 31.19, 240.03],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 230.15, 31.19, 240.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 239.75, 31.19, 249.63],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 239.75, 31.19, 249.63], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 249.35, 31.19, 259.23],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 249.35, 31.19, 259.23], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 258.95, 31.19, 268.83],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 258.95, 31.19, 268.83], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 268.55, 31.19, 278.43],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 268.55, 31.19, 278.43], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 278.15, 31.19, 288.03],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 278.15, 31.19, 288.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 287.75, 31.19, 297.63],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 287.75, 31.19, 297.63], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [297.7, 100.83, 350.55, 108.48],
+     "lines": [
+      {
+       "bbox": [297.7, 100.83, 350.55, 108.48],
+       "spans": [
+        {"text": "Press and release", "bbox": [297.7, 100.83, 350.55, 108.48], "font": "Gotham-Book", "size": 6.18, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [318.24, 79.89, 330.0, 83.76],
+     "lines": [
+      {
+       "bbox": [318.24, 79.89, 330.0, 83.76],
+       "spans": [
+        {"text": "POWER", "bbox": [318.24, 79.89, 330.0, 83.76], "font": "Gotham-Bold", "size": 2.94, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [315.49, 137.51, 331.71, 145.16],
+     "lines": [
+      {
+       "bbox": [315.49, 137.51, 331.71, 145.16],
+       "spans": [
+        {"text": "Press", "bbox": [315.49, 137.51, 331.71, 145.16], "font": "Gotham-Book", "size": 6.18, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [280.22, 181.74, 367.56, 189.39],
+     "lines": [
+      {
+       "bbox": [280.22, 181.74, 367.56, 189.39],
+       "spans": [
+        {"text": "Flashing LED = Pairing mode", "bbox": [280.22, 181.74, 367.56, 189.39], "font": "Gotham-Book", "size": 6.18, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [313.78, 219.38, 333.52, 221.97],
+     "lines": [
+      {
+       "bbox": [313.78, 219.38, 333.52, 221.97],
+       "spans": [
+        {"text": "ALESIS NITRO MAX", "bbox": [313.78, 219.38, 333.52, 221.97], "font": "Gotham-Bold", "size": 1.97, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [317.67, 214.15, 335.4, 217.82],
+     "lines": [
+      {
+       "bbox": [317.67, 214.15, 335.4, 217.82],
+       "spans": [
+        {"text": "BLUETOOTH", "bbox": [317.67, 214.15, 335.4, 217.82], "font": "Gotham-Bold", "size": 2.79, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [295.58, 265.39, 352.1, 273.04],
+     "lines": [
+      {
+       "bbox": [295.58, 265.39, 352.1, 273.04],
+       "spans": [
+        {"text": "Solid LED = Paired", "bbox": [295.58, 265.39, 352.1, 273.04], "font": "Gotham-Book", "size": 6.18, "flags": 4}
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "number": 24,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [[40.26, 129.0, 130.26, 218.64], [152.16, 126.0, 248.36, 217.26], [274.92, 128.4, 366.88, 219.18], [40.26, 277.44, 130.28, 366.96], [152.04, 276.48, 244.17, 366.6], [274.38, 277.08, 366.03, 367.68]],
+   "blocks": [
+    {
+     "bbox": [361.8, 39.5, 364.02, 48.81],
+     "lines": [
+      {
+       "bbox": [361.8, 39.5, 364.02, 48.81],
+       "spans": [
+        {"text": " ", "bbox": [361.8, 39.5, 364.02, 48.81], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 562.01, 30.47, 569.0],
+     "lines": [
+      {
+       "bbox": [28.8, 562.01, 30.47, 569.0],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 562.01, 30.47, 569.0], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [33.3, 569.03, 41.63, 576.02],
+     "lines": [
+      {
+       "bbox": [33.3, 569.03, 41.63, 576.02],
+       "spans": [
+        {"text": "24 ", "bbox": [33.3, 569.03, 41.63, 576.02], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 46.85, 138.0, 380.05],
+     "lines": [
+      {
+       "bbox": [28.8, 46.85, 31.19, 56.73],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 46.85, 31.19, 56.73], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 56.12, 127.98, 71.52],
+       "spans": [
+        {"text": "(5.0) Appendix ", "bbox": [28.8, 56.12, 127.98, 71.52], "font": "Gotham-Medium", "size": 12.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 70.9, 30.74, 78.92],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 70.9, 30.74, 78.92], "font": "Gotham-Book", "size": 6.48, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 78.54, 138.0, 90.94],
+       "spans": [
+        {"text": "(5.1) Velocity Curves ", "bbox": [28.8, 78.54, 138.0, 90.94], "font": "Gotham-Book", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 90.92, 31.02, 100.23],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 90.92, 31.02, 100.23], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 100.23, 31.02, 109.53],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 100.23, 31.02, 109.53], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 109.59, 31.02, 118.89],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 109.59, 31.02, 118.89], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 118.88, 31.02, 128.19],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 118.88, 31.02, 128.19], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 128.24, 31.02, 137.55],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 128.24, 31.02, 137.55], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 137.54, 31.02, 146.85],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 137.54, 31.02, 146.85], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 146.9, 31.02, 156.21],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 146.9, 31.02, 156.21], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 156.2, 31.02, 165.5],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 156.2, 31.02, 165.5], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 165.56, 31.02, 174.86],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 165.56, 31.02, 174.86], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 174.86, 31.02, 184.16],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 174.86, 31.02, 184.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 184.22, 31.02, 193.52],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 184.22, 31.02, 193.52], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 193.51, 31.02, 202.82],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 193.51, 31.02, 202.82], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 202.87, 31.02, 212.18],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 202.87, 31.02, 212.18], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 212.17, 31.02, 221.48],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 212.17, 31.02, 221.48], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 221.53, 31.02, 230.84],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 221.53, 31.02, 230.84], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 230.83, 31.02, 240.13],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 230.83, 31.02, 240.13], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 240.12, 31.02, 249.43],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 240.12, 31.02, 249.43], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 249.49, 31.02, 258.79],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 249.49, 31.02, 258.79], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 258.78, 31.02, 268.09],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 258.78, 31.02, 268.09], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 268.14, 31.02, 277.45],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 268.14, 31.02, 277.45], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 277.45, 31.02, 286.75],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 277.45, 31.02, 286.75], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 286.81, 31.02, 296.11],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 286.81, 31.02, 296.11], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 296.1, 31.02, 305.41],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 296.1, 31.02, 305.41], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 305.46, 31.02, 314.77],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 305.46, 31.02, 314.77], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 314.77, 31.02, 324.07],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 314.77, 31.02, 324.07], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 324.13, 31.02, 333.43],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 324.13, 31.02, 333.43], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 333.43, 31.02, 342.73],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 333.43, 31.02, 342.73], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 342.79, 31.02, 352.09],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 342.79, 31.02, 352.09], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 352.08, 31.02, 361.39],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 352.08, 31.02, 361.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 361.39, 31.02, 370.69],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 361.39, 31.02, 370.69], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 370.75, 31.02, 380.05],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 370.75, 31.02, 380.05], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.26, 117.86, 295.68, 127.95],
+     "lines": [
+      {
+       "bbox": [31.26, 118.64, 60.29, 127.95],
+       "spans": [
+        {"text": "Volume ", "bbox": [31.26, 118.64, 60.29, 127.95], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [144.54, 117.86, 173.58, 127.17],
+       "spans": [
+        {"text": "Volume ", "bbox": [144.54, 117.86, 173.58, 127.17], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [266.65, 118.64, 295.68, 127.95],
+       "spans": [
+        {"text": "Volume ", "bbox": [266.65, 118.64, 295.68, 127.95], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.27, 267.26, 295.69, 277.41],
+     "lines": [
+      {
+       "bbox": [31.27, 267.26, 60.3, 276.57],
+       "spans": [
+        {"text": "Volume ", "bbox": [31.27, 267.26, 60.3, 276.57], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [144.55, 267.45, 173.58, 276.75],
+       "spans": [
+        {"text": "Volume ", "bbox": [144.55, 267.45, 173.58, 276.75], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [266.65, 268.11, 295.69, 277.41],
+       "spans": [
+        {"text": "Volume ", "bbox": [266.65, 268.11, 295.69, 277.41], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [43.69, 219.09, 363.62, 229.41],
+     "lines": [
+      {
+       "bbox": [43.69, 219.09, 126.72, 228.39],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [43.69, 219.09, 126.72, 228.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [156.9, 219.09, 239.94, 228.39],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [156.9, 219.09, 239.94, 228.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [280.58, 220.11, 363.62, 229.41],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [280.58, 220.11, 363.62, 229.41], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [44.42, 367.65, 362.39, 376.96],
+     "lines": [
+      {
+       "bbox": [44.42, 367.65, 127.45, 376.96],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [44.42, 367.65, 127.45, 376.96], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [156.9, 367.65, 239.94, 376.96],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [156.9, 367.65, 239.94, 376.96], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [279.35, 367.65, 362.39, 376.96],
+       "spans": [
+        {"text": "Velocity (striking force) ", "bbox": [279.35, 367.65, 362.39, 376.96], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [68.94, 106.9, 340.53, 117.76],
+     "lines": [
+      {
+       "bbox": [68.94, 106.9, 104.31, 117.64],
+       "spans": [
+        {"text": "Curve 1 ", "bbox": [68.94, 106.9, 104.31, 117.64], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [182.76, 107.02, 218.14, 117.76],
+       "spans": [
+        {"text": "Curve 2 ", "bbox": [182.76, 107.02, 218.14, 117.76], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [305.15, 107.02, 340.53, 117.76],
+       "spans": [
+        {"text": "Curve 3 ", "bbox": [305.15, 107.02, 340.53, 117.76], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [68.94, 259.66, 341.14, 270.88],
+     "lines": [
+      {
+       "bbox": [68.94, 259.66, 104.31, 270.4],
+       "spans": [
+        {"text": "Curve 4 ", "bbox": [68.94, 259.66, 104.31, 270.4], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [182.76, 260.14, 218.14, 270.88],
+       "spans": [
+        {"text": "Curve 5 ", "bbox": [182.76, 260.14, 218.14, 270.88], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [305.76, 260.14, 341.14, 270.88],
+       "spans": [
+        {"text": "Curve 6 ", "bbox": [305.76, 260.14, 341.14, 270.88], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "number": 25,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [361.8, 38.6, 364.02, 47.91],
+     "lines": [
+      {
+       "bbox": [361.8, 38.6, 364.02, 47.91],
+       "spans": [
+        {"text": " ", "bbox": [361.8, 38.6, 364.02, 47.91], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [355.14, 562.01, 368.87, 576.02],
+     "lines": [
+      {
+       "bbox": [367.2, 562.01, 368.87, 569.0],
+       "spans": [
+        {"text": " ", "bbox": [367.2, 562.01, 368.87, 569.0], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [355.14, 569.03, 361.83, 576.02],
+       "spans": [
+        {"text": "25", "bbox": [355.14, 569.03, 361.83, 576.02], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 46.22, 183.34, 76.83],
+     "lines": [
+      {
+       "bbox": [28.8, 46.22, 31.02, 55.53],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 46.22, 31.02, 55.53], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 55.14, 183.34, 67.54],
+       "spans": [
+        {"text": "(5.2) Pad MIDI Note Numbers ", "bbox": [28.8, 55.14, 183.34, 67.54], "font": "Gotham-Book", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 67.52, 31.02, 76.83],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 67.52, 31.02, 76.83], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 79.25, 334.58, 98.73],
+     "lines": [
+      {
+       "bbox": [31.5, 84.05, 64.15, 93.93],
+       "spans": [
+        {"text": "Trigger ", "bbox": [31.5, 84.05, 64.15, 93.93], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 79.25, 147.74, 89.13],
+       "spans": [
+        {"text": "MIDI Note ", "bbox": [104.22, 79.25, 147.74, 89.13], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 88.85, 139.71, 98.73],
+       "spans": [
+        {"text": "Number ", "bbox": [104.22, 88.85, 139.71, 98.73], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 84.38, 184.5, 93.9],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 84.38, 184.5, 93.9], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [218.28, 84.05, 250.93, 93.93],
+       "spans": [
+        {"text": "Trigger ", "bbox": [218.28, 84.05, 250.93, 93.93], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 79.25, 334.58, 89.13],
+       "spans": [
+        {"text": "MIDI Note ", "bbox": [291.06, 79.25, 334.58, 89.13], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 88.85, 326.55, 98.73],
+       "spans": [
+        {"text": "Number ", "bbox": [291.06, 88.85, 326.55, 98.73], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 103.24, 299.95, 111.93],
+     "lines": [
+      {
+       "bbox": [31.5, 103.24, 49.02, 111.93],
+       "spans": [
+        {"text": "Kick ", "bbox": [31.5, 103.24, 49.02, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 103.24, 115.15, 111.93],
+       "spans": [
+        {"text": "36 ", "bbox": [104.22, 103.24, 115.15, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 103.59, 184.24, 111.78],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 103.59, 184.24, 111.78], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 103.24, 236.65, 111.93],
+       "spans": [
+        {"text": "Ride ", "bbox": [218.28, 103.24, 236.65, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 103.24, 299.95, 111.93],
+       "spans": [
+        {"text": "51 ", "bbox": [291.06, 103.24, 299.95, 111.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 116.44, 302.41, 125.13],
+     "lines": [
+      {
+       "bbox": [31.5, 116.44, 54.1, 125.13],
+       "spans": [
+        {"text": "Snare ", "bbox": [31.5, 116.44, 54.1, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 116.44, 115.02, 125.13],
+       "spans": [
+        {"text": "38 ", "bbox": [104.22, 116.44, 115.02, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 116.79, 184.23, 124.98],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 116.79, 184.23, 124.98], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 116.44, 245.81, 125.13],
+       "spans": [
+        {"text": "Crash 1 ", "bbox": [218.28, 116.44, 245.81, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 116.44, 302.41, 125.13],
+       "spans": [
+        {"text": "49 ", "bbox": [291.06, 116.44, 302.41, 125.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 129.64, 301.62, 138.33],
+     "lines": [
+      {
+       "bbox": [31.5, 129.64, 70.32, 138.33],
+       "spans": [
+        {"text": "Snare Rim ", "bbox": [31.5, 129.64, 70.32, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 129.64, 116.05, 138.33],
+       "spans": [
+        {"text": "40 ", "bbox": [104.22, 129.64, 116.05, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 130.0, 184.24, 138.19],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 130.0, 184.24, 138.19], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 129.64, 247.51, 138.33],
+       "spans": [
+        {"text": "Crash 2 ", "bbox": [218.28, 129.64, 247.51, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 129.64, 301.62, 138.33],
+       "spans": [
+        {"text": "57 ", "bbox": [291.06, 129.64, 301.62, 138.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 142.84, 302.41, 151.53],
+     "lines": [
+      {
+       "bbox": [31.5, 142.84, 54.62, 151.53],
+       "spans": [
+        {"text": "Tom 1 ", "bbox": [31.5, 142.84, 54.62, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 142.84, 115.45, 151.53],
+       "spans": [
+        {"text": "48 ", "bbox": [104.22, 142.84, 115.45, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.29, 143.19, 184.24, 151.38],
+       "spans": [
+        {"text": " ", "bbox": [182.29, 143.19, 184.24, 151.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 142.84, 265.27, 151.53],
+       "spans": [
+        {"text": "Hi-Hat Open ", "bbox": [218.28, 142.84, 265.27, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 142.84, 302.41, 151.53],
+       "spans": [
+        {"text": "46 ", "bbox": [291.06, 142.84, 302.41, 151.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 156.04, 301.63, 164.73],
+     "lines": [
+      {
+       "bbox": [31.5, 156.04, 70.86, 164.73],
+       "spans": [
+        {"text": "Tom 1 Rim ", "bbox": [31.5, 156.04, 70.86, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 156.04, 115.63, 164.73],
+       "spans": [
+        {"text": "50 ", "bbox": [104.22, 156.04, 115.63, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 156.4, 184.23, 164.58],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 156.4, 184.23, 164.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 156.04, 282.57, 164.73],
+       "spans": [
+        {"text": "Hi-Hat Half-Open ", "bbox": [218.28, 156.04, 282.57, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 156.04, 301.63, 164.73],
+       "spans": [
+        {"text": "23 ", "bbox": [291.06, 156.04, 301.63, 164.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 169.24, 302.05, 177.93],
+     "lines": [
+      {
+       "bbox": [31.5, 169.24, 56.3, 177.93],
+       "spans": [
+        {"text": "Tom 2 ", "bbox": [31.5, 169.24, 56.3, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 169.24, 115.32, 177.93],
+       "spans": [
+        {"text": "45 ", "bbox": [104.22, 169.24, 115.32, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 169.6, 184.23, 177.79],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 169.6, 184.23, 177.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 169.24, 270.27, 177.93],
+       "spans": [
+        {"text": "Hi-Hat Closed ", "bbox": [218.28, 169.24, 270.27, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 169.24, 302.05, 177.93],
+       "spans": [
+        {"text": "42 ", "bbox": [291.06, 169.24, 302.05, 177.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 182.44, 302.59, 191.13],
+     "lines": [
+      {
+       "bbox": [31.5, 182.44, 72.53, 191.13],
+       "spans": [
+        {"text": "Tom 2 Rim ", "bbox": [31.5, 182.44, 72.53, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 182.44, 115.21, 191.13],
+       "spans": [
+        {"text": "47 ", "bbox": [104.22, 182.44, 115.21, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 182.79, 184.23, 190.98],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 182.79, 184.23, 190.98], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 182.44, 265.73, 191.13],
+       "spans": [
+        {"text": "Hi-Hat Pedal ", "bbox": [218.28, 182.44, 265.73, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 182.44, 302.59, 191.13],
+       "spans": [
+        {"text": "44 ", "bbox": [291.06, 182.44, 302.59, 191.13], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 195.64, 299.88, 204.33],
+     "lines": [
+      {
+       "bbox": [31.5, 195.64, 56.42, 204.33],
+       "spans": [
+        {"text": "Tom 3 ", "bbox": [31.5, 195.64, 56.42, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 195.64, 115.33, 204.33],
+       "spans": [
+        {"text": "43 ", "bbox": [104.22, 195.64, 115.33, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 195.99, 184.23, 204.18],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 195.99, 184.23, 204.18], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.28, 195.64, 257.22, 204.33],
+       "spans": [
+        {"text": "HH Splash ", "bbox": [218.28, 195.64, 257.22, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 195.64, 299.88, 204.33],
+       "spans": [
+        {"text": "21 ", "bbox": [291.06, 195.64, 299.88, 204.33], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 208.84, 293.01, 217.53],
+     "lines": [
+      {
+       "bbox": [31.5, 208.84, 72.61, 217.53],
+       "spans": [
+        {"text": "Tom 3 Rim ", "bbox": [31.5, 208.84, 72.61, 217.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 208.84, 115.02, 217.53],
+       "spans": [
+        {"text": "58 ", "bbox": [104.22, 208.84, 115.02, 217.53], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.05, 209.19, 293.01, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [291.05, 209.19, 293.01, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 209.19, 220.22, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 209.19, 220.22, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.27, 209.19, 184.22, 217.38],
+       "spans": [
+        {"text": " ", "bbox": [182.27, 209.19, 184.22, 217.38], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [31.5, 222.04, 293.01, 230.73],
+     "lines": [
+      {
+       "bbox": [31.5, 222.04, 56.84, 230.73],
+       "spans": [
+        {"text": "Tom 4 ", "bbox": [31.5, 222.04, 56.84, 230.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 222.04, 113.53, 230.73],
+       "spans": [
+        {"text": "41 ", "bbox": [104.22, 222.04, 113.53, 230.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 222.4, 293.01, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [291.06, 222.4, 293.01, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 222.4, 220.22, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 222.4, 220.22, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.27, 222.4, 184.23, 230.58],
+       "spans": [
+        {"text": " ", "bbox": [182.27, 222.4, 184.23, 230.58], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 235.24, 293.01, 255.87],
+     "lines": [
+      {
+       "bbox": [31.5, 235.24, 73.03, 243.93],
+       "spans": [
+        {"text": "Tom 4 Rim ", "bbox": [31.5, 235.24, 73.03, 243.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [104.22, 235.24, 115.15, 243.93],
+       "spans": [
+        {"text": "39 ", "bbox": [104.22, 235.24, 115.15, 243.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [291.06, 235.6, 293.01, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [291.06, 235.6, 293.01, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [218.27, 235.6, 220.23, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [218.27, 235.6, 220.23, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [182.28, 235.6, 184.23, 243.79],
+       "spans": [
+        {"text": " ", "bbox": [182.28, 235.6, 184.23, 243.79], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 246.56, 31.02, 255.87],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 246.56, 31.02, 255.87], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "number": 26,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [361.8, 39.5, 364.02, 48.81],
+     "lines": [
+      {
+       "bbox": [361.8, 39.5, 364.02, 48.81],
+       "spans": [
+        {"text": " ", "bbox": [361.8, 39.5, 364.02, 48.81], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 562.01, 30.47, 569.0],
+     "lines": [
+      {
+       "bbox": [28.8, 562.01, 30.47, 569.0],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 562.01, 30.47, 569.0], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [33.3, 569.03, 41.63, 576.02],
+     "lines": [
+      {
+       "bbox": [33.3, 569.03, 41.63, 576.02],
+       "spans": [
+        {"text": "26 ", "bbox": [33.3, 569.03, 41.63, 576.02], "font": "HelveticaNeue-Roman", "size": 6.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 47.12, 79.03, 78.03],
+     "lines": [
+      {
+       "bbox": [28.8, 47.12, 31.02, 56.43],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 47.12, 31.02, 56.43], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 56.04, 79.03, 68.44],
+       "spans": [
+        {"text": "(5.3) Kits ", "bbox": [28.8, 56.04, 79.03, 68.44], "font": "Gotham-Book", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 68.15, 31.19, 78.03],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 68.15, 31.19, 78.03], "font": "Gotham-Book", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 380.14, 31.34, 559.97],
+     "lines": [
+      {
+       "bbox": [28.8, 380.14, 31.34, 394.56],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 380.14, 31.34, 394.56], "font": "TimesNewRoman", "size": 12.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 393.98, 30.49, 403.58],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 393.98, 30.49, 403.58], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 403.16, 30.49, 412.75],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 403.16, 30.49, 412.75], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 412.4, 30.49, 421.99],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 412.4, 30.49, 421.99], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 421.58, 30.49, 431.17],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 421.58, 30.49, 431.17], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 430.76, 30.49, 440.35],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 430.76, 30.49, 440.35], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 440.0, 30.49, 449.59],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 440.0, 30.49, 449.59], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 449.17, 30.49, 458.76],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 449.17, 30.49, 458.76], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 458.35, 30.49, 467.94],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 458.35, 30.49, 467.94], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 467.59, 30.49, 477.18],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 467.59, 30.49, 477.18], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 476.77, 30.49, 486.36],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 476.77, 30.49, 486.36], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 485.94, 30.49, 495.54],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 485.94, 30.49, 495.54], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 495.19, 30.49, 504.78],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 495.19, 30.49, 504.78], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 504.36, 30.49, 513.95],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 504.36, 30.49, 513.95], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 513.54, 30.49, 523.13],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 513.54, 30.49, 523.13], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 522.78, 30.49, 532.37],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 522.78, 30.49, 532.37], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 531.96, 30.49, 541.55],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 531.96, 30.49, 541.55], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 541.13, 30.49, 550.73],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 541.13, 30.49, 550.73], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 550.38, 30.49, 559.97],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 550.38, 30.49, 559.97], "font": "TimesNewRoman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 82.78, 255.95, 91.47],
+     "lines": [
+      {
+       "bbox": [34.14, 82.78, 38.76, 91.47],
+       "spans": [
+        {"text": "1 ", "bbox": [34.14, 82.78, 38.76, 91.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 82.78, 111.37, 91.47],
+       "spans": [
+        {"text": "Deep Rock ", "bbox": [71.09, 82.78, 111.37, 91.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 82.78, 207.25, 91.47],
+       "spans": [
+        {"text": "17 ", "bbox": [198.48, 82.78, 207.25, 91.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 82.78, 255.95, 91.47],
+       "spans": [
+        {"text": "Room ", "bbox": [233.1, 82.78, 255.95, 91.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 100.54, 252.79, 109.23],
+     "lines": [
+      {
+       "bbox": [34.14, 100.54, 40.45, 109.23],
+       "spans": [
+        {"text": "2 ", "bbox": [34.14, 100.54, 40.45, 109.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.1, 100.54, 107.29, 109.23],
+       "spans": [
+        {"text": "Tight Pop ", "bbox": [71.1, 100.54, 107.29, 109.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 100.54, 207.49, 109.23],
+       "spans": [
+        {"text": "18 ", "bbox": [198.48, 100.54, 207.49, 109.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 100.54, 252.79, 109.23],
+       "spans": [
+        {"text": "Rock ", "bbox": [233.1, 100.54, 252.79, 109.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 118.24, 268.69, 126.93],
+     "lines": [
+      {
+       "bbox": [34.14, 118.24, 40.56, 126.93],
+       "spans": [
+        {"text": "3 ", "bbox": [34.14, 118.24, 40.56, 126.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 118.24, 117.79, 126.93],
+       "spans": [
+        {"text": "Roomy Rock ", "bbox": [71.09, 118.24, 117.79, 126.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 118.24, 207.61, 126.93],
+       "spans": [
+        {"text": "19 ", "bbox": [198.48, 118.24, 207.61, 126.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 118.24, 268.69, 126.93],
+       "spans": [
+        {"text": "Pop Rock ", "bbox": [233.1, 118.24, 268.69, 126.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 136.0, 250.93, 144.69],
+     "lines": [
+      {
+       "bbox": [34.14, 136.0, 40.94, 144.69],
+       "spans": [
+        {"text": "4 ", "bbox": [34.14, 136.0, 40.94, 144.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.11, 136.0, 105.03, 144.69],
+       "spans": [
+        {"text": "Phat Pop ", "bbox": [71.11, 136.0, 105.03, 144.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 136.0, 209.81, 144.69],
+       "spans": [
+        {"text": "20 ", "bbox": [198.48, 136.0, 209.81, 144.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.14, 136.0, 250.93, 144.69],
+       "spans": [
+        {"text": "Jazz ", "bbox": [233.14, 136.0, 250.93, 144.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 153.76, 273.05, 162.45],
+     "lines": [
+      {
+       "bbox": [34.14, 153.76, 40.51, 162.45],
+       "spans": [
+        {"text": "5 ", "bbox": [34.14, 153.76, 40.51, 162.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.11, 153.76, 111.03, 162.45],
+       "spans": [
+        {"text": "Tight Rock ", "bbox": [71.11, 153.76, 111.03, 162.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 153.76, 207.3, 162.45],
+       "spans": [
+        {"text": "21 ", "bbox": [198.48, 153.76, 207.3, 162.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 153.76, 273.05, 162.45],
+       "spans": [
+        {"text": "Jazz Brush ", "bbox": [233.1, 153.76, 273.05, 162.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 171.52, 263.11, 180.21],
+     "lines": [
+      {
+       "bbox": [34.14, 171.52, 40.75, 180.21],
+       "spans": [
+        {"text": "6 ", "bbox": [34.14, 171.52, 40.75, 180.21], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.1, 171.52, 98.4, 180.21],
+       "spans": [
+        {"text": "Garage ", "bbox": [71.1, 171.52, 98.4, 180.21], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 171.52, 209.0, 180.21],
+       "spans": [
+        {"text": "22 ", "bbox": [198.48, 171.52, 209.0, 180.21], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.11, 171.52, 263.11, 180.21],
+       "spans": [
+        {"text": "Timpani ", "bbox": [233.11, 171.52, 263.11, 180.21], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 189.28, 257.68, 197.97],
+     "lines": [
+      {
+       "bbox": [34.14, 189.28, 40.44, 197.97],
+       "spans": [
+        {"text": "7 ", "bbox": [34.14, 189.28, 40.44, 197.97], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 189.28, 115.51, 197.97],
+       "spans": [
+        {"text": "Studio Rock ", "bbox": [71.09, 189.28, 115.51, 197.97], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 189.28, 209.05, 197.97],
+       "spans": [
+        {"text": "23 ", "bbox": [198.48, 189.28, 209.05, 197.97], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 189.28, 257.68, 197.97],
+       "spans": [
+        {"text": "Songo ", "bbox": [233.1, 189.28, 257.68, 197.97], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 207.04, 254.13, 215.73],
+     "lines": [
+      {
+       "bbox": [34.14, 207.04, 40.63, 215.73],
+       "spans": [
+        {"text": "8 ", "bbox": [34.14, 207.04, 40.63, 215.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.11, 207.04, 111.37, 215.73],
+       "spans": [
+        {"text": "Power Pop ", "bbox": [71.11, 207.04, 111.37, 215.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 207.04, 209.52, 215.73],
+       "spans": [
+        {"text": "24 ", "bbox": [198.48, 207.04, 209.52, 215.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.14, 207.04, 254.13, 215.73],
+       "spans": [
+        {"text": "1971's ", "bbox": [233.14, 207.04, 254.13, 215.73], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 224.74, 252.56, 233.43],
+     "lines": [
+      {
+       "bbox": [34.14, 224.74, 40.78, 233.43],
+       "spans": [
+        {"text": "9 ", "bbox": [34.14, 224.74, 40.78, 233.43], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.13, 224.74, 108.32, 233.43],
+       "spans": [
+        {"text": "Acoustic 1 ", "bbox": [71.13, 224.74, 108.32, 233.43], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 224.74, 209.07, 233.43],
+       "spans": [
+        {"text": "25 ", "bbox": [198.48, 224.74, 209.07, 233.43], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.12, 224.74, 252.56, 233.43],
+       "spans": [
+        {"text": "Latin ", "bbox": [233.12, 224.74, 252.56, 233.43], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 242.5, 254.55, 251.19],
+     "lines": [
+      {
+       "bbox": [34.14, 242.5, 43.74, 251.19],
+       "spans": [
+        {"text": "10 ", "bbox": [34.14, 242.5, 43.74, 251.19], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 242.5, 109.7, 251.19],
+       "spans": [
+        {"text": "Standard 1 ", "bbox": [71.09, 242.5, 109.7, 251.19], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 242.5, 209.29, 251.19],
+       "spans": [
+        {"text": "26 ", "bbox": [198.48, 242.5, 209.29, 251.19], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 242.5, 254.55, 251.19],
+       "spans": [
+        {"text": "Disco ", "bbox": [233.1, 242.5, 254.55, 251.19], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 260.26, 258.87, 268.95],
+     "lines": [
+      {
+       "bbox": [34.14, 260.26, 41.27, 268.95],
+       "spans": [
+        {"text": "11 ", "bbox": [34.14, 260.26, 41.27, 268.95], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 260.26, 111.37, 268.95],
+       "spans": [
+        {"text": "Standard 2 ", "bbox": [71.09, 260.26, 111.37, 268.95], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 260.26, 208.93, 268.95],
+       "spans": [
+        {"text": "27 ", "bbox": [198.48, 260.26, 208.93, 268.95], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 260.26, 258.87, 268.95],
+       "spans": [
+        {"text": "TR606 ", "bbox": [233.1, 260.26, 258.87, 268.95], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 278.02, 249.26, 286.71],
+     "lines": [
+      {
+       "bbox": [34.14, 278.02, 42.96, 286.71],
+       "spans": [
+        {"text": "12 ", "bbox": [34.14, 278.02, 42.96, 286.71], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 278.02, 94.95, 286.71],
+       "spans": [
+        {"text": "Funk 1 ", "bbox": [71.09, 278.02, 94.95, 286.71], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 278.02, 209.16, 286.71],
+       "spans": [
+        {"text": "28 ", "bbox": [198.48, 278.02, 209.16, 286.71], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 278.02, 249.26, 286.71],
+       "spans": [
+        {"text": "909 ", "bbox": [233.1, 278.02, 249.26, 286.71], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 295.78, 263.59, 304.47],
+     "lines": [
+      {
+       "bbox": [34.14, 295.78, 43.02, 304.47],
+       "spans": [
+        {"text": "13 ", "bbox": [34.14, 295.78, 43.02, 304.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 295.78, 96.7, 304.47],
+       "spans": [
+        {"text": "Funk 2 ", "bbox": [71.09, 295.78, 96.7, 304.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 295.78, 209.3, 304.47],
+       "spans": [
+        {"text": "29 ", "bbox": [198.48, 295.78, 209.3, 304.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.12, 295.78, 263.59, 304.47],
+       "spans": [
+        {"text": "Hip Hop ", "bbox": [233.12, 295.78, 263.59, 304.47], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 313.54, 269.01, 322.23],
+     "lines": [
+      {
+       "bbox": [34.14, 313.54, 43.44, 322.23],
+       "spans": [
+        {"text": "14 ", "bbox": [34.14, 313.54, 43.44, 322.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 313.54, 96.23, 322.23],
+       "spans": [
+        {"text": "Fusion ", "bbox": [71.09, 313.54, 96.23, 322.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 313.54, 209.89, 322.23],
+       "spans": [
+        {"text": "30 ", "bbox": [198.48, 313.54, 209.89, 322.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.1, 313.54, 269.01, 322.23],
+       "spans": [
+        {"text": "Electron 1 ", "bbox": [233.1, 313.54, 269.01, 322.23], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 331.24, 270.71, 339.93],
+     "lines": [
+      {
+       "bbox": [34.14, 331.24, 43.02, 339.93],
+       "spans": [
+        {"text": "15 ", "bbox": [34.14, 331.24, 43.02, 339.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 331.24, 97.63, 339.93],
+       "spans": [
+        {"text": "Camco ", "bbox": [71.09, 331.24, 97.63, 339.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 331.24, 207.35, 339.93],
+       "spans": [
+        {"text": "31 ", "bbox": [198.48, 331.24, 207.35, 339.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.08, 331.24, 270.71, 339.93],
+       "spans": [
+        {"text": "Electron 2 ", "bbox": [233.08, 331.24, 270.71, 339.93], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 349.0, 265.61, 357.69],
+     "lines": [
+      {
+       "bbox": [34.14, 349.0, 43.26, 357.69],
+       "spans": [
+        {"text": "16 ", "bbox": [34.14, 349.0, 43.26, 357.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.09, 349.0, 93.22, 357.69],
+       "spans": [
+        {"text": "Brush ", "bbox": [71.09, 349.0, 93.22, 357.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.48, 349.0, 209.03, 357.69],
+       "spans": [
+        {"text": "32 ", "bbox": [198.48, 349.0, 209.03, 357.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [233.08, 349.0, 265.61, 357.69],
+       "spans": [
+        {"text": "Techno 1 ", "bbox": [233.08, 349.0, 265.61, 357.69], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [34.14, 366.76, 104.39, 375.45],
+     "lines": [
+      {
+       "bbox": [34.14, 366.76, 61.0, 375.45],
+       "spans": [
+        {"text": "33 - 48 ", "bbox": [34.14, 366.76, 61.0, 375.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [71.13, 366.76, 104.39, 375.45],
+       "spans": [
+        {"text": "User Kits ", "bbox": [71.13, 366.76, 104.39, 375.45], "font": "Gotham-Book", "size": 7.02, "flags": 4}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

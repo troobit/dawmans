@@ -109,16 +109,18 @@ Measured on the reference machine against the real corpus; 8.1 allows 60 s.
 
 | Stage | Cost | Basis |
 |---|---|---|
-| Extract, 1068 pages | ~1 s | 0.63 s measured for Live 12 via a layout extraction; PyMuPDF's dict mode is the same order |
+| Extract, 1107 pages | ~4 s | **measured 2026-08-15** against the real corpus with `corpus/pdf/extract.py`: 3.99 s, of which Live 12 is 3.45 s. The earlier ~1 s estimate extrapolated from a 0.63 s *layout* extraction; dict mode is roughly five times that, not the same order |
 | Furniture, glyphs, sections, language | ≤6 s | estimate; language detection over the APC guide's blocks dominates |
 | Unit assembly + chunking | ≤2 s | estimate |
 | Embedding ~1000 chunks | ~21 s | 42.4 chunks/s measured, `bge-small-en-v1.5` at 350 words |
 | BM25 index + merge + commit | <1 s | 0.14 s measured for 4000 chunks |
-| **Total** | **~31 s** | plus a one-off 7.2 s model load per process |
+| **Total** | **~34 s** | plus a one-off 7.2 s model load per process |
 
 Embedding is the only stage with a slope: 8.1's 60 s is exhausted by embedding alone at ~2,500
-chunks, about 2.5× the current corpus. 8.2 (<5 s extraction) has roughly five times its measured
-cost as headroom.
+chunks, about 2.5× the current corpus. **8.2 is tighter than it looked**: 3.99 s measured against a
+5 s budget is 25% headroom, not the 5× the estimate implied, and it is a page-count slope — another
+1000-page manual breaks it. If it needs reclaiming, the cost is concentrated in Live 12 and the
+lever is `get_text` mode, not the corpus.
 
 **8.4 is the tightest budget in the spec**, not 8.1: a new ≤50-page source is ~60 chunks ≈ 1.5 s of
 embedding, but the 7.2 s cold model load takes it to 8.7 s of the allowed 10 s before anything else
@@ -345,12 +347,24 @@ configuration.
 
 | Path | Trigger | Reference corpus |
 |---|---|---|
-| **A. Embedded outline** | `doc.get_toc()` returns ≥2 entries | Live 12: 816 entries, 41 chapters |
+| **A. Embedded outline** | `doc.get_toc()` returns ≥2 entries | Live 12: 1054 entries, 41 chapters. Also the APC Key 25 (38) and the Nitro Max (28) |
 | **B. Printed contents page** | a page whose lines are ≥60% dot-leader matches | Nitro Max p2: `(1.3.1) Connection Diagram ...... 5` |
-| **C. Heading styles** | see the quality gate below | APC Key 25, which has neither outline nor contents page |
+| **C. Heading styles** | see the quality gate below | none — see the corpus check below |
 
 Path B's line grammar: `^\(?(?P<num>\d+(?:\.\d+)*)\)?\s*(?P<title>.+?)[\s.]{3,}(?P<page>\d+)$`,
 with the number group optional.
+
+**Corpus check (2026-08-15).** Capturing the fixtures of task 11 read the PDFs rather than
+describing them, and corrected the column above. **Every manual in the corpus carries an embedded
+outline**, so path A fires for all four and paths B and C have no live instance: the earlier claim
+that the APC Key 25 has "neither outline nor contents page" is wrong, and the 816-entry figure for
+Live was an earlier version of the document. **Live's printed contents pages carry no dot leaders**
+either — the page numbers are a separate right-hand column of bare numerals, extracted ahead of the
+titles — so path B's grammar does not match them; the Nitro Max contents page is the one that has
+leaders. Neither path is dropped: they are what the next manual needs, and their fixtures are
+captured with the outline withheld ([Decision 10](decision_log.md)). Two consequences for the
+implementation. Path C must not be assumed to run against this corpus, and the exclusion of printed
+contents pages below cannot rest on the dot-leader test alone.
 
 **Path C's quality gate.** "≥2 spans in a style larger than the modal body style" is met by almost
 any PDF — a cover title alone clears it — and the danger is path C firing *wrongly*: a title plus a
@@ -362,10 +376,13 @@ one titled region under 6.4/6.5 — weak citations, which the requirements antic
 confident wrong ones. Path C regions carry `inferred`, and the report records the heading count and
 the qualifying style.
 
-**Printed contents pages are excluded from chunking.** Path B's dot-leader test is applied to every
+**Printed contents pages are excluded from chunking.** The contents-page test is applied to every
 page of every document, not only when path B is the chosen sectioning path, and a page that passes
-it contributes no text. Live's printed contents is physical pp1–21: 871 of 899 non-blank lines are
-dot-leader entries, 4,343 words, ~12 chunks that between them contain all 816 section titles. Those
+it contributes no text. Dot leaders are one form it takes and not the only one: Live's contents
+pages set the page numbers in a separate right-hand column, so the test that catches them is a page
+whose lines are predominantly either a bare numeral in a narrow right-hand band or a title paired
+with one (corpus check above). Live's printed contents is physical pp2–21, some 12 chunks that
+between them contain every section title in the document. Those
 chunks BM25-match strongly on precisely the verbatim identifier queries this corpus exists to serve,
 citing as "Live 12 — Front matter p13". The pages remain in `page_count` and in the 4.4 audit; only
 their text is dropped.
@@ -948,18 +965,28 @@ snapshots** — span geometry, font names and, where the assertion needs it, tex
 copyrighted documents out of the repository and pins the extractor's output as an explicit input to
 every downstream test.
 
-| Fixture | Asserts |
-|---|---|
-| `nitro_max_p25.spans.json` | all 19 trigger-to-note pairs recoverable with their printed pairings; heading joined from three physical lines; ragged rows placed by x-position (7.1–7.3, 7.6) |
-| `apc_p3_arrows.spans.json` | the `Wingdings3` run at U+00F0/F1/F4/F5 repairs to arrows; a genuine Spanish `ñ` on the same fixture is left alone; a mutated span with no mapping sets `degraded` and yields U+FFFD in `text`, not the raw characters (5.1–5.3) |
-| `apc_pages.spans.json` | English pp. 3–6 and p. 23 selected, pp. 7–22 excluded, with no page range in the code (4.2–4.6). **Text is redacted**: each block carries its bounding box, font and a language label only. Span data for all 24 pages would commit substantially the whole guide, which the gitignore position forbids |
-| `live_toc_slice.json` | a slice of the 816 entries across a chapter boundary anchors to in-body headings, produces `§24.9`-shaped citations, and attributes text to the right section where two sections share a page (6.3, 6.6) |
-| `live_contents_p13.spans.json` | a dot-leader page is detected and contributes no chunks while remaining in the audit (6.5) |
-| `live_procedure_pagebreak.spans.json` | a numbered procedure starting on p11 and ending on p12 stays one chunk with `page_start` 11, `page_end` 12 (6.10, 6.8) |
-| `apc_no_toc.spans.json` | no outline and no contents page ⇒ heading-style path, unnumbered regions, citation rendered without a section number (6.4) |
-| `cover_only.spans.json` | a title plus strapline fails path C's quality gate and yields one titled region, not two spanning ones (6.5) |
-| `furniture_pages.spans.json` | a repeated right-aligned page number is suppressed; a numeric line inside a detected table on one page is not (3.6) |
-| rejection fixtures | image-only PDF, malformed filename, two files colliding on `source_id`, a source over the 2% unmappable threshold |
+Captured by `tools/capture_fixture.py` and recaptured with `make fixtures`; that file's `FIXTURES`
+list is the record of which pages of which guide each one is, and each snapshot carries the same
+note in its own header. The names and page ranges below are what was captured — where they differ
+from what this table first said, the reason is in the fixture's own note.
+
+| Fixture | Source | Asserts |
+|---|---|---|
+| `nitro_max_p25.json` | Nitro Max p25 | all 19 trigger-to-note pairs recoverable with their printed pairings; heading joined from three physical lines; ragged rows placed by x-position (7.1–7.3, 7.6) |
+| `apc_p14_arrows.json` | APC p14 | the `Wingdings3` run at U+00F0/F1/F4/F5 repairs to arrows; the genuine French `ô` set in the body face **on the same page** is left alone; a mutated span with no mapping sets `degraded` and yields U+FFFD in `text`, not the raw characters (5.1–5.3). p3 carries no symbol font and no page holds both the arrows and a real `ñ`; p14 is the stronger case, holding U+00F4 in two fonts at once |
+| `apc_pages.json` | APC pp1–24 | English pp. 3–6 and p. 23 selected, pp. 7–22 excluded, with no page range in the code (4.2–4.6). **Text is redacted**: each block carries its bounding box, font and a language label, and the text is masked to its character classes so the measurements the stage makes survive and no word does ([Decision 11](decision_log.md)) |
+| `live_toc_slice.json` | Live pp470–473, 584–592 | a slice of the outline across a chapter boundary anchors to in-body headings, produces `§24.9`-shaped citations, and attributes text to the right section where two sections share a page (6.3, 6.6); the parent chain keeps §28.21.1 `Sidechain Parameters` — one of eight — under `Glue Compressor` |
+| `live_contents_p13.json` | Live p13 | a printed contents page is detected and contributes no chunks while remaining in the audit (6.5). It has **no dot leaders**: the page numbers are a right-hand column of bare numerals |
+| `live_procedure_pagebreak.json` | Live pp158–159 | a numbered procedure whose steps 1–4 are on p158 and step 5 on p159 stays one chunk with `page_start` 158, `page_end` 159 (6.10, 6.8). The enumerators are set in a left gutter and extract *after* the step text, so only row assembly on geometry puts them back |
+| `apc_no_toc.json` | APC pp3–4, outline withheld | no outline and no contents page ⇒ heading-style path, unnumbered regions, citation rendered without a section number (6.4) |
+| `cover_only.json` | Live p1, outline withheld | a title plus strapline fails path C's quality gate and yields one titled region, not two spanning ones (6.5) |
+| `furniture_pages.json` | Nitro Max pp23–26 | a repeated right-aligned page number is suppressed; a numeric line inside a detected table on one page is not (3.6) |
+| `rejections/image_only.json` | synthetic | no text layer at all ⇒ `no-text-layer` (3.3) |
+| `rejections/unreadable_text.json` | synthetic | unmappable characters over 2% of the extracted text layer ⇒ `unreadable-text` (5.5) |
+| `rejections/filenames.json` | synthetic | malformed names, and two names colliding on `source_id` (2.5, 2.6) |
+
+The three rejection fixtures are synthetic because none of them can be captured: a manual that trips
+them is one no vendor ships.
 
 ### Timing tests
 

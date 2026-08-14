@@ -739,3 +739,136 @@ render something neither has a use for.
 - A hand-written declaration is still required, so the omission this guards against remains possible — the report names it after the fact rather than preventing it.
 - A third report is a third thing to compute and test, for a condition that is legitimate more often than it is a mistake.
 - The run report grows a line most runs will render empty, which is one more thing to read past.
+
+---
+
+## Decision 10: Path B and C fixtures withhold an outline the corpus does have
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Capturing the fixtures of task 11 was the first time the reference PDFs were read rather than
+described, and three of the design's claims about them did not survive it. **All four manuals carry
+an embedded outline**: Live 12 has 1054 entries (the design says 816, from an earlier version), the
+Akai APC Key 25 guide has 38 and the Alesis Nitro Max 28 — so path A fires for every source in the
+corpus and paths B and C have no live instance at all. Live's printed contents pages carry **no dot
+leaders**: the page numbers are a separate right-hand column of bare numerals, extracted ahead of
+the titles, so path B's dot-leader test does not detect them either. Only the Nitro Max contents
+page has leaders.
+
+Paths B and C are not therefore dead code to be deleted. They are what the next manual will need,
+and the design chose them as content-side structure rather than per-manual configuration for
+exactly that reason. But they cannot be tested against a corpus source as it stands, and a stage
+with no test is a stage that will be wrong when it first matters.
+
+### Decision
+
+The path B and C fixtures — `apc_no_toc` and `cover_only` — are captured **with the outline
+withheld** (`--toc none`), so a real page of a real manual stands in for a document that has no
+outline. The capture list records the withholding against each fixture, and `Capture.toc` documents
+why the option exists.
+
+### Rationale
+
+The alternative inputs to those two paths are worse in ways that matter. A synthesised PDF has
+synthetic typography: the heading-style gate measures the ratio of a candidate style's line length
+to the modal line length, how many headings there are and how they are spread, and every one of
+those numbers would be a number the test author chose rather than one a real document produced. The
+APC pages give the gate genuine, awkward input — a nine-point heading over eight-point body, six
+headings on one page and none on the next — and the only thing withheld is a structure the path is
+defined by not having.
+
+Withholding is honest because it is recorded. `toc: none` sits beside the fixture's page range in
+`tools/capture_fixture.py`, and the fixture file itself carries an empty `toc` and a note saying
+what it stands for. Nobody reading the failing test later concludes the APC guide has no outline.
+
+### Alternatives Considered
+
+- **Synthesise PDFs for paths B and C**: Generate documents with no outline, a dot-leader contents page and a heading hierarchy - Rejected because the quality gate's thresholds would then be tested against typography chosen to pass them. It is the same circularity as asserting a regular expression against a string written to match it, and path C's gate is precisely the thing the design calls dangerous.
+- **Obtain a manual that genuinely has neither**: Add a fifth source to the corpus to serve the two paths - Rejected because the corpus is the studio owner's own gear (requirement 11.1's rig is the whole point), and adding a document nobody owns to make a test pass inverts that. It would also arrive with its own drift the moment the vendor reissues it.
+- **Delete paths B and C and keep only the outline path**: Ingest what the corpus has and add the others when a source needs them - Rejected because it fails 6.5 for the first manual that arrives without an outline, and that manual is discovered in production. It would also discard the printed-contents detection that Live needs for a different reason: its contents pages must be excluded from chunking whether or not they are the sectioning source.
+- **Test the paths only through their unit predicates**: Assert the dot-leader grammar and the style gate directly, with no document behind them - Rejected as insufficient rather than wrong. Those tests are worth having and are in task 18, but neither exercises anchoring, region derivation or the interaction with furniture marks, which is where the paths actually break.
+
+### Consequences
+
+**Positive:**
+- Paths B and C get realistic input without inventing a document or acquiring one.
+- The corpus facts are now written down where the next reader of §Section map will meet them, instead of being rediscovered at task 19.
+- Live's contents pages are pinned as a fixture before the detector that has to catch them is written, so the "no dot leaders" case cannot be missed.
+
+**Negative:**
+- Two fixtures assert against a document that does not exist in exactly that form, and the withholding has to stay documented or it reads as a corpus fact.
+- Path B still has no fixture of its own with leaders — the Nitro Max contents page is a candidate for one, and task 18 will need it.
+- The design's §Section map reference-corpus column had to be corrected, and any downstream reasoning that rested on "the APC has no outline" is now suspect.
+
+### Impact
+
+`tools/capture_fixture.py` (the `toc` option and the capture list), `tests/fixtures/apc_no_toc.json`,
+`tests/fixtures/cover_only.json`, and design §Section map. Task 18/19 inherit the correction:
+the sectioning implementation must not assume path C ever runs against this corpus, and the
+printed-contents detector cannot rest on dot leaders alone.
+
+---
+
+## Decision 11: Redaction masks character classes rather than dropping text
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+`manuals/` is gitignored because the vendor PDFs are copyrighted, and the fixtures are the one place
+any of their text enters the repository. The design draws the line at the APC guide: full span text
+for its 24 pages "would commit substantially the whole guide", so `apc_pages` keeps "bounding box,
+font and a language label only".
+
+Taken literally that fixture cannot drive the stage it exists for. English selection scores blocks,
+does not score a block under eight words, and does not score a block whose tokens are predominantly
+non-alphabetic — three measurements over text that a bbox-and-font-only fixture no longer has. The
+fixture would assert the page ranges and nothing about how they were arrived at.
+
+### Decision
+
+Redaction replaces each character with its class — letters become `x` or `X`, digits `0`, and
+punctuation and whitespace are left as they are — and attaches a per-block language label supplied
+by hand at capture time. The test is `str.isalpha()`, not `[a-zA-Z]`, so accented characters are
+masked too.
+
+### Rationale
+
+Every measurement the later stages make is a measurement of shape: word counts, line lengths, the
+ratio of alphabetic to non-alphabetic tokens, the run of dots in a leader, the length of a heading
+against the modal line. All of them survive masking exactly, and none of them needs a word. What
+does not survive is the expression — which is what copyright protects and what the design's rule is
+about.
+
+Masking accented characters as well is not fastidiousness. On a multilingual guide `á`, `ñ` and `ü`
+are precisely the characters that identify the language of the line they sit in, so a
+`[a-zA-Z]`-only mask would leave the guide's Spanish, French, Italian and German pages
+distinguishable from their remains.
+
+The language label has to be ground truth supplied by hand, because a masked fixture cannot exercise
+a language identifier at all. That is a real limit and it is the right one: `lingua-py` is a third-
+party library and its accuracy is not this spec's to test, while the selection machinery around it —
+block granularity, the two inheritance guards, the audit's page ranges — is.
+
+### Alternatives Considered
+
+- **Keep only bbox, font and a label, as the design says**: Drop the text entirely - Rejected because the short-block guard and the language-neutral guard both measure the text, so the fixture could not exercise the two rules that most need exercising. The design's intent — no words of the guide in the repository — is met by masking, and masking meets the stages' needs as well.
+- **Capture the English pages in full and the rest redacted**: Commit pp3-6 and p23 verbatim, mask pp7-22 - Rejected because pp3-6 plus p23 is the entire English content of the guide. "Substantially the whole guide" is exactly what that is, in the one language a reader of this repository would want.
+- **Replace each word with a fixed placeholder**: `word word word` in place of the text - Rejected because it destroys line lengths and the alphabetic-token ratio, which the language-neutral guard and path C's heading test both measure. Character-class masking preserves both at the same cost.
+- **Hash each word**: Substitute a digest so identical words stay identical - Rejected because it preserves the word-frequency structure of the source, which is more of the original than the fixture needs, while also destroying the character shape the stages measure.
+
+### Consequences
+
+**Positive:**
+- The one fixture that must be redacted still drives the stage it was captured for.
+- No word of the APC guide is in the repository, and the accented-character hole is closed rather than left as a `[a-zA-Z]` oversight.
+- The same masking is available to any future fixture that grows too large to commit verbatim.
+
+**Negative:**
+- The language labels are hand-written ground truth, so a mislabelled block is a test asserting the wrong thing with nothing to catch it.
+- The redacted fixture cannot test the language identifier itself, only the selection around it, and that limit has to stay visible or a later reader will over-trust the fixture.
+- A masked fixture is unreadable to a human checking whether it captured the right pages; the `asserts` note and the page range are all there is to go on.
