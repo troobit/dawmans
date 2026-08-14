@@ -12,6 +12,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/state/sources.svelte.ts` — the sources store** (`ui/ask-and-source-picker`
+  Phase 3). Available sources of both kinds plus both gap reports from `GET /sources` — no fixed
+  source count anywhere, an added or removed source reflected on the next load (2.1, 2.3). Carries
+  the owned-but-undocumented report (empty is the live case; the populated path is exercised
+  against a fixture, per CONTRACTS §5), the documented-but-unconfirmed report, assumed
+  `hardware_applicability` with the revision it describes, and `low_text` (2.9, 2.10). A failed
+  `GET /sources` is an `engine-unreachable` state that blocks submission, distinct from
+  `corpus-empty` — the engine answering that nothing is ingested (9.13) — and never renders as an
+  empty picker.
+- **`web/src/lib/state/history.svelte.ts` — the history store** (Phase 3). Persisted exchanges in
+  `localStorage`, read lazily on first access so nothing parses on boot inside 8.7's
+  acknowledgement budget (12.1). An entry stores the question, the envelope, the citation records,
+  the scope at ask time and a timestamp — never passage text; trimmed to the most recent 50 on
+  settle, with a `QuotaExceededError` dropping oldest entries until the write succeeds rather than
+  failing the turn (12.9). Cancelled and failed exchanges are not retained as answers; a partial
+  kept under 9.14 is marked incomplete (12.7).
 - **`web/src/lib/engine/client.ts` — the engine client** (`ui/ask-and-source-picker` Phase 2). The
   nine `api/answer-engine` operations as stateless typed wrappers over relative routes — no host,
   no port, no retries. Non-envelope HTTP failures (422 question-too-long, 403 host/origin) throw a

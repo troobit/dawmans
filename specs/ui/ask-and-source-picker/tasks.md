@@ -114,13 +114,13 @@ references:
   - Stream: 2
   - Requirements: [3.1](requirements.md#3.1), [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [3.6](requirements.md#3.6), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [3.9](requirements.md#3.9), [7.9](requirements.md#7.9)
 
-- [ ] 14. Implement scope.svelte.ts <!-- id:f9ae01d -->
+- [x] 14. Implement scope.svelte.ts <!-- id:f9ae01d -->
   - A class instance, not a bare `$state` export — a reassigned module-level `$state` is not reactive across the module boundary. localStorage `dawmans.scope`, sessionStorage `dawmans.session`.
   - Blocked-by: f9ae01c (Write tests for the scope store, persistence and decay)
   - Stream: 2
   - Requirements: [3.1](requirements.md#3.1), [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [3.6](requirements.md#3.6), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [3.9](requirements.md#3.9), [7.9](requirements.md#7.9)
 
-- [ ] 15. Write tests for the sources store and gap reports <!-- id:f9ae01e -->
+- [x] 15. Write tests for the sources store and gap reports <!-- id:f9ae01e -->
   - Everything comes from GET /sources — `display_name` rendered, no fixed source count anywhere in the code (2.1); an added or removed source of either kind is reflected on the next load with no change to the interface (2.3).
   - Newness is `source_id ∉ seen[]`, and `seen[]` updates on the next submit, not on render — a source glimpsed but not acted on stays new (2.4). A new source enters scope only where the stored scope was all available; under a narrowed scope it stays out with a one-activation add, so a fresh ingestion never silently undoes a deliberate narrowing.
   - Both gap reports carried: owned-but-undocumented (2.9) and assumed `hardware_applicability` with the revision it describes (2.10), plus `low_text`. The empty owned-but-undocumented report is the live case (OVERVIEW, Decision 12) — the populated path is exercised against a fixture payload, never hardcoded empty.
@@ -129,13 +129,13 @@ references:
   - Stream: 2
   - Requirements: [2.1](requirements.md#2.1), [2.3](requirements.md#2.3), [2.4](requirements.md#2.4), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [9.13](requirements.md#9.13)
 
-- [ ] 16. Implement sources.svelte.ts <!-- id:f9ae01f -->
+- [x] 16. Implement sources.svelte.ts <!-- id:f9ae01f -->
   - Available sources plus both gap reports as a class-instance store consumed by the picker and the empty-corpus state, carrying the fetch-failed engine-unreachable state distinct from corpus-empty.
   - Blocked-by: f9ae01e (Write tests for the sources store and gap reports)
   - Stream: 2
   - Requirements: [2.1](requirements.md#2.1), [2.3](requirements.md#2.3), [2.4](requirements.md#2.4), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [9.13](requirements.md#9.13)
 
-- [ ] 17. Write tests for the history store <!-- id:f9ae01g -->
+- [x] 17. Write tests for the history store <!-- id:f9ae01g -->
   - localStorage, read lazily when the panel first opens — parsing 50 exchanges on boot would come out of 8.7's acknowledgement budget for nothing on screen at rest (12.1).
   - An entry stores the question, the envelope, the citation records, the scope at ask time and a timestamp — never passage text, which is refetched on demand; trimmed to the most recent 50 on `settled`; a QuotaExceededError drops oldest entries until the write succeeds rather than failing the turn (12.9).
   - Cancelled and failed exchanges are not retained as answers; a partial retained under 9.14 is marked incomplete (12.7).
@@ -143,7 +143,7 @@ references:
   - Stream: 2
   - Requirements: [12.1](requirements.md#12.1), [12.7](requirements.md#12.7), [12.9](requirements.md#12.9)
 
-- [ ] 18. Implement history.svelte.ts <!-- id:f9ae01h -->
+- [x] 18. Implement history.svelte.ts <!-- id:f9ae01h -->
   - The persisted exchange store; write on settle, lazy read, quota fallback.
   - Blocked-by: f9ae01g (Write tests for the history store)
   - Stream: 2

@@ -63,6 +63,31 @@ per-kind "not applicable" fields are structurally absent rather than optional-ev
   `#`-private members. State is `$state.raw` replaced-by-append everywhere (Map included — the
   svelte-autofixer suggests SvelteMap; not taken, reassignment is the design's reactivity model).
 
+## State stores (`src/lib/state/`)
+
+Every store is a **class instance with `$state` fields** exporting a singleton (a reassigned
+module-level `$state` is not reactive across the module boundary). Persistence keys:
+`dawmans.scope`, `dawmans.session` (marker only), `dawmans.history`.
+
+- `scope.svelte.ts` — selection, persistence, decay (§3, Decision 4). The stored record carries a
+  `known[]` field (the available-source list at last persist) **in addition to** `seen[]`: the 2.4
+  admission rule ("a new source joins only where the stored scope was all available") cannot read
+  `seen[]`, because `seen` updates only on submit — a narrowing made before any question would read
+  as "everything new" and be silently widened on reload, breaching 3.5. Session boundary is
+  `sessionStorage` **presence**, not a clock; the 8-hour clause reads `lastQuestionAt`.
+- `sources.svelte.ts` — `GET /sources` plus both gap reports. Four states: `loading` / `ready` /
+  `engine-unreachable` (fetch failed or non-OK — never rendered as an empty picker) /
+  `corpus-empty` (the engine answering that nothing is ingested, 9.13). `blocksSubmission` is
+  `state !== 'ready'`. The store does **not** call `scope.load()` — the page wires
+  `scope.load(sources.ids)` after a successful load (kept separate so each store tests alone).
+- `history.svelte.ts` — persisted exchanges, newest first, trimmed to 50 on `record()`. Lazy-read
+  gotcha: the `entries` getter must not assign a `$state` field (a first read from a template would
+  throw `state_unsafe_mutation`), so the cache is a **plain field** and a `$state` version counter —
+  bumped only in `record()`, which runs in stream handlers — provides the reactivity. Quota
+  fallback drops the oldest entry and retries until the write succeeds or the list is empty; it
+  never throws. Retention: user-cancelled, engine-`cancelled` and error/broken/empty-scope turns
+  are skipped; a `failed`/`incomplete` turn is retained with `incomplete: true` (9.14, 12.7).
+
 ## Testing stack
 
 vitest (jsdom) + @testing-library/svelte for units/components; @playwright/test + axe-core
