@@ -7,9 +7,9 @@
 	painted at its stable integer, so late arrival moves nothing (4.2).
 -->
 <script lang="ts">
-	import type { Citation } from '../engine/records';
 	import type { Turn } from '../engine/turn.svelte';
 	import { passages as defaultPassages, type PassageStore } from '../state/passages.svelte';
+	import { numberedCitations } from './citation-order';
 	import CitationEntry from './CitationEntry.svelte';
 
 	let {
@@ -17,23 +17,7 @@
 		passages = defaultPassages
 	}: { turn: Turn; passages?: PassageStore } = $props();
 
-	type Entry = { number: number; citation: Citation };
-
-	const entries: Entry[] = $derived.by(() => {
-		const list: Entry[] = [];
-		turn.markers.forEach((passageId, index) => {
-			const citation = turn.citations.get(passageId);
-			if (citation !== undefined) list.push({ number: index + 1, citation });
-		});
-		let next = turn.markers.length;
-		for (const [passageId, citation] of turn.citations) {
-			if (!turn.markers.includes(passageId)) {
-				next += 1;
-				list.push({ number: next, citation });
-			}
-		}
-		return list;
-	});
+	const entries = $derived(numberedCitations(turn));
 </script>
 
 {#if entries.length > 0 || turn.uncited || turn.envelope.ungrounded === true}

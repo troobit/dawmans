@@ -9,14 +9,25 @@
 <script lang="ts">
 	import type { Block, InlineSpan } from '../engine/blocks';
 	import type { Turn } from '../engine/turn.svelte';
+	import type { KeyRouter } from '../keys';
 	import { scope as defaultScope, type ScopeStore } from '../state/scope.svelte';
 	import { thread as defaultThread, type ThreadStore } from '../state/thread.svelte';
 	import AnswerView from './AnswerView.svelte';
+	import CoverageFailureView, { type SourcesLike } from './CoverageFailureView.svelte';
+	import NarrowingView from './NarrowingView.svelte';
+	import RankedCausesView from './RankedCausesView.svelte';
 
 	let {
 		thread = defaultThread,
-		scope = defaultScope
-	}: { thread?: ThreadStore; scope?: ScopeStore } = $props();
+		scope = defaultScope,
+		router = undefined,
+		sources = undefined
+	}: {
+		thread?: ThreadStore;
+		scope?: ScopeStore;
+		router?: KeyRouter;
+		sources?: SourcesLike;
+	} = $props();
 
 	/** Working / finished / broken as text — one of 8.4's two channels. */
 	function stateLabel(turn: Turn): string {
@@ -67,6 +78,12 @@
 			</header>
 			{#if turn.renderer === 'answer' || turn.renderer === null}
 				<AnswerView {turn} {thread} {scope} />
+			{:else if turn.renderer === 'narrowing'}
+				<NarrowingView {turn} {thread} {router} />
+			{:else if turn.renderer === 'ranked-causes'}
+				<RankedCausesView {turn} />
+			{:else if turn.renderer === 'coverage-failure'}
+				<CoverageFailureView {turn} {thread} {scope} {sources} />
 			{:else}
 				{#if turn.envelope.direct_answer !== undefined}
 					<p class="direct">{turn.envelope.direct_answer}</p>

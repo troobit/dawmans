@@ -193,7 +193,8 @@ describe('stopping and completion', () => {
 		channel.emit('done', {});
 		channel.close();
 		await vi.waitFor(() => expect(turn.state).toBe('settled'));
-		expect(harness.record).toHaveBeenCalledWith(turn);
+		// 6.7: recorded with the thread it belongs to — the minted conversation id.
+		expect(harness.record).toHaveBeenCalledWith(turn, expect.any(String));
 		expect(onSettled).toHaveBeenCalledOnce();
 		// 1.6: the answer just rendered is not discarded.
 		expect(harness.thread.turns).toHaveLength(1);

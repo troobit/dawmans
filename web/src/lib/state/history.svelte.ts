@@ -24,6 +24,12 @@ export type HistoryEntry = {
 	citations: Citation[];
 	scopeAtAsk: string[];
 	askedAt: number;
+	/**
+	 * 6.7: the thread the exchange belongs to (the client-minted conversation
+	 * id, Decision 8) — what lets a narrowing exchange be retained as part of
+	 * its thread rather than as a standalone unanswered question.
+	 */
+	thread?: string;
 	/** 12.7: a partial retained under 9.14, never presented as a finished answer. */
 	incomplete?: boolean;
 };
@@ -47,7 +53,7 @@ export class HistoryStore {
 	 * retained as answers; a partial retained under 9.14 is marked incomplete
 	 * (12.7). Never throws — a full store must not fail the turn.
 	 */
-	record(turn: Turn): void {
+	record(turn: Turn, thread?: string | null): void {
 		if (turn.userCancelled) return;
 		if (turn.envelope.outcome === 'cancelled') return;
 		if (turn.renderer === 'error' || turn.renderer === 'broken' || turn.renderer === 'empty-scope')
@@ -60,6 +66,7 @@ export class HistoryStore {
 			citations: [...turn.citations.values()],
 			scopeAtAsk: [...turn.scopeAtAsk],
 			askedAt: Date.now(),
+			...(thread != null ? { thread } : {}),
 			...(turn.incomplete ? { incomplete: true } : {})
 		};
 		this.#cache = [entry, ...this.entries].slice(0, RETENTION);

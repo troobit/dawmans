@@ -167,7 +167,9 @@ export class ThreadStore {
 			}
 		}
 		if (this.#controller === controller) this.#controller = null;
-		this.#history?.record(turn);
+		// 6.7: retained with its thread — a narrowing exchange is never a
+		// standalone unanswered question.
+		this.#history?.record(turn, this.#conversationId);
 		if (turn.state === 'settled' && turn.envelope.outcome !== 'cancelled') {
 			this.onSettled?.();
 		}

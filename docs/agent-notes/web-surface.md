@@ -87,6 +87,9 @@ module-level `$state` is not reactive across the module boundary). Persistence k
   fallback drops the oldest entry and retries until the write succeeds or the list is empty; it
   never throws. Retention: user-cancelled, engine-`cancelled` and error/broken/empty-scope turns
   are skipped; a `failed`/`incomplete` turn is retained with `incomplete: true` (9.14, 12.7).
+  `record(turn, thread?)` also stores the client-minted conversation id as `entry.thread` (6.7) —
+  the Phase 8 history panel groups on it so a narrowing exchange is never a standalone unanswered
+  question.
 
 - `thread.svelte.ts` — the conversation on screen. `draft` (the composed question) lives here, not
   in the input component, so the router's manual insert, ThreadView's re-edit and stop's
@@ -120,8 +123,35 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   store state (not submit attempts). Stop restores the question into the draft.
 - `ThreadView.svelte` — the thread shell. The question is a button that re-edits (sets
   `thread.draft`); state line is text (`working…`/`stopped`/`abandoned`/`incomplete`/`broken`/
-  `finished`). Renderer `'answer'` (and `null`, pre-outcome) goes to `AnswerView`; every other
-  renderer family keeps a plain-text placeholder until Phases 6–7.
+  `finished`). Renderer `'answer'` (and `null`, pre-outcome) goes to `AnswerView`; `'narrowing'`,
+  `'ranked-causes'` and `'coverage-failure'` go to their Phase 6 components below (ThreadView
+  passes optional `router` and `sources` props down for them); error/broken/empty-scope/cancelled
+  keep the plain-text placeholder until Phase 7.
+- `NarrowingView.svelte` — the §6 narrowing renderer. Candidates are numbered buttons in engine
+  order; the digits arm through `router.arm()` **only while the turn is the thread's last settled
+  turn** (`thread.awaitingNarrowing && turns.at(-1) === turn`) — the counterpart to AskSurface's
+  `!awaitingNarrowing` gate, which is what keeps the router's one-armed-set invariant from
+  throwing. Selection is just `thread.submit(candidate)` — a follow-up in the same conversation
+  against the unchanged scope; the free-text-reply path (6.5) is the router's printable capture,
+  nothing here. The question paints from the `narrowing` event, never gated on `done` (6.8).
+- `RankedCausesView.svelte` — the `ranked-causes` renderer. Causes are plain list items (no
+  buttons, no `<kbd>` — the affordance split from narrowing is deliberate and tested); each shows
+  rank, statement, `Check:` line, and marker superscripts for `cites[]`/`fix_cites[]`; empty
+  `fix_cites[]` renders the "no manual behind this" mark (5.16). `direct_answer` (the rank-1
+  check) paints first; the shared CitationList renders below.
+- `citation-order.ts` — `numberedCitations(turn)`: markers in first-appearance order, then
+  citations never referenced by a prose marker numbered on. Extracted from CitationList so
+  RankedCausesView's per-cause markers and the list entries can never disagree on a number.
+- `CoverageFailureView.svelte` — one renderer for `refused-not-covered` / `out-of-domain` /
+  `no-manual-for-device` with the §7 action table: add-suggested-and-re-ask (7.4, via
+  `scope.toggle` + `thread.submit(turn.question)`), widen-all-and-re-ask only on
+  `refused-not-covered` with no suggestion and out-of-scope sources (7.5; `scope.selectAll()`, so
+  it persists and decays like any scope change, 7.9), the copyable `required_manual` filename with
+  `placeholders[]` named from the array (7.7 — never split from the filename; absent ⇒ the
+  `manuals/` naming convention and the device, nothing synthesised), and an always-present "Edit
+  the question" fall-through so no state dead-ends (7.8, 9.2). Takes a `SourcesLike`
+  (`Pick<SourcesStore, 'ids' | 'displayName'>`) so tests inject a plain object; `allInScope` and
+  7.3's names are measured against `turn.scopeAtAsk`, not the scope now.
 - `AnswerView.svelte` — the §4 answer renderer: `scope_dropped` notice, `direct_answer` first,
   blocks in arrival order (`.heading/.step/.bullet/.paragraph/.caveat/.conflict>.reading`,
   backtick spans as `<kbd>`, markers as `<sup class="marker">`), then `.uncovered` with a

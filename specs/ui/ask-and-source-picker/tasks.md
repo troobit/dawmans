@@ -231,7 +231,7 @@ references:
 
 ## Phase 6: Narrowing, ranked causes and coverage failure
 
-- [ ] 29. Write tests for the narrowing renderer <!-- id:f9ae01s -->
+- [x] 29. Write tests for the narrowing renderer <!-- id:f9ae01s -->
   - `needs-narrowing` renders the question and candidates visually distinct from an answer, a coverage failure and an error (6.1); the 2–4 candidates are separately activatable controls numbered in engine order — never reordered, merged or added to (6.2); digits 1–4 select via the arming registry, as do navigation and pointer, with armed keys indicated (6.3).
   - Selection submits a follow-up turn in the current thread against unchanged scope, keeping the question and chosen candidate visible (6.4); typing any printable other than an armed digit begins a free-text reply without dismissing the list — this falls out of the keyboard router at no extra cost (6.5).
   - The exchange is retained in history as part of its thread, never as a standalone unanswered question (6.7); the narrowing question paints from its first token and is not held back until candidates complete (6.8 — the latency figure itself is the engine's, measured in the iterative loop).
@@ -239,13 +239,13 @@ references:
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.7](requirements.md#6.7), [6.8](requirements.md#6.8)
 
-- [ ] 30. Implement the narrowing renderer <!-- id:f9ae01t -->
+- [x] 30. Implement the narrowing renderer <!-- id:f9ae01t -->
   - The candidate list wired to the arming registry and the follow-up submit path.
   - Blocked-by: f9ae01s (Write tests for the narrowing renderer)
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.7](requirements.md#6.7), [6.8](requirements.md#6.8)
 
-- [ ] 31. Write tests for the ranked-causes renderer <!-- id:f9ae01u -->
+- [x] 31. Write tests for the ranked-causes renderer <!-- id:f9ae01u -->
   - `causes[]` renders in array order with each `rank` shown; causes are findings to read, never the digit-armed controls of 6.2/6.3 — the affordance split is the only thing keeping the two candidate-bearing shapes apart, and its failure mode is a ranked list that invites answering a question the engine stopped asking (6.6).
   - `causes[0]` is never promoted to an answer; the rank-1 cause's `check` arrives as `direct_answer` and paints first, which is what keeps 4.10 and 11.7 reachable on this outcome.
   - `cites[]` and `fix_cites[]` resolve through the turn's citation map by `passage_id` — no second citation channel; a cause with empty `fix_cites[]` carries the `unbacked` mark rather than simply appearing without a fix (5.16); the fix citation renders as an ordinary citation, distinct from the authored cause it belongs to.
@@ -253,13 +253,13 @@ references:
   - Stream: 1
   - Requirements: [5.16](requirements.md#5.16), [6.6](requirements.md#6.6)
 
-- [ ] 32. Implement the ranked-causes renderer <!-- id:f9ae01v -->
+- [x] 32. Implement the ranked-causes renderer <!-- id:f9ae01v -->
   - The `ranked-causes` renderer over `causes[]` and the shared citation entries.
   - Blocked-by: f9ae01u (Write tests for the ranked-causes renderer)
   - Stream: 1
   - Requirements: [5.16](requirements.md#5.16), [6.6](requirements.md#6.6)
 
-- [ ] 33. Write tests for the coverage-failure states <!-- id:f9ae01w -->
+- [x] 33. Write tests for the coverage-failure states <!-- id:f9ae01w -->
   - `refused-not-covered` states plainly that the in-scope sources do not cover the question, with no synthesised answer beside it (7.1); the state is visually distinct from error, narrowing and answer (7.2) and names the sources in scope at ask time (7.3).
   - `suggested_sources[]` offers add-to-scope-and-re-ask in one activation from addressable values (7.4); with no suggestion and out-of-scope sources existing, widen-all-and-re-ask is offered — except on `out-of-domain` and `no-manual-for-device`, where it is suppressed rather than costing a wasted turn (7.5); `out-of-domain` states technique-not-control wording with suggestions and widen suppressed and the question re-editable (7.6).
   - `no-manual-for-device` names `required_device` and that ingestion must re-run; where `required_manual` arrives, its `filename` is copyable in one activation and `placeholders[]` names the fields the user fills — never derived by splitting the filename, and never synthesised where the field is absent, where the convention and device are named instead (7.7). The field is dormant today (CONTRACTS §4e) and is exercised against fixture payloads, never hardcoded absent.
@@ -268,7 +268,7 @@ references:
   - Stream: 1
   - Requirements: [3.10](requirements.md#3.10), [7.1](requirements.md#7.1), [7.2](requirements.md#7.2), [7.3](requirements.md#7.3), [7.4](requirements.md#7.4), [7.5](requirements.md#7.5), [7.6](requirements.md#7.6), [7.7](requirements.md#7.7), [7.8](requirements.md#7.8), [7.9](requirements.md#7.9), [7.10](requirements.md#7.10)
 
-- [ ] 34. Implement the coverage-failure renderer <!-- id:f9ae01x -->
+- [x] 34. Implement the coverage-failure renderer <!-- id:f9ae01x -->
   - One renderer with the per-outcome action table of the design: add-and-re-ask, widen-all, suppressed variants, the copyable filename.
   - Blocked-by: f9ae01w (Write tests for the coverage-failure states)
   - Stream: 1

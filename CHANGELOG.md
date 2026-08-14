@@ -12,6 +12,49 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/components/NarrowingView.svelte` — the narrowing renderer**
+  (`ui/ask-and-source-picker` Phase 6). `needs-narrowing` renders the question and its 2–4
+  candidates visually distinct from an answer, a coverage failure and an error (6.1), each a
+  separately activatable control numbered in the engine's order — never reordered, merged or
+  added to (6.2). The digits arm through the keyboard router's registry while the list is the
+  thread's last settled turn, with the armed keys indicated on screen (6.3, 1.11); selection
+  submits a follow-up turn in the current thread against the unchanged scope, keeping the
+  question and the chosen candidate visible (6.4); typing any other printable begins a free-text
+  reply through the router's capture without dismissing the list (6.5); the question paints from
+  its first event, never held back until the turn settles (6.8).
+- **`web/src/lib/components/RankedCausesView.svelte` — the ranked-causes renderer** (Phase 6).
+  `causes[]` renders in array order with each `rank` shown, as findings to read — never the
+  digit-armed controls of a narrowing question, the affordance split that keeps the two
+  candidate-bearing shapes apart (6.6). The rank-1 cause's `check` arrives as `direct_answer` and
+  paints first, so the first cause is never promoted to an answer; `cites[]` and `fix_cites[]`
+  resolve through the turn's one citation map by `passage_id` via the new shared
+  `citation-order.ts` numbering (also adopted by `CitationList`), and a cause with an empty
+  `fix_cites[]` carries the `unbacked` mark rather than simply appearing without a fix (5.16).
+- **`web/src/lib/components/CoverageFailureView.svelte` — the coverage-failure renderer**
+  (Phase 6). One renderer for `refused-not-covered`, `out-of-domain` and `no-manual-for-device`
+  with the per-outcome action table: plain not-covered wording with no synthesised answer (7.1)
+  naming the sources in scope at ask time (7.3); add-the-suggested-sources-and-re-ask in one
+  activation from addressable values (7.4); widen-all-and-re-ask where nothing is suggested and
+  out-of-scope sources exist, suppressed on the two outcomes the engine has already judged
+  uncoverable (7.5); technique wording with the question re-editable on `out-of-domain` (7.6);
+  the `required_device` with the copyable `required_manual` filename and its `placeholders[]`
+  named from the field — never split out of the filename, and the `manuals/` naming convention
+  stated where the dormant field is absent (7.7). Under a narrowing the gap is attributed to the
+  narrowing in force (3.10); a widen persists and decays like any scope change (7.9); with all
+  sources already in scope the state says so and falls through to the filename action or
+  re-editing, never dead-ending (7.8, 9.2).
+- **History entries carry their thread** (Phase 6). `HistoryStore.record` now stores the
+  client-minted conversation id as `entry.thread`, so a narrowing exchange is retained as part of
+  the thread it belongs to and never as a standalone unanswered question (6.7).
+
+### Changed
+
+- `ThreadView` routes the `narrowing`, `ranked-causes` and `coverage-failure` renderer families
+  to the new Phase 6 components, passing the keyboard router and a source-name resolver down;
+  only the Phase 7 error families keep the plain-text placeholder.
+
+### Added
+
 - **`web/src/lib/components/AnswerView.svelte` — the answer renderer** (`ui/ask-and-source-picker`
   Phase 5). The §4 renderer over the reducer's blocks and envelope, presentation only:
   `direct_answer` first (4.3), every CONTRACTS §4d block and inline type visually distinct —

@@ -53,14 +53,15 @@ All four are at **requirements and design complete**. Each design has been revie
 All four now carry a `tasks.md` ledger, so every spec is implementable. Implementation has begun on
 `ui/ask-and-source-picker`: Phase 1 (scaffold, contract types and design tokens), Phase 2 (engine
 client and the turn stream), Phase 3 (scope, sources and history stores), Phase 4 (keyboard
-routing and the ask surface) and Phase 5 (answer rendering and citations) are done.
+routing and the ask surface), Phase 5 (answer rendering and citations) and Phase 6 (narrowing,
+ranked causes and coverage failure) are done.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, none started) | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
-| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, 28 done) | 154 |
+| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, 34 done) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
@@ -106,10 +107,11 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - **Ledger:** 47 tasks over 9 phases, two work streams; Phase 1 (scaffold, contract types and
   design tokens), Phase 2 (engine client, SSE reader, block parser and turn reducer), Phase 3
   (scope, sources and history stores), Phase 4 (keyboard router, thread store, ask input,
-  symptom shortcuts and thread shell) and Phase 5 (answer renderer, citation list, passage
-  expansion and open-at-source) are done — 28 tasks — delivering `web/` with its
-  `src/lib/engine/` layer, the `src/lib/state/` stores, `src/lib/keys.ts` and the
-  `src/lib/components/` for the answer path.
+  symptom shortcuts and thread shell), Phase 5 (answer renderer, citation list, passage
+  expansion and open-at-source) and Phase 6 (narrowing, ranked-causes and coverage-failure
+  renderers) are done — 34 tasks — delivering `web/` with its `src/lib/engine/` layer, the
+  `src/lib/state/` stores, `src/lib/keys.ts` and the `src/lib/components/` for the answer,
+  narrowing, ranked-causes and coverage-failure paths.
 - 13 requirement sections, 154 anchored criteria — **129 behavioural [B]** and **25 target-and-band
   [T]**, the latter run as the iterative loop of [`PROCESS.md`](PROCESS.md) §5.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
@@ -133,7 +135,7 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
 - Twelve cross-cutting ADRs in `DECISIONS.md` and 33 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers, one per spec; `data/manual-corpus` and `api/answer-engine` each carry a
   `prerequisites.md` naming what no task can do for itself.
-- The first five implemented phases: `web/` scaffolded for `ui/ask-and-source-picker`, with the
+- The first six implemented phases: `web/` scaffolded for `ui/ask-and-source-picker`, with the
   contract types of `CONTRACTS.md` §1–§4e in `web/src/lib/engine/records.ts`, the §11 contrast
   floors asserted from design tokens, the whole engine layer — the nine-operation client, the
   SSE turn-stream reader, the append-only §4d block parser and the event → Turn reducer with its
@@ -143,7 +145,10 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   registry, the thread store with client-minted conversation ids, the ask input, the four symptom
   shortcuts and the thread shell — and the answer path: the §4d answer renderer with partial
   answers and per-part re-ask, the citation list carrying every §3 inline obligation, the session
-  passage cache with focus prefetch, and both §3a open-at-source branches, all tested and green.
+  passage cache with focus prefetch, and both §3a open-at-source branches — and the remaining
+  content renderers of §6 and §7: the narrowing question with its router-armed candidates, the
+  ranked-cause list held apart from it by affordance, and the coverage-failure state with its
+  per-outcome action table and copyable `required_manual` filename, all tested and green.
 
 **What is next**
 
@@ -152,7 +157,7 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
 - The **task phase is complete** for all four specs, and implementation is under way: the ui
-  ledger's Phases 1–5 are done, and the other three ledgers are ready to start.
+  ledger's Phases 1–6 are done, and the other three ledgers are ready to start.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes
