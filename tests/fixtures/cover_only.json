@@ -1,0 +1,77 @@
+{
+ "captured_from": "ableton_live-12_reference-manual_v12_en.pdf",
+ "captured_pages": [1],
+ "redacted": false,
+ "asserts": "a title plus a strapline — 'Ableton Live 12 Manual' over 'for Windows and Mac' — fails path C's quality gate and yields one titled region, not two spanning the whole document (6.5)",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 1009,
+ "toc": [],
+ "pages": [
+  {
+   "number": 1,
+   "width": 595.28,
+   "height": 841.89,
+   "images": [[324.53, 673.12, 539.03, 715.87]],
+   "blocks": [
+    {
+     "bbox": [62.25, 115.02, 347.07, 185.61],
+     "lines": [
+      {
+       "bbox": [62.25, 115.02, 347.07, 153.48],
+       "spans": [
+        {"text": "Ableton Live 12 Manual", "bbox": [62.25, 115.02, 347.07, 153.48], "font": "futura-pt-Ultra-Bold-40", "size": 30.0, "flags": 16}
+       ]
+      },
+      {
+       "bbox": [62.25, 154.89, 274.12, 185.61],
+       "spans": [
+        {"text": "for Windows and Mac", "bbox": [62.25, 154.89, 274.12, 185.61], "font": "futura-pt-32", "size": 24.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 215.26, 523.43, 261.39],
+     "lines": [
+      {
+       "bbox": [62.25, 215.26, 523.43, 230.62],
+       "spans": [
+        {"text": "Reference Manual by Michelle Hughes, Sara Riegel, Ania Kuźbik, Chandler Tipton, Timothy Beutler,", "bbox": [62.25, 215.26, 523.43, 230.62], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 230.65, 500.62, 246.01],
+       "spans": [
+        {"text": "Dennis DeSantis, Ian Gallagher, Kevin Haywood, Rose Knudsen, Gerhard Behles, Jakob Rang,", "bbox": [62.25, 230.65, 500.62, 246.01], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 246.03, 198.43, 261.39],
+       "spans": [
+        {"text": "Robert Henke, Torsten Slama.", "bbox": [62.25, 246.03, 198.43, 261.39], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [289.13, 742.88, 539.06, 773.63],
+     "lines": [
+      {
+       "bbox": [313.58, 742.88, 539.06, 758.24],
+       "spans": [
+        {"text": "Schönhauser Allee 6-7 | 10119 Berlin, Germany", "bbox": [313.58, 742.88, 539.06, 758.24], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [289.13, 758.27, 539.04, 773.63],
+       "spans": [
+        {"text": "Contact Support: ", "bbox": [289.13, 758.27, 371.16, 773.63], "font": "futura-pt-32", "size": 12.0, "flags": 0},
+        {"text": "www.ableton.com/support/contact", "bbox": [371.17, 758.27, 539.04, 773.63], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

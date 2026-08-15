@@ -1,0 +1,347 @@
+{
+ "captured_from": "ableton_live-12_reference-manual_v12_en.pdf",
+ "captured_pages": [158, 159],
+ "redacted": false,
+ "asserts": "a numbered procedure whose steps 1-4 are on p158 and step 5 on p159 stays one chunk with page_start 158 and page_end 159 (6.8, 6.10). The design names p11-p12 illustratively; this is the real instance. Note the enumerators are set in a left gutter and extract after the step text, so only row assembly on geometry puts them back",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 1009,
+ "toc": [[2, "5.10 File Management FAQs", 158], [3, "5.10.1 How Do I Create a Project?", 158], [3, "5.10.2 How Can I Save Presets Into My Current Project?", 158], [3, "5.10.3 Can I Work On Multiple Versions of a Set?", 158], [3, "5.10.4 Where Should I Save My Live Sets?", 158], [3, "5.10.5 Can I Use My Own Folder Structure Within a Project Folder?", 158]],
+ "pages": [
+  {
+   "number": 158,
+   "width": 595.28,
+   "height": 841.89,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [62.25, 58.87, 334.65, 89.63],
+     "lines": [
+      {
+       "bbox": [62.25, 58.87, 334.65, 89.63],
+       "spans": [
+        {"text": "5.10 File Management FAQs", "bbox": [62.25, 58.87, 334.65, 89.63], "font": "futura-pt-Ultra-Bold-40", "size": 24.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 122.25, 263.64, 141.48],
+     "lines": [
+      {
+       "bbox": [62.25, 122.25, 263.64, 141.48],
+       "spans": [
+        {"text": "5.10.1 How Do I Create a Project?", "bbox": [62.25, 122.25, 263.64, 141.48], "font": "futura-pt-Ultra-Bold-40", "size": 15.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 156.49, 501.48, 187.24],
+     "lines": [
+      {
+       "bbox": [62.25, 156.49, 501.48, 171.85],
+       "spans": [
+        {"text": "A Project is automatically created whenever you save a Live Set, ", "bbox": [62.25, 156.49, 361.37, 171.85], "font": "futura-pt-32", "size": 12.0, "flags": 0},
+        {"text": "except", "bbox": [361.35, 156.49, 392.44, 171.85], "font": "futura-pt-Italic-16", "size": 12.0, "flags": 2},
+        {"text": " when you save it into a", "bbox": [392.43, 156.49, 501.48, 171.85], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 171.88, 149.23, 187.24],
+       "spans": [
+        {"text": "preexisting Project.", "bbox": [62.25, 171.88, 149.23, 187.24], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 217.25, 392.24, 236.48],
+     "lines": [
+      {
+       "bbox": [62.25, 217.25, 392.24, 236.48],
+       "spans": [
+        {"text": "5.10.2 How Can I Save Presets Into My Current Project?", "bbox": [62.25, 217.25, 392.24, 236.48], "font": "futura-pt-Ultra-Bold-40", "size": 15.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 251.49, 517.93, 297.62],
+     "lines": [
+      {
+       "bbox": [62.25, 251.49, 491.65, 266.85],
+       "spans": [
+        {"text": "You can save presets directly to the current project by dragging from the device’s title bar and", "bbox": [62.25, 251.49, 491.65, 266.85], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 266.87, 517.93, 282.23],
+       "spans": [
+        {"text": "dropping into the Current Project label in the browser. You can then use the File Management tools,", "bbox": [62.25, 266.87, 517.93, 282.23], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 282.26, 227.39, 297.62],
+       "spans": [
+        {"text": "collect any referenced samples, etc.", "bbox": [62.25, 282.26, 227.39, 297.62], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 327.63, 356.45, 346.86],
+     "lines": [
+      {
+       "bbox": [62.25, 327.63, 356.45, 346.86],
+       "spans": [
+        {"text": "5.10.3 Can I Work On Multiple Versions of a Set?", "bbox": [62.25, 327.63, 356.45, 346.86], "font": "futura-pt-Ultra-Bold-40", "size": 15.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 361.87, 532.24, 423.38],
+     "lines": [
+      {
+       "bbox": [62.25, 361.87, 532.24, 377.23],
+       "spans": [
+        {"text": "If you’d like to work on different versions of the same Live Set, save them into the same Project. This will", "bbox": [62.25, 361.87, 532.24, 377.23], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 377.25, 509.77, 392.61],
+       "spans": [
+        {"text": "usually be the Project that was created when you saved the first version of the Live Set. If a Project", "bbox": [62.25, 377.25, 509.77, 392.61], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 392.64, 517.72, 408.0],
+       "spans": [
+        {"text": "contains multiple Live Sets it will only collect one copy of any samples used by the various versions,", "bbox": [62.25, 392.64, 517.72, 408.0], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 408.02, 315.32, 423.38],
+       "spans": [
+        {"text": "which can save disk space and help with organization.", "bbox": [62.25, 408.02, 315.32, 423.38], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 453.39, 312.96, 472.62],
+     "lines": [
+      {
+       "bbox": [62.25, 453.39, 312.96, 472.62],
+       "spans": [
+        {"text": "5.10.4 Where Should I Save My Live Sets?", "bbox": [62.25, 453.39, 312.96, 472.62], "font": "futura-pt-Ultra-Bold-40", "size": 15.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 487.63, 513.33, 549.15],
+     "lines": [
+      {
+       "bbox": [62.25, 487.63, 500.2, 502.99],
+       "spans": [
+        {"text": "You can save Live Sets anywhere you want, but saving to pre-existing Project folders can cause", "bbox": [62.25, 487.63, 500.2, 502.99], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 503.02, 513.33, 518.38],
+       "spans": [
+        {"text": "problems, and should be reserved for special cases. You should only save a Live Set to an existing", "bbox": [62.25, 503.02, 513.33, 518.38], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 518.4, 504.49, 533.76],
+       "spans": [
+        {"text": "Project if it is somehow related to the Project — for example, an alternate version of a song that’s", "bbox": [62.25, 518.4, 504.49, 533.76], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 533.79, 162.5, 549.15],
+       "spans": [
+        {"text": "already in the Project.", "bbox": [62.25, 533.79, 162.5, 549.15], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 579.16, 461.31, 598.39],
+     "lines": [
+      {
+       "bbox": [62.25, 579.16, 461.31, 598.39],
+       "spans": [
+        {"text": "5.10.5 Can I Use My Own Folder Structure Within a Project Folder?", "bbox": [62.25, 579.16, 461.31, 598.39], "font": "futura-pt-Ultra-Bold-40", "size": 15.0, "flags": 16}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [62.25, 613.4, 489.92, 644.14],
+     "lines": [
+      {
+       "bbox": [62.25, 613.4, 489.92, 628.76],
+       "spans": [
+        {"text": "You can organize your files any way you want within a Project, but you’ll need to use the File", "bbox": [62.25, 613.4, 489.92, 628.76], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [62.25, 628.78, 310.22, 644.14],
+       "spans": [
+        {"text": "Manager to relink the files that you’ve moved around:", "bbox": [62.25, 628.78, 310.22, 644.14], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [92.25, 656.17, 531.68, 779.21],
+     "lines": [
+      {
+       "bbox": [92.25, 656.17, 504.75, 671.53],
+       "spans": [
+        {"text": "In Live’s Browser or via your operating system, reorganize the files and folders within your", "bbox": [92.25, 656.17, 504.75, 671.53], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 671.55, 155.65, 686.91],
+       "spans": [
+        {"text": "Project folder.", "bbox": [92.25, 671.55, 155.65, 686.91], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 686.94, 531.68, 702.3],
+       "spans": [
+        {"text": "Navigate to the Project folder in the Browser and choose Manage Project via the context menu.", "bbox": [92.25, 686.94, 531.68, 702.3], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 702.32, 530.13, 717.68],
+       "spans": [
+        {"text": "If you’ve changed the original location of any samples used in the Project, the Missing Samples", "bbox": [92.25, 702.32, 530.13, 717.68], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 717.7, 525.39, 733.06],
+       "spans": [
+        {"text": "section of the File Manager will indicate this. Click the Locate button to search for the samples.", "bbox": [92.25, 717.7, 525.39, 733.06], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 733.09, 519.94, 748.45],
+       "spans": [
+        {"text": "Since you know that your samples are all in the Project folder, unfold Automatic Search. Then", "bbox": [92.25, 733.09, 519.94, 748.45], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 748.47, 504.95, 763.83],
+       "spans": [
+        {"text": "enable the Search Project and Fully Rescan Folders options. Finally, click Go to initiate the", "bbox": [92.25, 748.47, 504.95, 763.83], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 763.85, 125.47, 779.21],
+       "spans": [
+        {"text": "search.", "bbox": [92.25, 763.85, 125.47, 779.21], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [80.5, 656.17, 92.26, 671.53],
+     "lines": [
+      {
+       "bbox": [80.5, 656.17, 92.26, 671.53],
+       "spans": [
+        {"text": "1. ", "bbox": [80.5, 656.17, 92.26, 671.53], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [79.9, 686.94, 92.25, 717.68],
+     "lines": [
+      {
+       "bbox": [79.9, 686.94, 92.25, 702.3],
+       "spans": [
+        {"text": "2. ", "bbox": [79.9, 686.94, 92.25, 702.3], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [80.14, 702.32, 92.25, 717.68],
+       "spans": [
+        {"text": "3. ", "bbox": [80.14, 702.32, 92.25, 717.68], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [79.9, 733.09, 92.25, 748.45],
+     "lines": [
+      {
+       "bbox": [79.9, 733.09, 92.25, 748.45],
+       "spans": [
+        {"text": "4. ", "bbox": [79.9, 733.09, 92.25, 748.45], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [520.08, 806.08, 539.03, 821.44],
+     "lines": [
+      {
+       "bbox": [520.08, 806.08, 539.03, 821.44],
+       "spans": [
+        {"text": "158", "bbox": [520.08, 806.08, 539.03, 821.44], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "number": 159,
+   "width": 595.28,
+   "height": 841.89,
+   "images": [],
+   "blocks": [
+    {
+     "bbox": [80.14, 56.26, 501.16, 87.01],
+     "lines": [
+      {
+       "bbox": [92.25, 56.26, 501.16, 71.62],
+       "spans": [
+        {"text": "When searching is complete, click Collect and Save at the bottom of the File Manager to", "bbox": [92.25, 56.26, 501.16, 71.62], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [92.25, 71.65, 178.43, 87.01],
+       "spans": [
+        {"text": "update the Project.", "bbox": [92.25, 71.65, 178.43, 87.01], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      },
+      {
+       "bbox": [80.14, 56.26, 92.25, 71.62],
+       "spans": [
+        {"text": "5. ", "bbox": [80.14, 56.26, 92.25, 71.62], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [520.08, 806.08, 539.03, 821.44],
+     "lines": [
+      {
+       "bbox": [520.08, 806.08, 539.03, 821.44],
+       "spans": [
+        {"text": "159", "bbox": [520.08, 806.08, 539.03, 821.44], "font": "futura-pt-32", "size": 12.0, "flags": 0}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}
