@@ -124,21 +124,25 @@ def validate_scope(
         if in_rig:
             _check_revision(device, revisions[device.id], flag)
 
-    for cause in entry.causes:
+    for position, cause in enumerate(entry.causes, start=1):
         claim = cause.undocumented_device
         if claim is None:
             continue
+        # The cause is named in the message as well as on the record, in the form every
+        # other cause-level message uses: 5.3 is about what reaches the author, and the
+        # header above this line carries the file and the symptom but not the cause.
+        where = f'cause {position} "{cause.statement}"'
         if claim in indexed:
             return reject(
                 "undocumented-claim-invalid",
-                f"the cause is marked `undocumented: {claim}`, but that device is documented by "
+                f"{where} is marked `undocumented: {claim}`, but that device is documented by "
                 "an ingested manual. Cite the section instead with a `fix:` line.",
                 cause=cause.statement,
             )
         if claim not in revisions:
             return reject(
                 "undocumented-claim-invalid",
-                f"the cause is marked `undocumented: {claim}`, but that device is not in the rig "
+                f"{where} is marked `undocumented: {claim}`, but that device is not in the rig "
                 "inventory. 2.3 permits an unbacked cause only for gear the rig records and no "
                 "manual covers.",
                 cause=cause.statement,
@@ -191,7 +195,7 @@ def sidecar(
     outcome: StoreOutcome,
     passage_ids: Mapping[str, Sequence[str]],
     *,
-    ledger_missing: bool = False,
+    report: Mapping[str, Any],
 ) -> dict[str, Any]:
     """Everything `Passage` cannot carry, keyed by `passage_id` — design 'The sidecar'.
 
@@ -207,6 +211,9 @@ def sidecar(
     in declared order: which passage of a split entry holds which cause is an artefact of
     the 350-word cap and changes under a re-chunk, so a consumer reading the causes of a
     citation must not get a list truncated by where the cap fell.
+
+    `report` is the block the caller has already built, not one assembled here: the run
+    writes the same block to its audit, and building it twice would let the two disagree.
     """
     return {
         "passages": [
@@ -214,17 +221,27 @@ def sidecar(
             for entry_outcome in outcome.ingesting
             for passage_id in passage_ids.get(entry_outcome.entry.source_file.as_posix(), ())
         ],
-        "report": report(outcome, ledger_missing=ledger_missing),
+        "report": dict(report),
     }
 
 
-def report(outcome: StoreOutcome, *, ledger_missing: bool = False) -> dict[str, Any]:
+def report(
+    outcome: StoreOutcome,
+    *,
+    ledger_missing: bool = False,
+    coverage: Mapping[str, Any] | None = None,
+) -> dict[str, Any]:
     """The run's counts and one row per rejection and per flag (2.8, 5.5).
 
-    The same rows `dawmans coverage` renders. The pointer counts describe the entries
-    this run **ingested**: a pointer that cost its entry its place is reported by that
-    entry's rejection row, which names the entry, the cause and the pointer (2.2), and
-    counting it again as unresolved would report one fault twice.
+    `coverage` is the §6 report's own rows, which land in this block so that the report
+    is obtainable without asking a question (6.5) and published where a consumer can
+    read it (6.6). They are passed in rather than computed here: they need the rig, and
+    `triage.coverage` owns their shape — this module renders the run's own verdict.
+
+    The pointer counts describe the entries this run **ingested**: a pointer that cost
+    its entry its place is reported by that entry's rejection row, which names the entry,
+    the cause and the pointer (2.2), and counting it again as unresolved would report one
+    fault twice.
     """
     checked = [
         pointer
@@ -241,7 +258,11 @@ def report(outcome: StoreOutcome, *, ledger_missing: bool = False) -> dict[str, 
     return {
         "entries": len(outcome.ingesting),
         "rejected": len(outcome.rejections),
-        "flagged": sum(1 for entry_outcome in outcome.ingesting if entry_outcome.flags),
+        # Counted over the store's flags rather than over `EntryOutcome.flags`, which
+        # carries only the flags raised while evaluating the entry: a parse flag —
+        # `unknown-frontmatter-key`, `closing-statement-inferred` — is collected before
+        # any entry outcome exists, and an entry carrying one is an entry to look at.
+        "flagged": len({flag.source_file for flag in outcome.flags}),
         "pointers": {
             "checked": len(checked),
             "resolved": sum(1 for pointer in checked if pointer.ok),
@@ -274,6 +295,10 @@ def report(outcome: StoreOutcome, *, ledger_missing: bool = False) -> dict[str, 
         # silent: the author would otherwise meet a wall of rejections with nothing
         # explaining them.
         "ledger_missing": ledger_missing,
+        # `{}` where the caller passed none, never absent: a consumer reading the block
+        # gets the key either way, and an empty report is a statement while a missing
+        # one is not (the rule `gaps.json` follows for the same reason).
+        "coverage": dict(coverage) if coverage is not None else {},
     }
 
 

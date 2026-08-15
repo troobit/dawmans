@@ -1,12 +1,12 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phases 1–5 are implemented — the model, the grammar, the canonical rendering,
+Phases 1–6 are implemented — the model, the grammar, the canonical rendering,
 pointer resolution, the ledger, device scope validation, the term check, identity
-and emission, and now discovery, the sidecar and the run integration. `dawmans
-ingest` runs the real loader end to end. Outstanding: the validation message
-rendering, `dawmans validate` over the store, `dawmans coverage`, the five
-starter entries and the acceptance targets (Phase 6 onwards).
+and emission, discovery, the sidecar, the run integration, and now the validation
+messages, `dawmans validate` over the store and `dawmans coverage`. `dawmans
+ingest`, `validate` and `coverage` all run the real loader. Outstanding: the five
+starter entries and the acceptance targets (Phase 7).
 
 **`data/manual-corpus` is merged into this branch** (`bd4625e`), which is what
 unblocked Phase 4. Two earlier runs recorded the block and costed the merge
@@ -41,8 +41,10 @@ imports before trusting `rune streams --available`.
 | `parse.py` | `parse_entry(source_file, data) -> ParseResult`, `render_blocks(entry) -> Rendering`, and `render(entry) -> str` |
 | `loader.py` | `TriageLoader`, `CorpusView`, `source_record`, `entry_location`, `emit`, the `StoreOutcome`/`EntryOutcome`/`CauseOutcome` types, and discovery — `entry_files`, `skipped_files`, `store_fingerprint`, `scan_store` |
 | `pointers.py` | `parse_pointer`, `normalise_title`, `SectionIndex`, `resolve`, `title_disagrees`, and the ledger — `pointer_key`, `Ledger`, `check_pointer` |
-| `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult`, and the sidecar — `sidecar(outcome, passage_ids)` and `report(outcome)` |
+| `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult`, and the sidecar — `sidecar(outcome, passage_ids, report=…)` and `report(outcome, ledger_missing=…, coverage=…)` |
 | `terms.py` | `terms`, `device_vocabulary`, `contains`, `Resolution`, `check_terms`, `TermMiss`, `term_flag` — design 'The term check (2.6)' |
+| `messages.py` | `lines(rejection or flag)`, `header`, `counts`, `counts_of`, `store_lines` — the 5.3 rendering and nothing else |
+| `coverage.py` | `coverage(outcome, rig) -> Coverage`, its four row types, `Coverage.lines()` and `Coverage.to_dict()` — the §6 report |
 
 The design's 'Module placement' names only behaviour modules. `model.py` is an
 addition, and it earns its place: the rejection and flag vocabularies are needed
@@ -220,6 +222,61 @@ and `loader` imports `scope`. `loader.py` still re-exports `normalised_symptom`.
 - **`title-number-disagreement` is raised in `_evaluate`.** `title_disagrees` has
   existed since Phase 2 with no caller; the flag joins the run beside the drift
   and term flags.
+
+## Messages, validate and coverage (Phase 6)
+
+- **The words are written where the fault is found; `messages.py` only lays them
+  out.** `parse`, `scope`, `pointers`, `terms` and `loader` each phrase their own
+  `detail` in the entry's terms, because that is where the entry's terms are
+  known. What the module adds is the header — `triage/x.md — "Symptom"` — and
+  `rejected:` against `flagged:`. A reason constant is never printed; 5.3 forbids
+  a message that is an internal error name, and the closed set is the taxonomy's
+  shape rather than something to show an author.
+
+- **`test_messages.py` restates the fifteen constants.** The store it builds holds
+  one malformed file per constant plus 1.9's second file, and asserts the reason
+  set is *exactly* those fifteen. A reason added to `model.py` with no fixture and
+  no message fails there rather than passing unnoticed.
+
+- **The flagged count is by `source_file`, not by `EntryOutcome.flags`.** Parse
+  flags — `unknown-frontmatter-key`, `closing-statement-inferred` — are collected
+  before any entry outcome exists, so counting entry outcomes reported an entry as
+  unflagged while printing its flag row underneath. Both `messages.counts` and
+  `scope.report` count the same way now.
+
+- **`dawmans validate` exits non-zero on a rejection as well as a term miss**
+  (Decision 14), and on neither under `ingest`. Flags never fail it: `pointer-drifted`
+  and `unbacked-cause` are states the design chose over withdrawing working triage,
+  and failing on them would pressure an author into deleting it.
+
+- **Validate writes nothing, and the test snapshots the whole tree** rather than
+  the files this implementation happens to touch. It goes through `evaluate()`,
+  which never calls `_record_resolutions`, and `cli` never loads an embedder on
+  that path — there is a `monkeypatch` asserting the second, because "we do not
+  call it" is exactly the kind of claim a later refactor breaks silently.
+
+- **`CorpusView.read(view_dir)` is validate's reader**, and it takes the same two
+  published shapes `of()` does. Decision 13 split *where the rows come from*
+  between the two commands; it did not split the reader.
+
+- **8.7's orphaned entries are a coverage row, not a flag** (Decision 15). The
+  design lists `orphaned-scope` among the flags while its own device-scope table
+  says a documented device absent from `rig.yaml` scopes with no flag. The
+  constant stays in `FlagName` as the row's name with nothing raising it.
+  **An empty rig produces no rows at all** — an absent `rig.yaml` is "nothing is
+  declared owned", not "everything has been taken away", and without the guard
+  every entry on a machine with no rig file reports as orphaned.
+
+- **Coverage counts a device as covered only by an entry that ingests.** A
+  rejected entry declaring `akai/apc-key-25` leaves the APC uncovered: the entry
+  reaches no question, so nothing triages that device.
+
+- **The report block is built once, in `load()`, and handed to `sidecar()`.**
+  `sidecar` used to call `report` itself, so the audit and the sidecar built it
+  twice; the coverage rows need the rig, which `scope` does not have, so the
+  block is now assembled in the loader and passed down. `report(coverage=None)`
+  still writes `"coverage": {}` rather than omitting the key — absent and empty
+  are different statements to a reader.
 
 ## Pointer resolution and the ledger (`pointers.py`)
 
@@ -410,6 +467,10 @@ way to confirm the corpus has not moved under the fixtures.
   that reads it, over the committed section fixtures. Every triage test file uses
   it; it was extracted from `test_emission.py` when the discovery and sidecar
   tests needed the same store.
+- `tests/triage/runs.py` holds the stub `manuals/` (one region per committed
+  section fixture) and `run()`, which drives a real `cli.ingest` over it. Both
+  `test_ingest_wiring.py` and `test_validate.py` use it: a command that reads a
+  committed view has to have one to read.
 - `tests/triage/test_ingest_wiring.py` is the only test that runs the **real**
   loader through `cli.ingest`, with a stub vendor store that rebuilds `manuals/`
   from the same section fixtures. `tests/test_run.py` deliberately keeps a *stub*

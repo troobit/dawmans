@@ -12,6 +12,57 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 6 — validation messages, `dawmans validate` over the store and
+  `dawmans coverage`.** `triage/messages.py` renders a rejection or a flag as the design prints it:
+  a header naming the file and the symptom, then the prose saying what is wrong and what to change
+  in the entry's own words (5.3). A reason constant never reaches the author — `rejected:` against
+  `flagged:` is the whole difference on screen between an entry withdrawn and an entry served with a
+  remark. The counts line is 5.5, over entries rather than passages, and a missing ledger says so in
+  one line rather than letting a wall of 2.2 rejections arrive unexplained. One malformed fixture per
+  reason constant pins the taxonomy closed at the fifteen of design §Error Handling, with two
+  well-formed entries beside them proving a rejection costs one entry and not the run (5.2).
+
+- **`dawmans validate` now validates the entry store** (5.4). It parses, resolves and term-checks the
+  whole store against the committed view — read through `manifest.view_dir` by `CorpusView.read`, the
+  same reader the ingest path uses over shards — and **writes nothing**: no index write, no shard, no
+  ledger row, no embedding model loaded, asserted by snapshotting the whole tree either side of a
+  run. A term miss exits non-zero here and never under ingest (Decision 5): consequences where the
+  author is, none where the user is.
+
+- **`dawmans coverage` — the §6 report.** Six row sets over one evaluation of the store: every entry
+  with its scope, cause count and pointer health (6.1); every rejection and flag with its reason, so
+  the report covers 100% of the store (6.2); every rig device no entry declares scope for (6.3);
+  every cause 2.3 permits to carry no pointer, with the device it names (6.4); every drifted pointer
+  with the source that changed (8.6); and every entry scoped only to gear the rig no longer holds
+  (8.7), reported and never deleted. **No percentage anywhere** — there is no denominator over
+  symptoms. The same rows land in the sidecar's `report` block, so the report is obtainable without
+  asking a question (6.5) and published where a consumer can read it (6.6's publishing half).
+
+- **`data/symptom-triage` Decision 14 — `dawmans validate` exits non-zero on a rejection**, not only
+  on a term miss. 5.2's "the run reports succeeded" governs the *ingestion* run, which still serves
+  the other entries; `validate` serves nothing and is asked one question, and answering "yes" while
+  printing an entry that will not be served is the one answer it must not give. Flags do not fail it:
+  `pointer-drifted` and `unbacked-cause` are states the design chose over withdrawing working triage.
+
+- **`data/symptom-triage` Decision 15 — 8.7's orphaned scope is a coverage row, not a flag.** The
+  design listed `orphaned-scope` among the flags while its own §Device scope table forbids flagging
+  the device such an entry declares — a documented device absent from `rig.yaml` is gear removed under
+  8.7 *or* a manual added ahead of its rig entry. The entry-level fact is reported in the coverage
+  report instead, per entry rather than per device, and an empty rig inventory declares no removal at
+  all. The flag list is marked superseded in place.
+
+### Fixed
+
+- **`data/symptom-triage`: the flagged count now includes parse flags.** `report()`'s `flagged`
+  counted entries carrying evaluation flags, so an entry whose only remark was
+  `unknown-frontmatter-key` or `closing-statement-inferred` — both raised before any entry outcome
+  exists — was reported as unflagged while its row was printed beneath the count. Counted by file
+  over the store's flags, which also keeps an entry with three remarks one entry to look at.
+
+- **`data/symptom-triage`: `undocumented-claim-invalid` names its cause in the message.** The record
+  carried the cause and the prose did not, so the one rejection an author meets while taking 2.3's
+  carve-out named the file and the symptom but never the cause concerned (5.3).
+
 - **`data/symptom-triage` Phase 5 — discovery, the sidecar and the run integration.** `dawmans
   ingest` now runs both stores with the real `TriageLoader`. Discovery is a recursive scan of
   `triage/**/*.md` (1.6): a subdirectory entry is found, a non-`.md` file beside one gets a report

@@ -626,10 +626,17 @@ survives, since a source with no passages is not a source.
 Flags, all leaving the entry ingested: `pointer-drifted` (8.4, sets `unbacked`), `unbacked-cause`
 (2.3/2.4, sets `unbacked`), `term-not-in-passage` (2.6), `unknown-device` (4.5),
 `revision-mismatch` (4.6), `title-number-disagreement`, `undocumented-device-scope` (4.4),
-`orphaned-scope` (8.7), `closing-statement-inferred`, `unknown-frontmatter-key`.
+~~`orphaned-scope` (8.7)~~, `closing-statement-inferred`, `unknown-frontmatter-key`.
+
+`orphaned-scope` is **superseded by [Decision 15](decision_log.md)**: 8.7's orphaned entry is a
+**coverage row** (§Coverage without a taxonomy) rather than a flag, because §Device scope's third row
+forbids flagging the device it would be about. The constant stays in the closed vocabulary as that
+row's name, and nothing raises it as a `Flag`.
 
 **Failures**, which exit non-zero rather than rejecting an entry: an unparseable ledger (§Reject
-versus flag), and a term miss under `dawmans validate` only (§The term check).
+versus flag), and a term miss under `dawmans validate` only (§The term check). `dawmans validate`
+additionally exits non-zero on a **rejection** ([Decision 14](decision_log.md)); 5.2's "the run
+reports succeeded" governs `dawmans ingest`, which is the run that serves the other entries.
 
 **`authored-invalid` deletes the authored shard.** Without that, a rejected source produces no
 shard, the merge reads whatever shards exist, and re-ingestion replaces a shard only on success — so

@@ -21,6 +21,7 @@ Two things this module deliberately does **not** do:
 from __future__ import annotations
 
 import hashlib
+import json
 from collections.abc import Callable, Collection, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from datetime import UTC, datetime
@@ -32,6 +33,7 @@ from dawmans.corpus.chunk import Chunk, chunk_source
 from dawmans.corpus.discover import AUTHORED_STORE, DiscoveryRejection, StoreScan
 from dawmans.corpus.loader import Discovered, LoadResult, Region, Rejection, Unit, UnitFlags
 from dawmans.records import AUTHORED_SOURCE_ID, HardwareApplicability, SourceRecord
+from dawmans.triage.coverage import coverage
 from dawmans.triage.model import (
     Cause,
     Entry,
@@ -288,6 +290,24 @@ class CorpusView:
             texts=MappingProxyType({str(row["passage_id"]): str(row["text"]) for row in rows}),
         )
 
+    @classmethod
+    def read(cls, view_dir: Path) -> CorpusView:
+        """One committed view, from `passages.jsonl` and `sources.json`.
+
+        The read path `dawmans validate` takes, located through `manifest.view_dir` and
+        no other way: the manifest's rename is the corpus's only switch, so a reader that
+        went looking for a view directory itself could pair one version's rows against
+        another's. It is the same two published shapes `of()` already takes, which is why
+        validating and ingesting resolve pointers through one reader rather than two.
+        """
+        rows = [
+            json.loads(line)
+            for line in (view_dir / "passages.jsonl").read_text(encoding="utf-8").splitlines()
+            if line.strip()
+        ]
+        sources = json.loads((view_dir / "sources.json").read_text(encoding="utf-8"))
+        return cls.of(rows, sources)
+
     def text(self, passage_id: str) -> str | None:
         return self.texts.get(passage_id)
 
@@ -385,7 +405,14 @@ class TriageLoader:
         """
         outcome = self.evaluate()
         record = source_record(ingested_at=self.now())
-        block = report(outcome, ledger_missing=self.ledger.missing)
+        # The §6 rows travel in the run's own report block, so the coverage report is
+        # published with the passages it describes rather than only on a terminal (6.5,
+        # 6.6). One block, built once, written to the audit and to the sidecar alike.
+        block = report(
+            outcome,
+            ledger_missing=self.ledger.missing,
+            coverage=coverage(outcome, self.rig).to_dict(),
+        )
 
         if not outcome.ingesting:
             return LoadResult(
@@ -407,7 +434,7 @@ class TriageLoader:
             sidecar=sidecar(
                 outcome,
                 _passage_ids(outcome.ingesting, chunk_source(record, regions)),
-                ledger_missing=self.ledger.missing,
+                report=block,
             ),
         )
 

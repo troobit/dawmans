@@ -176,7 +176,7 @@ references:
 
 ## Phase 6: Messages, validation and coverage
 
-- [ ] 21. Write tests for validation messages and the rejection taxonomy <!-- id:f3stq0l -->
+- [x] 21. Write tests for validation messages and the rejection taxonomy <!-- id:f3stq0l -->
   - The rejection set is closed - the fifteen reason constants of design 'Error Handling', three of its twelve table rows carrying paired reasons - and one malformed fixture per reason constant proves each message names the file, the symptom and the cause concerned, and says what to change in the entry's own words, never a position or internal error name alone (5.3); pointer messages carry the nearest-section candidates.
   - A rejection excludes one entry; the other entries in the same run still ingest and the run reports succeeded (5.2). Only when no entry survives is the source rejected as authored-invalid.
   - Per-run counts of entries ingested, rejected and flagged, with a reason for each (5.5).
@@ -184,25 +184,25 @@ references:
   - Stream: 1
   - Requirements: [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.5](requirements.md#5.5)
 
-- [ ] 22. Implement the validation message rendering <!-- id:f3stq0m -->
+- [x] 22. Implement the validation message rendering <!-- id:f3stq0m -->
   - Blocked-by: f3stq0l (Write tests for validation messages and the rejection taxonomy)
   - Stream: 1
   - Requirements: [5.2](requirements.md#5.2), [5.3](requirements.md#5.3), [5.5](requirements.md#5.5)
 
-- [ ] 23. Write tests for dawmans validate over the entry store <!-- id:f3stq0n -->
+- [x] 23. Write tests for dawmans validate over the entry store <!-- id:f3stq0n -->
   - Validate parses, resolves and term-checks the whole store and reports, while modifying nothing: no index write, no shard, no ledger row, no embedding (5.4) - so it is unaffected by the cold model load either way.
   - A term-not-in-passage miss exits non-zero under validate only, and never under ingest (Decision 5): consequences where the author is present, none where the user is.
   - Blocked-by: f3stq0i (Implement TriageLoader.discover and the ingest wiring), f3stq0m (Implement the validation message rendering), f3stq0a (Implement terms.py)
   - Stream: 1
   - Requirements: [2.6](requirements.md#2.6), [5.4](requirements.md#5.4)
 
-- [ ] 24. Implement the validate integration in cli.py <!-- id:f3stq0o -->
+- [x] 24. Implement the validate integration in cli.py <!-- id:f3stq0o -->
   - The existing dawmans validate gains the entry store; CorpusView and the ledger opened read-only on that path.
   - Blocked-by: f3stq0n (Write tests for dawmans validate over the entry store)
   - Stream: 1
   - Requirements: [2.6](requirements.md#2.6), [5.4](requirements.md#5.4)
 
-- [ ] 25. Write tests for the coverage report <!-- id:f3stq0p -->
+- [x] 25. Write tests for the coverage report <!-- id:f3stq0p -->
   - Rows: every entry with symptom, declared scope, cause count and whether every pointer currently resolves (6.1); every rejection and flag with its reason, covering 100% of the store (6.2); every rig device and software item no entry declares scope for (6.3); every cause permitted without a pointer with the undocumented device it names (6.4, fixture rig); every drift-flagged entry with the source that changed (8.6); every entry scoped only to a device removed from the rig, reported and never deleted (8.7).
   - No percentage anywhere - there is no denominator over symptoms, so the report is an inventory plus the one enumerable gap, the rig side.
   - dawmans coverage renders to stdout and the same rows land in the sidecar's report block, so the report is obtainable without asking a question (6.5) and published where a consumer can read it (6.6 - the publishing half; the consuming half closes when api/answer-engine or the UI names it).
@@ -210,7 +210,7 @@ references:
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.6](requirements.md#6.6), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7)
 
-- [ ] 26. Implement coverage.py and the cli coverage command <!-- id:f3stq0q -->
+- [x] 26. Implement coverage.py and the cli coverage command <!-- id:f3stq0q -->
   - Blocked-by: f3stq0p (Write tests for the coverage report)
   - Stream: 1
   - Requirements: [6.1](requirements.md#6.1), [6.2](requirements.md#6.2), [6.3](requirements.md#6.3), [6.4](requirements.md#6.4), [6.5](requirements.md#6.5), [6.6](requirements.md#6.6), [8.6](requirements.md#8.6), [8.7](requirements.md#8.7)

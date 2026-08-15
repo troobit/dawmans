@@ -883,3 +883,140 @@ those: no PDF is opened, no vector file is read, no extraction, chunking or embe
 superseded by this entry.
 
 ---
+
+## Decision 14: `dawmans validate` exits non-zero on a rejection as well as on a term miss
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+[5.2](requirements.md#5.2) fixes the exit behaviour of an *ingestion* run: a malformed entry is
+excluded, the reason is reported, every other entry ingests, and the run still reports success. The
+design's §Error Handling then names the two things that exit non-zero instead of rejecting an entry —
+an unparseable ledger, and a term miss under `dawmans validate` only.
+
+Neither statement says what `dawmans validate` should exit when an entry is **rejected**. Read
+literally, 5.2's "still report the run as succeeded" would carry over, and `validate` would print a
+rejection message and exit zero. `validate` exists so an author can check work before committing to
+it ([5.4](requirements.md#5.4)), and its exit code is the half of the answer a script or a commit
+hook reads.
+
+### Decision
+
+`dawmans validate` exits non-zero when the store holds any rejection, and when any cause raises
+`term-not-in-passage`. `dawmans ingest` is unchanged: a rejection is reported and the run succeeds.
+
+### Rationale
+
+5.2's success is a statement about the *corpus*: one bad entry must not cost the user the others, so
+the run that serves them succeeds. `validate` serves nothing. It is asked one question — is the store
+right — and answering "yes" while printing an entry that will not be served is the one answer it must
+not give.
+
+It is also the same argument the design already accepted for the term miss: the author is present at
+validate time, so a non-zero exit costs a re-read, while at ingest time the user is present and the
+cost would be a refused answer mid-session. A rejection is strictly more serious than a term miss —
+the entry is gone rather than marked — so an exit rule that fails on the lesser and passes on the
+greater would be incoherent.
+
+### Alternatives Considered
+
+- **Exit zero on a rejection, non-zero only on a term miss** - The literal reading of the two
+  documents together. Rejected because it makes `validate` useless in the one place an exit code
+  matters: a pre-commit check over a store with a mistyped pointer would pass, and the author would
+  find out when the entry stopped answering.
+- **Exit non-zero on any flag as well** - Rejected because a flag is a remark on an entry that is
+  still served, and two flags in particular are states the design deliberately chose over withdrawal:
+  `pointer-drifted` (8.4) and `unbacked-cause` (2.3/2.4). Failing on them would pressure an author
+  into deleting working triage to get a green check.
+- **A separate `--strict` switch** - Rejected as a setting standing in for a decision: the command
+  has one purpose, and a second mode would only postpone choosing what its default answer means.
+
+### Consequences
+
+**Positive:**
+- `dawmans validate` is usable as a gate: zero means every entry in the store will be served, and
+  every factual claim rests on a passage that prints it.
+- The ingest path is untouched, so 5.2 holds exactly as written where it is stated.
+
+**Negative:**
+- The two commands disagree about the same store, which has to be understood rather than guessed:
+  `ingest` succeeds where `validate` fails. The messages are identical, which is what makes the
+  difference legible as a difference in question rather than in verdict.
+- A store carrying a long-known rejection cannot be validated green until it is fixed or the entry is
+  removed. That is the intent, but it means `validate` cannot be used as a "nothing got worse" check.
+
+---
+
+## Decision 15: 8.7's orphaned scope is a coverage row, not an ingest-time flag
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+[8.7](requirements.md#8.7) requires that when a device is removed from the rig inventory, every entry
+scoped **only** to that device is reported and not deleted. The design lists `orphaned-scope` (8.7)
+among the flags in §Error Handling, which would put it beside `unknown-device` and
+`revision-mismatch` as something `scope.validate_scope` raises while validating a declaration.
+
+The same design's §Device scope table forbids exactly that at device level. Its third row — a device
+documented by an ingested manual and absent from `rig.yaml` — scopes with **no** flag, and the
+rationale is explicit: "It is a device removed under 8.7, or a manual added ahead of its rig entry.
+Flagging it would be a warning 4.5 does not authorise." A device cannot both flag and not flag.
+
+### Decision
+
+Report orphaned scope in the coverage report (`coverage.Coverage.orphaned`, published as
+`orphaned_scope` in the sidecar's `report` block), computed per **entry**: an entry none of whose
+declared devices is in the rig. Raise no flag during scope validation, and leave `orphaned-scope` in
+`FlagName` unproduced as a flag. An empty rig inventory produces no rows at all.
+
+### Rationale
+
+The two obligations are about different units. 4.5 is about a *device declaration* the run cannot
+recognise, and the third row's device is perfectly recognisable — its manual is in the corpus. 8.7 is
+about an *entry* that has quietly stopped applying to any gear the owner holds. The entry-level fact
+is the one 8.7 asks to be reported, and the coverage report is where the spec puts facts of that
+shape: 6.3's uncovered rig devices are computed the same way, from the same two inputs.
+
+Reporting rather than flagging also keeps the ingest path honest about the ambiguity the design
+names. The same state means "the gear went" and "the manual arrived early", and only one of those is
+a problem. A row in a report the owner reads at their desk carries that ambiguity; a flag on every
+run implies a fault.
+
+The empty-rig guard follows `manual-corpus`'s own reading of an absent `rig.yaml` — "nothing is
+declared owned", not "everything has been taken away". Without it, a machine with no rig file would
+report every entry in the store as orphaned and bury the rows that mean something.
+
+### Alternatives Considered
+
+- **Raise the flag in `validate_scope` when no declared device is in the rig** - Rejected because it
+  contradicts the third row of the design's own table for the single-device case: an entry scoped to
+  one indexed-but-unowned device would flag, which is the warning 4.5 does not authorise. It would
+  also fire on every ingest for the benign case, a manual added ahead of its rig entry.
+- **Raise it in the loader instead, keeping `validate_scope` intact** - Rejected as the same warning
+  moved to a module where the reason for it is no longer written down. The device-scope rule would
+  then live in two places, one of them contradicting the other.
+- **Drop `orphaned-scope` from `FlagName`** - Rejected because the closed vocabulary is the taxonomy
+  the design states, and quietly shortening it would make the flag list and the design disagree. It
+  stays, unproduced, with the coverage report carrying its name as its row key.
+
+### Consequences
+
+**Positive:**
+- The device-scope table holds exactly as written, and its third-row test — a documented device absent
+  from the rig scopes with no flag — is untouched.
+- 8.7's "reported, and never deleted" is one row in the report the requirement itself points at
+  ([§6](requirements.md#6-coverage-reporting)), beside the other five row sets.
+- Published as well as printed: the row is in the sidecar's `report` block, so a consumer sees it
+  without running the command.
+
+**Negative:**
+- `orphaned-scope` is a `FlagName` constant nothing produces as a `Flag`, which reads as dead
+  vocabulary until this entry is found.
+- The row does not reach `dawmans validate`, which renders the run's rejections and flags rather than
+  the coverage rows, so an author checking work sees it only under `dawmans coverage`.
+
+---
