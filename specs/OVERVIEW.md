@@ -50,15 +50,15 @@ amendment to that decision, not an ad-hoc `mkdir`.
 ## Specs
 
 All four are at **requirements and design complete**. Each design has been reviewed and repaired, and
-all four now carry a `tasks.md` ledger. Two are being built: `data/manual-corpus` is **fully
-implemented** — all 45 tasks across all 8 phases — and `data/symptom-triage` is through its first
-six phases, 26 of 29. `api/answer-engine` and `ui/ask-and-source-picker` have ledgers and no
-implementation yet.
+all four now carry a `tasks.md` ledger. Two are built: `data/manual-corpus` is **fully
+implemented** — all 45 tasks across all 8 phases — and `data/symptom-triage` is now **fully
+implemented** too, all 29 tasks across all 7 phases, starter set included. `api/answer-engine` and
+`ui/ask-and-source-picker` have ledgers and no implementation yet.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45 of 45 — phases 1–8) | 84 |
-| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks 🔶 (26 of 29 — phases 1–6) | 60 |
+| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29 of 29 — phases 1–7) | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ (0 of 45 — 9 phases) | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ (0 of 47 — 9 phases) | 154 |
 
@@ -97,7 +97,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - **Missing:** `prerequisites.md` — the two things no task here can do for itself are
   `data/manual-corpus`'s, and its `prerequisites.md` records them.
 - 8 requirement sections, 60 anchored criteria. Header declares status *draft*.
-- **Ledger:** 29 tasks over 7 phases, test-then-implement, one work stream — **26 done, phases 1–6**.
+- **Ledger:** 29 tasks over 7 phases, test-then-implement, one work stream — **all complete**.
   Phase 1 — the entry model, the grammar and the canonical rendering — phase 2 — pointer resolution,
   the section index cut from a real view, and the committed pointer ledger that separates 2.2's
   rejection from 8.4's flag — phase 3 — device scope validation against the rig and the term
@@ -107,10 +107,12 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
   `dawmans ingest` as the second store — and phase 6 — the 5.3 message rendering over a rejection set
   pinned closed at fifteen constants, `dawmans validate` over the entry store against the committed
   view while writing nothing, and `dawmans coverage`, the §6 report published in the sidecar as well
-  as printed. Phase 7 (the five starter entries and the acceptance targets) is next.
+  as printed — and phase 7, the five starter entries in `triage/` with the acceptance and timing
+  targets.
 - Exists because the manuals cannot answer diagnostic questions: "gain staging" appears **zero**
   times in the 1009-page Live 12 manual and "troubleshoot" appears twice (DECISIONS Decision 7).
-  §7 specifies a five-symptom starter set as the acceptance test for the source, and it is task 28.
+  §7's five-symptom starter set is the acceptance test for the source; it is written, ingested and
+  cited, and the one half that cannot run yet is 7.7's ask, which needs `api/answer-engine`.
 
 ### `specs/api/answer-engine/`
 
@@ -165,7 +167,7 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   1431 passages, a full cold rebuild in ~43 s against 8.1's 60 s budget, and the gap reports come out
   as the design predicts — owned-but-undocumented empty, indexed-but-not-owned empty, and
   documented-but-unconfirmed naming the APC and the Nitro Max (`data/manual-corpus` Decision 16).
-- `data/symptom-triage` **through phases 1–6, 26 of 29 tasks.** The entry model and its total
+- `data/symptom-triage` **fully implemented — all 29 tasks, all 7 phases.** The entry model and its total
   parser, the canonical rendering, pointer resolution against a section index cut from a real view,
   the committed pointer ledger that separates a pointer that never worked from one that stopped,
   device scope validation against the rig, the term check, authored identity and the region emission
@@ -176,6 +178,13 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   against the committed view while writing nothing at all, exiting non-zero on a rejection or a term
   miss where the author is present and never under `ingest` where the user is; `dawmans coverage`
   reports what the store covers, with no percentage anywhere, and the same rows land in the sidecar.
+- **A written starter set.** `triage/` holds the five entries of §7 — no sound from a track, a track
+  distorting, latency when monitoring, a drum pad triggering the wrong sound, the controller doing
+  nothing — 19 causes between them, every one with an observable check and a fix pointer that
+  resolves in the real index, and 2.3's carve-out used nowhere. A live `dawmans ingest` takes them
+  in and `dawmans coverage` reports every pointer resolving with no rig gear uncovered. 7.5 needed
+  the Nitro Max's own manual, since General MIDI mode is documented there and nowhere else, so the
+  committed section fixtures gained a fourth file.
 
 **What is next**
 
@@ -183,13 +192,10 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   and §6a, and rewriting §4, §6 and §7 — and reconciled all four specs against it in the same pass.
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
-- **`data/symptom-triage` phase 7** — the five starter entries §7 makes the acceptance test for the
-  source, and the timing and acceptance targets (5.6, 7.7). Everything the entries need is now
-  built: `dawmans ingest` runs both stores with the real `TriageLoader`, and `dawmans validate` will
-  tell the author which pointer is wrong before a single entry is committed. What remains is product
-  content, plus one integration target that skips without a built index.
 - **`api/answer-engine` and `ui/ask-and-source-picker` implementation.** Both have ledgers — 45 and
-  47 tasks — and neither is started.
+  47 tasks — and neither is started. They are now the only unimplemented specs, and the engine is
+  also what 7.7 waits on: the starter set is written and ingested, but whether asking those five
+  symptoms yields an answer rather than a refusal cannot be observed until something answers.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes
@@ -212,7 +218,7 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
 | No live owned-but-undocumented case | Every rig device is documented since the Scarlett Solo 4th Gen guide was ingested, so that report is empty and four mechanisms reading from it are dormant (Decision 12). They stay specified and are exercised against a fixture rig; the risk is untested-in-anger code, not a missing gap. |
 | Scarlett applicability must be declared by hand | `focusrite_scarlett-solo-4g_…` yields source id `focusrite/scarlett-solo-4g` while `rig.yaml` declares `focusrite/scarlett-solo`. Omit the `source_applicability` mapping and the manual is present while its device reports as undocumented. `data/manual-corpus` 11.7 names the omission in the run report; nothing prevents it. **Declared** in the committed `rig.yaml`, and the live run now resolves it. |
 | Nitro Max reports as unconfirmed | `rig.yaml` declares no `source_applicability` for the Nitro Max, so under 11.2 its guide is `assumed` for a device the rig holds and 11.5 reports it alongside the APC — two sources where the design's worked example says one (`data/manual-corpus` Decision 16). The remedy is one line, after someone checks the guide against the unit; writing it now would fabricate a verification. |
-| Triage starter entries unwritten | `data/symptom-triage` §7 specifies five starter entries (no sound from a track, a track distorting, monitoring latency, drum pad triggers the wrong sound, controller does nothing). None are authored yet, so the diagnostic questions the source exists to answer still refuse. |
+| Triage acceptance (7.7) cannot be run | The five starter entries are written, ingested and citable, and every fix pointer resolves. What 7.7 actually asserts — that asking those five symptoms yields `answered`, `partially-answered` or `needs-narrowing` — needs `api/answer-engine`, which has no implementation. The test exists under `make bench`, runs the corpus-side precondition, and skips the ask naming what it waits on. |
 
 **Contract defects.** Each was found from both ends of its seam — named in the design of the spec
 that produces it *and* the one that consumes it — and none could be settled by one spec alone. All

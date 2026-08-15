@@ -1,0 +1,46 @@
+{
+ "schema": "dawmans.triage.sections/1",
+ "captured_from": "alesis/nitro-max (Alesis Nitro Max User Guide v1.1)",
+ "asserts": "7.5's General MIDI and channel causes resolve in the drum module's own manual",
+ "passages": [
+  {
+   "passage_id": "alesis/nitro-max#31bd60b67613941c",
+   "source_id": "alesis/nitro-max",
+   "section_number": "4.4",
+   "section_title": "MIDI Settings",
+   "page_start": 21,
+   "page_end": 22,
+   "text": "(4.4) MIDI Settings\nTo change the MIDI note number sent by each pad, see the section (3.1) Editing and\nSaving Drum Kits > To adjust the pad settings.\nTo adjust the MIDI settings:\n1. Hit the pad whose settings you want to adjust.\n2. Press Utility repeatedly until the desired setting appears on the display:\n• LOC (Local Mode):\no When set to ON, playing your electronic drum kit will trigger the sounds\nin the drum module.\no When set to OFF, playing your electronic drum kit will trigger sounds in a\ncomputer connected to the module's USB port, bypassing the drum\nmodule's sound library.\no GM (General MIDI Mode): When set to ON, Channel 10 in the drum\nmodule will use General MIDI percussion sounds.\no When set to OFF, Channel 10 in the drum module will use the module's\ninternal drum sounds.\n3. Use the – and + buttons to adjust the value.\nTo record to recording software (DAW):\n1. Use a USB cable (sold separately) to connect to the USB port on the module's rear\npanel to an available USB port on your computer.\n2. Open DAW software and set the active instrument or MIDI track to Channel 10,\nand start recording.\nNote: Be sure to have an instrument plugin (like BFD player) inserted into the\ninstrument track or MIDI track.\n3. Start recording in your DAW.\n4. Play your Nitro Max kit!\n5. Stop recording in your DAW. Your performance has been recorded.\nTo use BFD player as a standalone drum module:",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "alesis/nitro-max#c4dda24221eb2691",
+   "source_id": "alesis/nitro-max",
+   "section_number": "4.4",
+   "section_title": "MIDI Settings",
+   "page_start": 22,
+   "page_end": 22,
+   "text": "To use BFD player as a standalone drum module:\n1. Use a USB cable (sold separately) to connect to the USB port on the module's\nrear panel to an available USB port on your computer.\n2. Install BFD Player and any associated Expansion Packs.\n3. Open your BFD Player software.\n4. Select the Cog icon (Settings) in the bottom left corner of BFD Player.\n5. In the Audio section, select your Sample Rate, Buﬀer Size, and Output. Be sure\nthat your headphones are connected to whatever audio source you have\nselected, such as your laptop's headphone output or audio interface's output.\nImportant: Audio from BFD Player will not be sent out of the Nitro Max's\nheadphone output.\n6. In MIDI Input Device, select \"Alesis Nitro Max\".\n7. Close the settings window.\n8. In the left side of the BFD Player's window, select the expansion pack kit you\nwould like to use.\n9. Play your Nitro Max Kit and enjoy!",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "alesis/nitro-max#0c19afe5abb8c2b5",
+   "source_id": "alesis/nitro-max",
+   "section_number": "5.2",
+   "section_title": "Pad MIDI Note Numbers",
+   "page_start": 25,
+   "page_end": 25,
+   "text": "(5.2) Pad MIDI Note Numbers\nTrigger | MIDI Note Number | Trigger | MIDI Note Number\nKick | 36 ‖ Ride | 51\nSnare | 38 ‖ Crash 1 | 49\nSnare Rim | 40 ‖ Crash 2 | 57\nTom 1 | 48 ‖ Hi-Hat Open | 46\nTom 1 Rim | 50 ‖ Hi-Hat Half-Open | 23\nTom 2 | 45 ‖ Hi-Hat Closed | 42\nTom 2 Rim | 47 ‖ Hi-Hat Pedal | 44\nTom 3 | 43 ‖ HH Splash | 21\nTom 3 Rim | 58\nTom 4 | 41\nTom 4 Rim | 39",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  }
+ ]
+}

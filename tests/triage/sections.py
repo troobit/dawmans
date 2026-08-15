@@ -38,9 +38,15 @@ def passages(*names: str) -> list[dict[str, Any]]:
 LIVE = "live_sections.json"
 SCARLETT = "scarlett_sections.json"
 APC = "apc_sections.json"
+ALESIS = "alesis_sections.json"
 SPLIT = "split_section.json"
 DRIFT_BEFORE = "drift/before.json"
 DRIFT_AFTER = "drift/after.json"
 
-CORPUS = (LIVE, SCARLETT, APC)
-"""The three manuals a pointer can name, as one index."""
+CORPUS = (LIVE, SCARLETT, APC, ALESIS)
+"""The four manuals a pointer can name, as one index — the whole rig's documentation.
+
+The starter set points into all four: 7.5's General MIDI and channel causes are documented
+by the drum module and by nothing else, so a corpus of three would reject that entry rather
+than resolve it (2.2).
+"""
