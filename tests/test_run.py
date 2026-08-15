@@ -581,6 +581,72 @@ def test_a_rig_declaration_reaches_the_index_without_rebuilding_any_shard(
     assert published["focusrite/scarlett-solo-4g"]["status"] == "confirmed"
 
 
+def test_the_inventory_reports_the_declared_applicability_not_the_shard_default(
+    tmp_path: Path,
+) -> None:
+    """9.1 reports the record as the index holds it, and the rig join runs at the merge.
+
+    Read from the shards instead, `dawmans inventory` prints the loader's 11.2 default —
+    `assumed` for a source `rig.yaml` declares `confirmed`, against the filename's own
+    product rather than the device the declaration maps it to. That is the one field of
+    CONTRACTS §1 the shard and the view disagree about, and the inventory would be the
+    only place in the system reporting the losing side.
+    """
+    index_root = tmp_path / "index"
+    vendor = StubVendorStore(
+        sources={"focusrite/scarlett-solo-4g": [vendor_region("Direct Monitor", page=5)]}
+    )
+    rig = Rig(
+        devices=(
+            RigDevice(
+                id="focusrite/scarlett-solo",
+                display_name="Scarlett Solo 4th Gen",
+                revision="4th-gen",
+            ),
+        ),
+        source_applicability={
+            "focusrite/scarlett-solo-4g": HardwareApplicability(
+                status="confirmed", device="focusrite/scarlett-solo", revision="4th-gen"
+            )
+        },
+    )
+
+    ingest(index_root, vendor=vendor, embedder=StubEmbedder(), rig=rig)
+    code, lines = run_inventory(index_root)
+
+    assert code == 0
+    text = "\n".join(lines)
+    assert "confirmed for focusrite/scarlett-solo" in text
+    assert "assumed" not in text
+    # The 4.4 audit still lands beside the row it belongs to.
+    assert "english pages:" in text
+
+
+def test_the_inventory_reports_only_what_the_committed_view_holds(corpus) -> None:
+    """A shard whose merge never reached a view is on disk and reachable by nobody. 9.1 is
+    the inventory of the *queryable* index, so a stale shard must not appear in it."""
+    index_root, vendor, authored = corpus
+    ingest(index_root, vendor=vendor, authored=authored, embedder=StubEmbedder())
+
+    # A committed shard the live view does not name, as a failed merge leaves behind.
+    shards = index_root / "shards"
+    for path in shards.glob("akai_apc-key-25.*"):
+        ghost = shards / path.name.replace("akai_apc-key-25", "ghost_source")
+        ghost.write_bytes(path.read_bytes())
+    meta = shards / "ghost_source.meta.json"
+    payload = json.loads(meta.read_text())
+    payload["source"]["source_id"] = "ghost/source"
+    meta.write_text(json.dumps(payload))
+    assert "ghost/source" in {shard.source_id for shard in read_shards(index_root)}
+
+    code, lines = run_inventory(index_root)
+
+    assert code == 0
+    text = "\n".join(lines)
+    assert "akai/apc-key-25" in text  # the view still names it
+    assert "ghost/source" not in text
+
+
 def test_indexed_but_not_owned_is_reported_and_the_run_still_succeeds(corpus) -> None:
     """11.7: both manuals document devices no `rig.yaml` declares. Reported, never fatal."""
     index_root, vendor, authored = corpus

@@ -565,6 +565,14 @@ exemption is easy to miss:
   time a new declaration never reaches the index. The shard holds the loader's 11.2
   default; the view holds the joined value. Found by running the real corpus and seeing the
   Focusrite reported under both gap reports at once.
+- **Anything reporting a `SourceRecord` must read the view, not the shards** — the corollary
+  of the line above, and easy to get wrong because `read_shards` is right there and returns
+  records that look complete. `run_inventory` originally read the shards and so printed
+  `assumed for focusrite/scarlett-solo-4g` while the `sources.json` every consumer reads
+  said `confirmed for focusrite/scarlett-solo`: the CLI was the only place in the system
+  reporting the losing side of the join. `read_view_sources` (`index/build.py`) is the
+  reader to use. The view is also the *queryable* set — a shard whose merge failed is on
+  disk and in no view, so reporting from the shards names sources nobody can reach.
 - The run needs `scan()`, not the seam's `discover()`, so `cli.py` declares its own `Store`
   protocol (Decision 17). `discover()` drops discovery rejections and cannot tell an
   unavailable store from an empty one.

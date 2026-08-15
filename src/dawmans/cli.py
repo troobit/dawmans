@@ -47,6 +47,7 @@ from dawmans.index.build import (
     commit_view,
     read_shard,
     read_shards,
+    read_view_sources,
     shard_paths,
 )
 from dawmans.index.embed import Embedder, load_embedder
@@ -367,7 +368,12 @@ def run_validate(index_root: Path) -> tuple[int, list[str]]:
 
 
 def run_inventory(index_root: Path) -> tuple[int, list[str]]:
-    """9.1 over the committed view, with each source's 4.4 English ranges beside it."""
+    """9.1 over the committed view, with each source's 4.4 English ranges beside it.
+
+    The records come from the view and not from the shards, because the rig join runs at
+    the merge: a shard's `hardware_applicability` is the loader's 11.2 default, and only
+    the view carries what `rig.yaml` declares. See `read_view_sources`.
+    """
     try:
         manifest = read_manifest(index_root)
     except IndexVersionMismatch as error:
@@ -375,7 +381,7 @@ def run_inventory(index_root: Path) -> tuple[int, list[str]]:
     if manifest is None:
         return 1, [f"{index_root}: no manifest — nothing has been committed here"]
 
-    records = [shard.record for shard in read_shards(index_root)]
+    records = read_view_sources(index_root, manifest)
     audits = {
         record.source_id: audit
         for record in records

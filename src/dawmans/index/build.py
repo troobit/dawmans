@@ -273,6 +273,28 @@ def read_shards(index_root: Path) -> list[Shard]:
     return sorted((shard for shard in shards if shard is not None), key=lambda s: s.source_id)
 
 
+def read_view_sources(index_root: Path, manifest: Manifest) -> list[SourceRecord]:
+    """The records of the **committed view**, in the order the merge wrote them.
+
+    Not `read_shards`, and the difference is the rig join. A shard holds what the
+    *document* said — the loader's own 11.2 default — while `commit_view` writes the record
+    after `Rig.applied` has run over it (see `cli.ingest`). Reading the shards to report the
+    inventory would therefore print `assumed` for a source `rig.yaml` declares `confirmed`,
+    and print the filename's own product where a declaration maps it to another device id.
+    The view is what `api/answer-engine` and `ui/ask-and-source-picker` read (9.6, 11.6), so
+    it is what 9.1 has to report.
+
+    The view is also the *queryable* set: a shard whose merge failed is on disk but in no
+    view, and reporting it would name a source no consumer can reach.
+    """
+    path = index_root / manifest.view_dir / "sources.json"
+    try:
+        rows = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, ValueError):
+        return []
+    return [record_from_dict(row) for row in rows]
+
+
 def build_shard(
     index_root: Path,
     *,
@@ -593,6 +615,7 @@ __all__ = [
     "passage_to_dict",
     "read_shard",
     "read_shards",
+    "read_view_sources",
     "record_from_dict",
     "record_to_dict",
     "shard_paths",
