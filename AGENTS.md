@@ -1,6 +1,7 @@
-# CLAUDE.md
+# AGENTS.md
 
-This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
+Guidance for any coding agent working in this repository. Harness-neutral by intent: there is no
+separate `CLAUDE.md`, and anything added here should read the same to every tool.
 
 DAWMans answers home-studio questions strictly from the owner's own sources — vendor manuals plus
 an authored triage store — with every claim cited. `README.md` is the product and stack intro;
@@ -77,6 +78,13 @@ Non-obvious, and worth knowing before you run anything:
 - Log notable changes in `CHANGELOG.md` (Keep a Changelog format, under `[Unreleased]`).
 - Module knowledge lives in `docs/agent-notes/` — read the relevant note before changing a module,
   update it after the work.
+- Repeatable procedures live in `docs/workflows/`, written for any harness. The one that exists is
+  [`triage-from-threads.md`](docs/workflows/triage-from-threads.md): how to turn forum reading into
+  a triage entry that is grounded in the manuals. **Read it before authoring anything in `triage/`.**
+  A forum thread is never a source — it is never fetched at answer time, ingested, cited or
+  committed; it only informs which documented control a human decides to suspect. `make sections
+  ARGS="…"` prints paste-ready `fix:` pointers from the committed index, so a section number is
+  never written from memory.
 - `.claude/settings.json` ships a git/make permission baseline only. Running `/project-init` to add
   Python and Node permissions is still outstanding.
 

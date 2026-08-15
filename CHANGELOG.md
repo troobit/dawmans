@@ -12,6 +12,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **A harness-neutral workflow for authoring triage entries from forum reading.**
+  `docs/workflows/triage-from-threads.md` is the procedure; `tools/sections.py` (`make sections
+  ARGS="…"`) prints paste-ready `fix:` pointers from the committed index so a section number is
+  never written from memory. No product code and no spec change: the loop is `dawmans coverage` →
+  read → look up sections → write the entry → `dawmans ingest` + `validate`, all of which already
+  existed. A forum thread stays out of the corpus entirely — never fetched at answer time, ingested,
+  cited or committed — so `data/symptom-triage`'s "a forum or community corpus" non-goal is
+  untouched: it informs which documented control a human suspects, and the committed entry is the
+  owner's, cited to the manuals. The `docs/workflows/` directory is new and referenced from
+  `AGENTS.md`.
+
 - **`README.md` now introduces the product.** It was a one-line stub. It now carries the product
   intro, the stack table, mermaid diagrams for the system, a turn and the ingestion run, a
   three-depth walk through the deployment patterns (the ingest/serve extras split, the loopback

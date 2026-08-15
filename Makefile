@@ -3,7 +3,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help build build-py build-serve test test-py lint lint-py format spelling clean \
-	fetch-model fixtures bench bench-ingest bench-answer bench-retrieval serve \
+	fetch-model sections fixtures bench bench-ingest bench-answer bench-retrieval serve \
 	web-install web-build web-test web-e2e web-lint dev dev-web dev-engine
 
 help: ## List available targets
@@ -44,6 +44,9 @@ clean: ## Remove build artefacts
 
 fetch-model: ## Populate the gitignored models/ cache (one-off, needs network)
 	uv run python tools/fetch_model.py
+
+sections: ## Find real manual sections for a triage fix: pointer — make sections ARGS="direct monitor"
+	@uv run python tools/sections.py $(ARGS)
 
 fixtures: ## Recapture tests/fixtures/ from manuals/; needs the vendor PDFs locally
 	@if ! ls manuals/*.pdf >/dev/null 2>&1; then \
