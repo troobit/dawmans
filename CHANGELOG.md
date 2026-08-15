@@ -12,6 +12,72 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **The rig inventory and the two gap reports** (`dawmans/corpus/rig.py`, `rig.yaml`,
+  `data/manual-corpus` phase 8, requirements 11.1-11.7). `rig.yaml` is hand-maintained and
+  committed — it says what the owner **holds**, while `manuals/` says what is **documented**, and
+  11.3 keeps them apart on purpose. The join runs through `hardware_applicability.device` and never
+  through `source_id` (Decision 9), which looks like a nicety until the Focusrite: the filename's
+  product carries the generation marker (`scarlett-solo-4g`) and the rig's device id does not
+  (`scarlett-solo`), so a join on the ID would report the device undocumented with its manual
+  sitting in `manuals/`. `gaps.json` carries owned-but-undocumented and documented-but-unconfirmed,
+  **both members always present even when empty** (11.4) — a consumer distinguishing absent from
+  empty breaks on the day it fills. indexed-but-not-owned (11.7) stays in the run report and out of
+  `gaps.json`: a manual for gear the owner does not hold is not a gap in the rig, and CONTRACTS §5
+  governs two reports rather than three.
+- **The per-run report and the per-source ingestion audits** (`dawmans/report.py`, 1.5-1.7, 4.4,
+  5.4, 9.1, 9.5, 11.7). Every source is reported as ingested, skipped as unchanged, or rejected with
+  its reason — and for a malformed filename, the pattern it should have matched. The six rejection
+  reasons are closed **at construction** rather than checked at rendering: a rejection reports the
+  run as succeeded, so a disk error dressed as one is a run that indexed nothing and exited zero,
+  which is exactly what 1.7's failure path exists to prevent. The audit at `index/audits/<slug>.json`
+  is written as each source finishes, committed shard or rejection, and always carries a `rejection`
+  key — `null` where there is none, because absent and null are different to a reader. The 9.1
+  inventory derives its fields from `SourceRecord` itself rather than a hand-written list, so it
+  cannot drift from the CONTRACTS §1 table it is required to reproduce.
+- **`dawmans ingest`, `dawmans validate`, `dawmans inventory`** (`dawmans/cli.py`, 8.6, 9.1, 9.6,
+  12.2, 12.7). The whole stage order behind one command: collect superseded views, discover both
+  stores, load the embedding model once, ingest the vendor sources and commit their shards, then the
+  authored load, then the merge, `gaps.json` and the manifest rename. The vendor and authored
+  loaders are separate parameters rather than a list, because their order is a constraint and not a
+  convention — `TriageLoader` resolves each fix pointer against a vendor passage, so loading it
+  earlier would resolve against the *previous* run's text. A rejection deletes the source's shard,
+  since 1.6's "exclude that source from the index" is the passages going rather than a line in a
+  report; a failure keeps the previous shard, is collected, and the run continues to the next source
+  with no abort-on-first-failure path. Against the real corpus: 4 sources, 1431 passages, a full
+  cold rebuild in ~43 s.
+- **The timing tests and the `bench` target** (`tests/test_timing.py`, 8.1, 8.2, 8.4). 8.2 and 8.4
+  run in CI against synthetic PDFs generated at test time; 8.1 needs the gitignored manuals and runs
+  under `make bench`. 8.4 is measured with the model **resident**, exactly as the CLI arranges it,
+  and the cold load is asserted separately in a fresh process and through to a first vector —
+  `fastembed` builds no ONNX session until something is embedded, so a test that stopped at
+  construction would time an import and pass however slow the real load became.
+
+### Changed
+
+- **The rig is joined at the merge, not written into the shard** (Decision 18). A shard is a cache
+  of what the *document* said, keyed by the document's bytes; `rig.yaml` is what the *owner* says,
+  and editing it changes no byte of any PDF. Applied at shard-build time, a new
+  `source_applicability` declaration was invisible until something unrelated changed the manual —
+  every cache key still matched, no loader ran, and the reports kept describing the last rig the
+  corpus happened to be rebuilt under. Found by running the real corpus and seeing the Focusrite
+  reported under owned-but-undocumented *and* indexed-but-not-owned at once, which is the pairing
+  11.7 uses to signal a missing declaration that was not missing.
+- **The authored store is exempt from fingerprint-based shard skipping**, per
+  `data/symptom-triage` §Discovery. Its validity is a function of the manuals as well as its own
+  text, so a fingerprint over its own bytes cannot say whether a fix pointer still resolves;
+  skipping it left `unbacked` describing the run before last.
+- `pytest` now runs with `-m 'not bench'` by default. The marker alone deselected nothing, so
+  `make test` was running the full-corpus 8.1 benchmark.
+- `AUDIT_DIR` is declared once, in `corpus/discover.py`. It had been defined in two modules and
+  hardcoded in a third.
+
+### Fixed
+
+- `Rejection` now refuses a reason outside requirement 1.6's closed set. The `Literal` type
+  documented the set; nothing enforced it at runtime.
+
+### Added
+
 - **The embedding wrapper and its offline pin** (`dawmans/index/embed.py`, `data/manual-corpus`
   phase 7). `fastembed` is the only network-capable dependency in the package, so ingestion pins
   `HF_HUB_OFFLINE=1` in its **own process environment** — not as a library argument — and then

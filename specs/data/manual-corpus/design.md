@@ -114,7 +114,7 @@ Measured on the reference machine against the real corpus; 8.1 allows 60 s.
 | Unit assembly + chunking | ≤2 s | estimate |
 | Embedding ~1000 chunks | ~21 s | 42.4 chunks/s measured, `bge-small-en-v1.5` at 350 words |
 | BM25 index + merge + commit | <1 s | 0.14 s measured for 4000 chunks |
-| **Total** | **~34 s** | plus a one-off 7.2 s model load per process |
+| **Total** | **~34 s** | plus a one-off model load per process — stated as 7.2 s, **measured 2026-08-15 at ~0.25 s** ([Decision 19](decision_log.md)) |
 
 Embedding is the only stage with a slope: 8.1's 60 s is exhausted by embedding alone at ~2,500
 chunks, about 2.5× the current corpus. **8.2 is tighter than it looked**: 3.99 s measured against a
@@ -127,6 +127,14 @@ embedding, but the 7.2 s cold model load takes it to 8.7 s of the allowed 10 s b
 runs. The CLI therefore loads the model **once per run**, before iterating sources, and the 8.4
 timing test measures the per-source cost with the model resident while asserting the cold load
 separately, rather than hiding a 7.2 s constant inside a 10 s budget.
+
+> **Superseded in part — see [Decision 19](decision_log.md).** The 7.2 s figure is not what the
+> populated cache costs: measured 2026-08-15, a cold process reaches a first vector in ~0.25 s,
+> because `make fetch-model` populates the **quantised** ONNX build. 8.1 is therefore the tighter
+> budget of the two today. Everything the paragraph prescribes stands — the model is still loaded once
+> per run, and the cold load is still asserted separately and against 7.2 s, since that is the figure
+> the argument was built on and the one worth defending if the cache is ever repopulated with the
+> unquantised build.
 
 ### Module placement
 
@@ -172,6 +180,12 @@ reachable over a network.
 ## Components and Interfaces
 
 ### The loader protocol
+
+The run orchestration needs a **wider** protocol than this one and declares it itself, in
+`dawmans/cli.py` ([Decision 17](decision_log.md)): `scan() -> StoreScan` in place of `discover()`,
+because `discover()` drops the sources a store rejected by name — which 1.5 requires reported — and
+cannot distinguish an unavailable store from an empty one, which 1.4's removal rests on. `PdfLoader`
+and `TriageLoader` both provide it.
 
 ```python
 class SourceLoader(Protocol):
@@ -699,10 +713,25 @@ load-bearing — it is what keeps the report honest the moment a device is added
 of its manual.
 
 **Today, with all four manuals present: the first report is empty, the second names
-`akai/apc-key-25`, and the third is empty.** The first being empty is the corpus being complete
-(11.4), not the check failing to run.
+`akai/apc-key-25` and `alesis/nitro-max`, and the third is empty.** The first being empty is the
+corpus being complete (11.4), not the check failing to run.
+
+> **Superseded — see Decision 16.** This paragraph previously read "the second names
+> `akai/apc-key-25`" alone. The worked `rig.yaml` above declares no `source_applicability` for the
+> Nitro Max, so under 11.2 its guide resolves to `assumed` for a device that *is* in the rig
+> inventory, and 11.5's first arm fires on it. The criteria are unchanged; only this statement of
+> the live outcome was wrong. It returns to naming the APC alone once the Nitro Max is declared
+> `confirmed` by a person who has checked the guide against the unit.
 
 Both reports are published as `views/<hex>/gaps.json` (11.6), part of the read contract below.
+
+**The join runs at the merge, not when a shard is built** ([Decision 18](decision_log.md)). A shard is
+a cache of what the *document* said, keyed by the document's bytes; `rig.yaml` is what the *owner*
+says, and editing it changes no byte of any PDF. Applied at build time, a new `source_applicability`
+declaration would be invisible until something unrelated changed the manual — every shard's cache key
+still matches, no loader runs, and the reports keep describing the last rig the corpus happened to be
+rebuilt under. So `shards/<slug>.meta.json` records the loader's own 11.2 default, and
+`views/<hex>/sources.json` and `gaps.json` carry the joined value.
 
 ---
 
@@ -809,6 +838,12 @@ version differs MUST refuse to load rather than interpret the files, and the fix
 (~31 s). `corpus_revision` is `sha256` over the sorted `(source_id, fingerprint, chunk_count)`
 triples — a single cheap read that lets `api/answer-engine` satisfy its 5.10 (detect a corpus change
 and discard cached retrieval state) without diffing the corpus.
+
+**`corpus_revision` does not move when only `rig.yaml` moves**, and that is correct rather than
+overlooked: 8.11 requires it to change when and only when the indexed *content* does, and a rig edit
+changes no passage. It does change what `sources.json` and `gaps.json` say
+([Decision 18](decision_log.md)), so a consumer refreshing applicability keys on `manifest.view_dir`,
+which is fresh every run, and not on the revision.
 
 ### Incremental behaviour (8.3, 8.7)
 

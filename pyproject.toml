@@ -15,7 +15,12 @@ dependencies = [
     "lingua-language-detector>=2.2.0",
     "bm25s>=0.3.10",
     "numpy>=2.5.2",
+    # The declared rig inventory, `rig.yaml` at the repository root (requirement 11.3).
+    "pyyaml>=6.0",
 ]
+
+[project.scripts]
+dawmans = "dawmans.cli:main"
 
 [dependency-groups]
 dev = [
@@ -33,7 +38,10 @@ packages = ["src/dawmans"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
-addopts = "--strict-markers"
+# `-m "not bench"` is what actually keeps 8.1 out of `make test`; the marker alone only
+# names it. `make bench` passes `-m bench` on the command line, and pytest takes the last
+# `-m` it is given, so the two do not fight.
+addopts = "--strict-markers -m 'not bench'"
 markers = [
     "bench: the full-corpus timing of requirement 8.1; run by `make bench`, never by `make test`",
 ]

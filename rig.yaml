@@ -1,0 +1,55 @@
+# The rig inventory — the hardware this studio actually holds (requirement 11.3).
+#
+# Hand-maintained and committed, unlike `manuals/`, which is gitignored. It is deliberately
+# NOT derived from the corpus: what is documented is not evidence of what is owned, and
+# nothing detects connected devices. A device bought and not declared here will not be
+# reported as owned-but-undocumented.
+#
+# Device ids take the same `<vendor>/<product>` shape as a `source_id` so that matching is
+# exact and never fuzzy. `display_name` names the *device* and appears only in the two gap
+# reports; `SourceRecord.display_name` names the *document* and is derived from its
+# filename, so `Ableton Live 12 Standard` here against `Ableton Live 12` there is not a
+# conflict.
+
+devices:
+  - id: ableton/live-12
+    display_name: Ableton Live 12 Standard
+    revision: "12 Standard"
+  - id: akai/apc-key-25
+    display_name: Akai APC Key 25 mk2
+    revision: mk2
+  - id: alesis/nitro-max
+    display_name: Alesis Nitro Max
+    # revision omitted: no revision marker is declared for this unit.
+  - id: focusrite/scarlett-solo
+    display_name: Focusrite Scarlett Solo 4th Gen
+    revision: 4th-gen
+
+# Which device each source's document describes, and how well that is known.
+#
+# Optional in general — an absent entry means `assumed` for the product named in the
+# filename (11.2) — but MANDATORY wherever the filename's product carries a generation
+# marker the device id does not (11.7, decision_log Decision 9). `status: confirmed` is a
+# claim that someone checked, never a default: nothing here may be inferred from a
+# document's contents (CONTRACTS §5).
+source_applicability:
+  # Confirmed against the installed edition on this machine.
+  ableton/live-12: {device: ableton/live-12, revision: "12 Standard", status: confirmed}
+
+  # The worked case for 11.7. The filename's product carries the generation
+  # (`scarlett-solo-4g`) and the device id does not, so 11.2's default would resolve this
+  # source to a device no entry above holds: the source would miss its device and the
+  # device would be reported owned-but-undocumented with its manual sitting in `manuals/`.
+  # The generation was checked against Live's own log on this machine, not inferred from
+  # the document.
+  focusrite/scarlett-solo-4g:
+    {device: focusrite/scarlett-solo, revision: 4th-gen, status: confirmed}
+
+  # akai/apc-key-25 is deliberately undeclared: the ingested guide is Manual Version 1.0
+  # describing the original unit while the rig holds an mk2, so it defaults to `assumed`
+  # and is reported documented-but-unconfirmed (11.5). Obtaining the mk2 guide closes it.
+  #
+  # alesis/nitro-max is undeclared too, and is reported alongside the APC for the same
+  # reason — `assumed` for a device in the rig (11.5's first arm). Declare it `confirmed`
+  # once the guide has been checked against the unit; doing so on the owner's behalf is
+  # exactly the inference 11.2 forbids. See decision_log Decision 16.

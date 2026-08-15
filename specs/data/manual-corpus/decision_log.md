@@ -1117,3 +1117,279 @@ words of room for the rows it exists to hold, on every part of every split table
 ### Impact
 
 `src/dawmans/corpus/chunk.py`, design §Chunking.
+
+---
+
+## Decision 16: The Nitro Max is reported documented-but-unconfirmed
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Implementing the rig join (tasks 39–40) ran 11.5 against the committed `rig.yaml` and produced two
+sources, not one. The design's §Rig inventory states the live outcome as "the first report is empty,
+the second names `akai/apc-key-25`, and the third is empty", and 11.5 says "Today that is the Akai
+APC Key 25 guide". Both are computed from the same worked `rig.yaml`, which declares four devices and
+exactly two `source_applicability` entries — Live's and the Focusrite mapping.
+
+`alesis/nitro-max` is not among those two. Under 11.2 an undeclared source is `assumed` for the
+product named in its filename, so the Nitro Max guide resolves to `assumed` for device
+`alesis/nitro-max`, which **is** in the rig inventory. 11.5's first arm — "an indexed source whose
+applicability is `assumed` for a device in the rig inventory" — fires on it, before the revision
+comparison is reached at all. The arms are a disjunction, so the fact that neither side declares a
+revision does not save it.
+
+### Decision
+
+`rig.py` reports `alesis/nitro-max` alongside `akai/apc-key-25` under documented-but-unconfirmed,
+and `rig.yaml` is committed with the design's two `source_applicability` entries and no third. The
+design's "the second names `akai/apc-key-25`" and 11.5's "Today that is the Akai APC Key 25 guide"
+are **superseded** as statements of the live outcome; the criteria they sit in are unchanged.
+
+### Rationale
+
+The alternative — adding `alesis/nitro-max: {device: alesis/nitro-max, status: confirmed}` to
+`rig.yaml` — would make the reports match the prose, and it is the wrong way round. `confirmed` is a
+claim that a human checked this document against this unit. Nobody has. 11.2 is explicit that nothing
+is recorded as `confirmed` by default and that an undeclared source is unverified rather than
+verified, and writing the declaration during implementation would be exactly the inference
+CONTRACTS §5 forbids, dressed as a fix to a test.
+
+Reporting the Nitro Max is also *correct* on its own terms. The ingested guide is v1.1 and the unit
+declares no revision marker; whether the two agree is unknown, which is what `assumed` means and what
+the report exists to surface. The APC is the *interesting* instance because its mismatch is known —
+that is why the requirements name it — but "interesting" and "the only one" are different claims, and
+only the second is wrong.
+
+The remedy stays open and costs one line: the owner declares the Nitro Max `confirmed` once they have
+checked the guide against the unit, and the report drops back to naming the APC alone.
+
+### Alternatives Considered
+
+- **Declare `alesis/nitro-max` confirmed in `rig.yaml`**: One entry, and both documents' prose becomes true - Rejected because it fabricates a verification nobody performed, which is the single thing 11.2 and CONTRACTS §5 both forbid. The report would then be silent about a source whose applicability is genuinely unknown, which is the failure §11 exists to prevent, arrived at from the other direction.
+- **Restrict 11.5's first arm to sources whose revision also differs**: Report only a mismatch, so an `assumed` source agreeing on revision passes - Rejected because it deletes the arm's whole purpose. `assumed` means unchecked, not matching; a source that has never been compared has no revision agreement to rest on, and every undeclared source in the corpus would then report as confirmed-by-silence.
+- **Exclude a source whose device declares no revision**: Treat the Nitro Max's absent revision marker as nothing to confirm - Rejected because the absence is a property of the *unit*, not of the document. A guide can still describe a different production run of a device that prints no revision, and the report would go quiet on exactly the hardware where the mismatch is hardest to spot by eye.
+
+### Consequences
+
+**Positive:**
+- The implementation follows the criteria rather than the worked example, and the divergence is
+  recorded where the next reader will look for it.
+- No `confirmed` status is ever written by anything other than a person.
+- The correct remedy — a one-line declaration after an actual check — stays available and is named in
+  `rig.yaml`'s own comments.
+
+**Negative:**
+- The live report names two sources where two spec documents say one, until the Nitro Max is checked
+  and declared.
+- `ui/ask-and-source-picker` marks a second source as assumed in the picker, which is one more mark
+  to read past on a four-source corpus.
+
+### Impact
+
+`src/dawmans/corpus/rig.py`, `rig.yaml`, `tests/test_rig.py`; design §Rig inventory and
+requirement 11.5, both of which carry a superseded note pointing here.
+
+---
+
+## Decision 17: The run orchestration needs a wider loader protocol than the seam publishes
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §The loader protocol gives `SourceLoader` two methods: `discover() -> Iterable[Discovered]`
+and `load(d) -> LoadResult`. Wiring the run (task 44) found that `discover()` cannot carry two things
+the run is required to report.
+
+The first is **rejections**. 1.5 requires a per-run line for every source, including one rejected at
+discovery for a malformed filename (2.5) or a source-ID collision (2.6). Those sources never become a
+`Discovered` — that is what being rejected at discovery means — so a loader that yields only
+`Discovered` has already dropped them by the time it returns.
+
+The second is **availability**. 1.4 removes a source's chunks when its store no longer holds it, and
+`discover.py`'s `StoreScan` already draws the distinction the removal rests on: an absent or
+unreadable store is an *unknown* discovery set and removes nothing, while an existing empty one
+removes its shards. `data/symptom-triage` §The store on disk states the same rule for `triage/`. An
+empty `Iterable[Discovered]` cannot tell the two apart, and reading it as "empty" deletes every
+passage of an unmounted volume and reports the run as succeeded.
+
+### Decision
+
+`dawmans/cli.py` declares its own `Store` protocol — `scan() -> StoreScan` plus `load()` — and the run
+orchestration is written against that. `corpus/loader.py`'s `SourceLoader` is left exactly as the
+design states it, with a note pointing here. `PdfLoader` already offers both; `TriageLoader` must
+offer `scan()` too.
+
+### Rationale
+
+The protocol a consumer needs belongs with the consumer, and this one has exactly one consumer. Put
+in `corpus/loader.py`, `scan()` would also force a circular import — `StoreScan` lives in
+`discover.py`, which imports `loader.py` — and the fix for that (a `TYPE_CHECKING` guard, or moving
+`StoreScan` down into the seam) would be paying a structural cost to relocate a requirement that has
+no second reader.
+
+Leaving `SourceLoader` alone also keeps the published seam honest. It is what `data/symptom-triage`
+§Module placement reproduces, and widening it silently would change that spec's obligations in a
+document it does not own. Stated in `cli.py`, the extra obligation is visible at the place that
+enforces it and is named in both modules' docstrings.
+
+### Alternatives Considered
+
+- **Add `scan()` to `SourceLoader` in `corpus/loader.py`**: One protocol, no duplication - Rejected because it inverts the layering. `StoreScan` is defined in `discover.py`, which already imports `loader.py`, so the seam would import the store layer above it; the circularity is a symptom of the seam being the wrong home, not an inconvenience to route around.
+- **Move `StoreScan` and `DiscoveryRejection` down into `loader.py`**: Removes the cycle and gives one protocol - Rejected as the largest change for the smallest gain. It relocates two types that five modules import so that one method can sit somewhere it has no second caller, and `discover.py` — "stage 1 of the run", by its own docstring — is where a discovery set legibly belongs.
+- **Keep `discover()` and pass the scan alongside it**: `ingest(vendor_loader, vendor_scan, …)` - Rejected because it lets the two disagree. Nothing would stop a caller passing one store's scan with another store's loader, and the failure would be a silently wrong removal set rather than an error.
+
+### Consequences
+
+**Positive:**
+- The seam `data/symptom-triage` implements against is unchanged, and the extra obligation is written
+  down in both places rather than implied.
+- An unavailable store is distinguishable from an empty one everywhere the run can act on it, which
+  is what 1.4 needs and what `StoreScan` was built to say.
+- Discovery rejections reach the run report by the same path as every other outcome.
+
+**Negative:**
+- Two protocols describe one relationship, and a reader has to find the second to know what a loader
+  really has to provide.
+- `TriageLoader` carries an obligation stated in this spec's `cli.py` rather than in the design
+  section its own spec cites.
+
+### Impact
+
+`src/dawmans/cli.py`, `src/dawmans/corpus/loader.py`, design §The loader protocol.
+
+---
+
+## Decision 18: The rig is joined at the merge, not written into the shard
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+`rig.py` gives `Rig.applied(record)`, which replaces the loader's 11.2 default applicability with
+whatever `rig.yaml` declares for that source. The first wiring called it in `_ingest_source`, so the
+joined value was written into the shard alongside the passages.
+
+Running that against the real corpus showed it was wrong within one run. `rig.yaml` declares
+`focusrite/scarlett-solo-4g -> focusrite/scarlett-solo`, and the run still reported the Scarlett under
+indexed-but-not-owned and its device under owned-but-undocumented — the exact diagnostic pairing 11.7
+exists to signal a *missing* declaration. The declaration was not missing. Editing `rig.yaml` changes
+no byte of any PDF, so every shard's cache key still matched, every shard was reused, no loader ran,
+and `Rig.applied` was never reached. The joined value in each shard was the one written the last time
+that manual's bytes happened to change.
+
+### Decision
+
+`Rig.applied` runs at the **merge**, over the shards the run is about to commit, and not when a shard
+is built. The shard records the loader's own 11.2 default; `views/<hex>/sources.json` and `gaps.json`
+carry the joined value.
+
+### Rationale
+
+The split follows what each artefact is a record of. A shard is a cache of what the *document* said,
+keyed by the document's bytes — so a value that does not derive from those bytes has no business
+being cached under them. `rig.yaml` is what the *owner* says, it is versioned separately, and it is
+the input the whole of §11 is a join against. Deriving it at the point the two meet is the only place
+where both are current.
+
+It also makes 11.6's consumers correct by construction rather than by luck. `api/answer-engine` and
+`ui/ask-and-source-picker` read applicability out of the view, and a declaration added today reaches
+them on the next run rather than on the next run that happens to touch a manual.
+
+The cost is one `dataclasses.replace` per source per run, over a list of four.
+
+### Alternatives Considered
+
+- **Fold `rig.yaml`'s digest into the shard cache key**: A rig edit invalidates every shard, so the build-time join stays correct - Rejected because it re-extracts and re-embeds the whole corpus to change a declaration nobody claims is derived from the corpus — ~34 s and a fresh `corpus_revision` for an edit that altered no passage, which would also trip `api/answer-engine` 5.10 into discarding valid cached retrieval state.
+- **Apply at build time and again at merge**: Belt and braces - Rejected because two writers of one field is how they come to disagree. The shard's copy would be stale by construction and a reader picking it up would get an answer that was true at some earlier run, which is worse than not having it.
+- **Publish `rig.yaml` beside the view and let consumers join it**: The corpus stays out of it - Rejected because CONTRACTS §5 puts the two gap reports on this spec, and a join done in two consumers is a join done two ways. It would also hand `ui/ask-and-source-picker` a file whose grammar this spec owns.
+
+### Consequences
+
+**Positive:**
+- A `rig.yaml` edit reaches the index on the next run with no rebuild, which is the case §11 is for.
+- The shard means one thing — what the document said — and the view means the other.
+- The live corpus now reports what the design predicts: owned-but-undocumented empty and
+  indexed-but-not-owned empty, with the Focusrite mapping resolving.
+
+**Negative:**
+- `corpus_revision` is hashed over `(source_id, fingerprint, chunk_count)` and so does **not** change
+  when only `rig.yaml` changes. A consumer keyed on it alone will not see new applicability until
+  something else moves; `manifest.view_dir` does change every run, and that is the signal to use.
+- The applicability in `shards/<slug>.meta.json` is not the published one, so a reader debugging from
+  a shard has to know to look at the view.
+
+### Impact
+
+`src/dawmans/cli.py`, `tests/test_run.py`, design §Rig inventory and §Index layout.
+
+---
+
+## Decision 19: The cold model load is measured, not assumed, and it is lazy
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §Build budget states "a one-off 7.2 s model load per process", and the whole of the 8.4
+argument rests on it: a new ≤50-page source is ~1.5 s of embedding, so a 7.2 s load takes the total to
+8.7 s of the allowed 10 s, which is why the CLI loads the model once per run before iterating sources
+and why the design calls 8.4 the tightest budget in the spec.
+
+Writing the timing tests (task 45) measured it. From a cold process to a first vector is **~0.25 s**
+on the reference machine, not 7.2 s — the populated cache is `models--qdrant--bge-small-en-v1.5-onnx-q`,
+the *quantised* ONNX build. The first draft of the test also passed vacuously for a second reason:
+`load_embedder()` constructs `TextEmbedding` and returns, and `fastembed` builds no ONNX session until
+something is embedded, so timing the call timed an import.
+
+### Decision
+
+The cold-load test spawns a **fresh process** and measures through to a **first vector**, asserting
+against the design's 7.2 s figure rather than against the measured 0.25 s. The design's §Build budget
+carries a superseded note recording the measurement. The CLI keeps loading the model once per run.
+
+### Rationale
+
+Asserting the design's number rather than today's is the point. A timing test exists to catch a
+regression toward what the design feared, and one pinned to a fresh measurement fails on the first
+slower CI runner and teaches everyone to add a zero. 7.2 s is the number 8.4's reasoning was built on,
+so it is the number worth defending; the 29× headroom underneath it is reported in the test's comment
+where the next person to tighten it will find it.
+
+Measuring to a first vector rather than to a constructed object is not a refinement but the whole
+test. A lazy constructor makes "the model is loaded" unobservable at the call site, and the budget
+that matters to 8.4 is time-to-first-vector regardless of which line inside the library pays it.
+
+Loading once per run stays correct whatever the constant turns out to be. It is free, it is what makes
+the cost a per-*run* one rather than a per-*source* one, and if the cache is ever repopulated with the
+unquantised build the design's figure returns without a code change.
+
+### Alternatives Considered
+
+- **Assert the measured 0.25 s with a small margin**: The test then catches any regression at all - Rejected because it makes the suite a machine-speed detector. A cold ONNX load on a shared CI runner varies by more than an order of magnitude, and a test that fails for that reason is one that gets marked flaky and then skipped.
+- **Update the design's 7.2 s to 0.25 s and drop the separate assertion**: The documents would agree - Rejected because the figure is cache-dependent, not settled: it is a property of which ONNX build `make fetch-model` happens to populate, and folding a number that can change by 29× back into 8.4's 10 s is exactly the hiding the task set out to prevent.
+- **Force the session eagerly inside `load_embedder()`**: Construction would then mean what it says - Rejected as this spec reaching into the library's strategy for a test's convenience. Laziness costs the run nothing — the first source embeds within milliseconds of the load either way — and the seam has no other reason to care.
+
+### Consequences
+
+**Positive:**
+- The cold-load budget is asserted against a real load in a real cold process, and cannot pass by
+  timing an import.
+- 8.4 is measured with the model resident, so the per-source cost is free to regress into a test
+  rather than into 7 s of unclaimed headroom.
+- The gap between the design's figure and the measurement is written down instead of discovered again.
+
+**Negative:**
+- The test spawns a subprocess, which is slower and noisier than an in-process call and will be the
+  first thing blamed when the suite is slow.
+- The assertion has ~29× headroom on this machine, so it will not catch a load that becomes ten times
+  slower and still finishes in 2.5 s.
+
+### Impact
+
+`tests/test_timing.py`, `pyproject.toml` (`-m 'not bench'`), design §Build budget.

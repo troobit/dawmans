@@ -42,12 +42,26 @@ REJECTION_REASONS: tuple[RejectionReason, ...] = (
 
 @dataclass(frozen=True, slots=True)
 class Rejection:
-    """Why one source was excluded, for the run report."""
+    """Why one source was excluded, for the run report.
+
+    The set is closed **here**, at construction, rather than checked where a report line
+    is rendered. A rejection excludes one source and still reports the run as succeeded
+    (1.6), so a condition wrongly dressed as one — a disk error, an out-of-memory — is a
+    run that indexed nothing and exited zero. 1.7's failure path exists precisely to catch
+    those, and it only holds if this path is unreachable for anything not in 1.6's list.
+    """
 
     reason: RejectionReason
     #: What the report line says beyond the reason — for `filename-invalid`, the
     #: expected pattern; for `source-id-collision`, the colliding files.
     detail: str = ""
+
+    def __post_init__(self) -> None:
+        if self.reason not in REJECTION_REASONS:
+            raise ValueError(
+                f"{self.reason!r} is not one of the rejection reasons {REJECTION_REASONS} "
+                f"(requirement 1.6); anything else is a failure and fails the run (1.7)"
+            )
 
 
 @dataclass(frozen=True, slots=True)
@@ -127,7 +141,16 @@ class LoadResult:
 
 
 class SourceLoader(Protocol):
-    """One store's half of the seam."""
+    """One store's half of the seam.
+
+    The run orchestration needs a **stronger** protocol than this one and declares it
+    itself, in `dawmans/cli.py` (Decision 17): `discover()` yields the sources a store
+    holds and drops the two other things a scan knows — which sources it *rejected* by
+    name (1.5), and whether the store was **available** at all, an absent store being an
+    unknown discovery set rather than an empty one (1.4). This protocol stays as the
+    design's §The loader protocol states it; `PdfLoader.scan()` is where the wider one is
+    satisfied, and `TriageLoader` satisfies it the same way.
+    """
 
     def discover(self) -> Iterable[Discovered]: ...
 

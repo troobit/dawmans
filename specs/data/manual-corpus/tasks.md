@@ -344,7 +344,7 @@ references:
 
 ## Phase 8: Reports, rig inventory and the CLI
 
-- [ ] 39. Write tests for the rig inventory and the two gap reports <!-- id:e7lsx2v -->
+- [x] 39. Write tests for the rig inventory and the two gap reports <!-- id:e7lsx2v -->
   - rig.yaml is hand-maintained and committed, with device ids in the same <vendor>/<product> shape as source_id so matching is exact and never fuzzy; the rig inventory is never derived from manuals/ - what is documented is not evidence of what is owned.
   - An undeclared source is `assumed` for the product named in its filename; nothing is ever recorded as `confirmed` by default, and applicability is never inferred from content.
   - Both reports compute over source_applicability.device, not over source_id - a manual can document a device whose id is not its own product, and comparing against source IDs silently ignores it.
@@ -358,7 +358,7 @@ references:
   - Stream: 2
   - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6), [11.7](requirements.md#11.7)
 
-- [ ] 40. Implement corpus/rig.py and gaps.json <!-- id:e7lsx2w -->
+- [x] 40. Implement corpus/rig.py and gaps.json <!-- id:e7lsx2w -->
   - Also author the initial rig.yaml at the repository root with the four declared devices and both source_applicability entries - Live's confirmed applicability and the Focusrite mapping - per the design's worked example.
   - The Focusrite mapping is mandatory, not optional (11.7): focusrite/scarlett-solo-4g -> device focusrite/scarlett-solo, revision 4th-gen, status confirmed. Omit it and the manual is present while its device reports as undocumented.
   - gaps.json is written into the view before the manifest rename, with both members always present even when empty.
@@ -366,7 +366,7 @@ references:
   - Stream: 2
   - Requirements: [11.1](requirements.md#11.1), [11.2](requirements.md#11.2), [11.3](requirements.md#11.3), [11.4](requirements.md#11.4), [11.5](requirements.md#11.5), [11.6](requirements.md#11.6), [11.7](requirements.md#11.7)
 
-- [ ] 41. Write tests for the per-run report and the per-source audits <!-- id:e7lsx2x -->
+- [x] 41. Write tests for the per-run report and the per-source audits <!-- id:e7lsx2x -->
   - Per-run report lists every source as ingested, skipped as unchanged, or rejected with its reason; filename-invalid additionally reports the expected pattern.
   - The rejection reasons are a closed set - filename-invalid, source-id-collision, no-text-layer, no-english-content, unreadable-text, authored-invalid - and anything not in it is a failure. Assert an unlisted condition cannot be reported as a rejection.
   - A rejection continues the run and reports it as succeeded; a failure continues the remaining sources and exits non-zero with every failure listed, with no abort-on-first-failure path.
@@ -378,13 +378,13 @@ references:
   - Stream: 1
   - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5), [11.7](requirements.md#11.7)
 
-- [ ] 42. Implement report.py <!-- id:e7lsx2y -->
+- [x] 42. Implement report.py <!-- id:e7lsx2y -->
   - The per-run report and the per-source ingestion audits; a reused shard's audit is not rewritten, because it describes the run that produced the shard.
   - Blocked-by: e7lsx2x (Write tests for the per-run report and the per-source audits)
   - Stream: 1
   - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [4.4](requirements.md#4.4), [5.4](requirements.md#5.4), [9.1](requirements.md#9.1), [9.5](requirements.md#9.5), [11.7](requirements.md#11.7)
 
-- [ ] 43. Write end-to-end tests for a full ingestion run <!-- id:e7lsx2z -->
+- [x] 43. Write end-to-end tests for a full ingestion run <!-- id:e7lsx2z -->
   - Over a synthetic corpus with a stub TriageLoader standing in for data/symptom-triage: both kinds converge before chunking and are chunked, embedded, sharded and inventoried by the same code, which is what makes 12.2 structural rather than a set of kind branches.
   - Pass ordering: the authored load runs after every vendor shard commits, so an authored fix pointer whose target text this run repaired resolves and is not flagged unbacked from the previous run's passages.
   - A rejected source is excluded, its reason reported, and the run still succeeds with the remaining sources queryable.
@@ -393,14 +393,14 @@ references:
   - Stream: 1
   - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [8.6](requirements.md#8.6), [9.1](requirements.md#9.1), [9.6](requirements.md#9.6), [12.2](requirements.md#12.2), [12.3](requirements.md#12.3), [12.6](requirements.md#12.6), [12.7](requirements.md#12.7)
 
-- [ ] 44. Implement cli.py and the run orchestration <!-- id:e7lsx30 -->
+- [x] 44. Implement cli.py and the run orchestration <!-- id:e7lsx30 -->
   - `dawmans ingest`, `dawmans validate`, `dawmans inventory`.
   - Run order: delete superseded views, discover both stores, load the embedding model once, ingest vendor sources and commit their shards, then the authored load, then merge, gaps.json, and the manifest rename.
   - Blocked-by: e7lsx2z (Write end-to-end tests for a full ingestion run)
   - Stream: 1
   - Requirements: [1.5](requirements.md#1.5), [1.6](requirements.md#1.6), [1.7](requirements.md#1.7), [8.6](requirements.md#8.6), [9.1](requirements.md#9.1), [9.6](requirements.md#9.6), [12.2](requirements.md#12.2), [12.3](requirements.md#12.3), [12.7](requirements.md#12.7)
 
-- [ ] 45. Add the timing tests and the bench target <!-- id:e7lsx31 -->
+- [x] 45. Add the timing tests and the bench target <!-- id:e7lsx31 -->
   - 8.2 (<5 s extraction) and 8.4 (<10 s for a new <=50-page source) run against synthetic PDFs generated at test time and assert their budgets in CI.
   - 8.4 is measured with the model resident and the cold load asserted separately, rather than hiding a 7.2 s constant inside a 10 s budget. 8.4, not 8.1, is the tightest budget in the spec.
   - 8.1 (full corpus under 60 s) needs the real gitignored PDFs, so it is `make bench`, run locally and skipped when manuals/ is empty; CI cannot verify it.

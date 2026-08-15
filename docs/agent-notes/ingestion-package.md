@@ -518,3 +518,74 @@ of the page, the way PyMuPDF reports bboxes, with a `Text`'s `y` being its basel
 `Image(resolution=N)` writes N×N uncompressed RGB pixels, which is how the 10.4 test makes
 one file a hundred times larger than another with the same text layer. Task 45's timing
 tests want synthetic PDFs too.
+
+## The run report and the ingestion audits — `dawmans/report.py`
+
+Two artefacts with two lifetimes, and mixing them up is the mistake this module exists to
+prevent. The **run report** describes one run and goes to the terminal. The **ingestion
+audit** at `index/audits/<slug>.json` describes one *source* and is keyed to that source's
+shard: rewritten only when the source is re-ingested, surviving the shard being reused, and
+still readable after the view it accompanied has been collected. `views/<hex>/reports/` is
+the third thing and is neither — it is the per-`passage_id` view sidecar.
+
+- `AUDIT_DIR` lives in `corpus/discover.py`, not here and not in `index/build.py`. Three
+  modules reach for the directory (the writer here, the merge, and `remove_absent_sources`)
+  and it was previously declared twice and hardcoded once.
+- `write_audit` always writes a `rejection` key, `null` where there is none. Absent and
+  null are different to a reader and only one is a statement — the same rule `gaps.json`
+  follows for an empty report (11.4).
+- **A reused shard's audit is not rewritten**, and that is the *caller's* rule, enforced in
+  `cli.py` by not calling `write_audit` on the skip path. The audit describes the run that
+  produced the shard.
+- `inventory_row` derives its keys from `fields(SourceRecord)` rather than a hand-written
+  list. 9.1 names the CONTRACTS §1 table, not a copy of it, so a literal list here could
+  drift from it silently and a derived row cannot.
+- The rejection set is closed in `Rejection.__post_init__` (`corpus/loader.py`), not where
+  a line is rendered. A rejection reports the run as *succeeded*, so a disk error dressed
+  as one is a run that indexed nothing and exited zero.
+
+## The run orchestration — `dawmans/cli.py`
+
+`ingest()` is the design's §Stages in order. Three orderings are load-bearing and one
+exemption is easy to miss:
+
+- **Superseded views are collected first**, not at the end of the run that superseded them.
+- **The model is loaded once per run**, before iterating sources.
+- **The authored load runs after every vendor shard commits**, so `TriageLoader` resolves
+  fix pointers against *this* run's passages. `vendor` and `authored` are separate
+  parameters rather than a list, so the order is structural rather than a convention about
+  how the caller wrote the list down.
+- **The authored store is exempt from fingerprint-based skipping** (`always_load=True`).
+  `data/symptom-triage` §Discovery: its validity is a function of the *manuals* as well as
+  its own text, so a fingerprint over its own bytes cannot say whether a pointer still
+  resolves. Skipped, `unbacked` would describe the run before last. This was a real bug
+  found by the pass-ordering test.
+- **The rig is applied at the merge, not at shard build** (Decision 18). Editing `rig.yaml`
+  changes no source byte, so every shard is reused and no loader runs — applied at build
+  time a new declaration never reaches the index. The shard holds the loader's 11.2
+  default; the view holds the joined value. Found by running the real corpus and seeing the
+  Focusrite reported under both gap reports at once.
+- The run needs `scan()`, not the seam's `discover()`, so `cli.py` declares its own `Store`
+  protocol (Decision 17). `discover()` drops discovery rejections and cannot tell an
+  unavailable store from an empty one.
+- A **rejection deletes the shard**. 1.6's "exclude that source from the index" is the
+  passages going, not just a report line; left in place, a source whose content has become
+  invalid keeps serving the previous run's passages while the run reports the rejection and
+  succeeds. The audit is kept — it is the only record of why.
+- 6.11 (a chunk page outside the source's range) is a **failure**, not a rejection, per
+  design §Error Handling. Skipped for a pageless source.
+
+## Timing — `tests/test_timing.py`
+
+- `pyproject.toml` carries `addopts = "--strict-markers -m 'not bench'"`. The `bench` marker
+  alone does **not** deselect anything; without the `-m`, `make test` runs the full-corpus
+  8.1 test. `make bench` passes `-m bench`, and pytest takes the last `-m`.
+- **`load_embedder()` is lazy.** `fastembed`'s `TextEmbedding` builds no ONNX session until
+  something is embedded, so timing the call times an import. The cold-load test spawns a
+  fresh process and measures through to a first *vector*.
+- The design's 7.2 s cold load is not what this machine costs: measured ~0.25 s, because
+  `make fetch-model` populates the **quantised** ONNX build (Decision 19). The test still
+  asserts against 7.2 s — the figure 8.4's reasoning was built on — rather than against
+  today's measurement, which would fail on any slower runner.
+- A full real-corpus rebuild measures ~43 s against 8.1's 60 s. So 8.1, not 8.4, is the
+  tighter budget today, contrary to what §Build budget says.

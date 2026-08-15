@@ -50,7 +50,6 @@ from dawmans.records import HardwareApplicability, Passage, SourceRecord
 from dawmans.version import INGESTION_VERSION
 
 SHARD_DIR = "shards"
-AUDIT_DIR = "audits"
 
 #: Written beside the destination, not in a system temporary directory: `os.replace` is
 #: atomic only within one filesystem.
@@ -581,7 +580,6 @@ def collect_views(index_root: Path) -> list[Path]:
 
 
 __all__ = [
-    "AUDIT_DIR",
     "SHARD_DIR",
     "TMP_SUFFIX",
     "CacheKey",

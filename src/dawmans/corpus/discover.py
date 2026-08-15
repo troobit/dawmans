@@ -37,6 +37,13 @@ AUTHORED_STORE = "triage"
 #: Everything `index/build.py` commits for one source, all of it keyed by the same slug.
 SHARD_SUFFIXES = (".passages.jsonl", ".vectors.npy", ".sidecar.json", ".meta.json")
 
+#: `index/audits/<slug>.json`, written by `dawmans/report.py` and deleted with the shard it
+#: describes. Named here because three modules reach for it — the writer, the merge and the
+#: removal below — and a second spelling of it would be a directory only two of them find.
+#: It is deliberately not `index/reports/`, which is the view's and is keyed by `passage_id`
+#: (design §Index layout).
+AUDIT_DIR = "audits"
+
 #: What a rejected filename is reported against (2.5).
 FILENAME_GRAMMAR = "<vendor>_<product>_<doctype>_v<version>_<lang>.pdf"
 
@@ -355,7 +362,7 @@ def remove_absent_sources(scans: Sequence[StoreScan], index_root: Path) -> tuple
             path
             for path in (
                 *(index_root / "shards" / f"{meta.slug}{suffix}" for suffix in SHARD_SUFFIXES),
-                index_root / "audits" / f"{meta.slug}.json",
+                index_root / AUDIT_DIR / f"{meta.slug}.json",
             )
             if path.exists()
         )
@@ -368,6 +375,7 @@ def remove_absent_sources(scans: Sequence[StoreScan], index_root: Path) -> tuple
 
 
 __all__ = [
+    "AUDIT_DIR",
     "AUTHORED_STORE",
     "FILENAME_GRAMMAR",
     "FILENAME_PATTERN",
