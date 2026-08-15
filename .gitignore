@@ -3,6 +3,8 @@
 
 # Orbit task management
 **/.orbit/
+# Orbit run artefacts: generated variant diffs and reports, same category as .orbit/
+**/comparison-report/
 .vercel
 .env*.local
 

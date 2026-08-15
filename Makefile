@@ -1,34 +1,41 @@
 # Development tooling entry point. `make <target>` is the canonical way to build, test
-# and lint; the targets wrap `uv run …` rather than replacing it.
+# and lint; the targets wrap `uv run …` and `pnpm …` rather than replacing them.
 
 .DEFAULT_GOAL := help
-.PHONY: help build build-serve test lint spelling clean fetch-model fixtures \
-	bench bench-ingest bench-answer serve
+.PHONY: help build build-py build-serve test test-py lint lint-py spelling clean \
+	fetch-model fixtures bench bench-ingest bench-answer serve \
+	web-install web-build web-test web-e2e web-lint dev dev-web dev-engine
 
 help: ## List available targets
 	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Sync the dev environment (both extras) and install the package
+build: build-py web-build ## Build both halves: the Python environment and the browser surface
+
+build-py: ## Sync the dev environment (both extras) and install the package
 	uv sync --all-extras
 
 build-serve: ## Sync what the API host runs — serve only, never ingest (AGPL, Decision 6)
 	uv sync --extra serve
 
-test: ## Run the tests
+test: test-py web-test ## Run every suite
+
+test-py: ## Run the Python tests
 	uv run pytest
 
-lint: spelling ## Run linters (spelling, ruff)
+lint: spelling lint-py web-lint ## Run every linter
+
+lint-py: ## Run ruff over the Python tree
 	uv run ruff check .
 	uv run ruff format --check .
 
 spelling: ## Check spelling
 	bash tools/check_spelling.sh
 
-serve: ## Run the answer engine on loopback
+serve: ## Run the answer engine on loopback, serving web/build at / when it exists
 	uv run dawmans serve
 
 clean: ## Remove build artefacts
-	rm -rf dist .pytest_cache .ruff_cache
+	rm -rf dist .pytest_cache .ruff_cache web/build web/.svelte-kit
 	find . -name __pycache__ -type d -prune -exec rm -rf {} +
 	find . -name '*.egg-info' -type d -prune -exec rm -rf {} +
 
@@ -60,3 +67,27 @@ bench-ingest: ## Time a full-corpus rebuild (manual-corpus 8.1); skipped when ma
 
 bench-answer: ## Real-provider, real-index answer timing (skips when either is absent)
 	uv run python tools/bench.py
+
+web-install: ## Install web/ dependencies
+	cd web && pnpm install
+
+web-build: web-install ## Build the browser surface to web/build
+	cd web && pnpm build
+
+web-test: web-install ## Run the web unit and component tests
+	cd web && pnpm test
+
+web-e2e: web-install ## Run the Playwright browser and accessibility suite
+	cd web && pnpm test:e2e
+
+web-lint: web-install ## Type-check the browser surface (svelte-check)
+	cd web && pnpm check
+
+dev: ## Run the web dev server and the answer engine together
+	$(MAKE) -j2 dev-web dev-engine
+
+dev-web:
+	cd web && pnpm dev
+
+dev-engine:
+	uv run dawmans serve

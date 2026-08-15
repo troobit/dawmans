@@ -441,6 +441,325 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   empty string, an authored-triage citation cannot carry a page, section number or `doc_version`,
   `entry_location` is authored-only, a cause's `rank` equals its position in `causes[]`, and
   `retry_after` is non-negative and unrounded. 32 tests assert the field sets and invariants.
+- **`web/src/routes/+page.svelte` — the assembled surface** (`ui/ask-and-source-picker` Phase 9).
+  One page: scope bar, thread and ask input, with the picker, history, provider configuration and
+  expanded passages as regions, not routes, so no transition can discard the typed question or
+  the scope (10.2, 10.11). The page wires what no component owns: the loads on mount (sources →
+  scope, provider), a submission gate blocking the turn while the source list is not ready (9.13)
+  or the shared-backend disclosure is unacknowledged (10.4), the 3.6 release notice with its
+  one-activation reinstate, the engine-unreachable and corpus-empty states, and the provider
+  region's place on the Escape stack. The layout applies the design tokens to the body and keeps
+  the thread at ≥ 70% of the viewport at rest (11.8).
+- **`web/src/routes/page.test.ts` and `web/src/lib/testing/fake-server.ts` — the integration
+  suite** (Phase 9). A fake engine server over global fetch, so full turns exercise the real
+  client → SSE → reducer → renderer path for every renderer family and error outcome with no
+  provider, corpus or key; the keyboard-only core loop asserted at component level (1.13); region
+  transitions asserted to preserve question and scope (10.2, 10.11); and CONTRACTS §4b re-checked
+  at the integrated level — one visible discharge per governed event, typed as a total record so
+  a seventeenth event fails the type check.
+- **`web/e2e/` — the Playwright browser and accessibility suite** (Phase 9). A scripted stub
+  engine behind the real vite dev proxy proves in a live browser: no already-painted line moves
+  while streaming (4.2); the core loop with zero pointer use (1.13, 13.1); open-at-source at
+  exactly `#page=N` in a new tab and the authored entry revealed in place (5.5, 5.19); Escape
+  returning focus to each region's opener (13.3); a mid-stream citation expand/collapse leaving
+  the entry at the same viewport offset (5.8); one announcement per state transition and never a
+  fragment (13.5); the ≥ 70% chrome ratio (11.8); every 11.6 distinction surviving greyscale; no
+  horizontal scrolling at the 200% text-size equivalence (13.7); the reduced-motion counter with
+  distinct static state shapes (13.6); and an axe-core WCAG A/AA floor over every rendered state
+  (13.2, 13.4, 13.8). Run with `make web-e2e`.
+
+### Fixed
+
+- **`CitationEntry` reading-position restore scrolls the real scroll container** (5.8). The
+  collapse restore called `window.scrollBy`, a silent no-op on the assembled page where the
+  thread scrolls inside a container; it now scrolls the nearest scrollable ancestor, falling back
+  to the window.
+
+### Added
+
+- **`web/src/lib/components/SourcePicker.svelte` — the source picker** (`ui/ask-and-source-picker`
+  Phase 8). Collapsed at rest to the one-line scope indicator, which is itself the expand/collapse
+  control (2.11): "All N sources in scope" (2.7), names at three or fewer in scope (2.6, 3.3), else
+  "n of m", with a scope glyph as the greyscale-safe channel (3.10, 11.6). Expanded: per-source
+  checkboxes with a filled/hollow marker plus the word in/out of scope (2.14), the kind stated on
+  every entry so authored notes are never mistaken for vendor documentation (2.12), the
+  assumed-revision and sparse-text marks (2.10), all/none controls (2.8), a substring filter from
+  twelve sources (2.13), and the known-gaps group rendered apart, never selectable, and omitted
+  entirely while the report is empty (2.9). Registers on the router's Escape stack while expanded
+  (13.3).
+- **`web/src/lib/state/provider.svelte.ts` and `ProviderConfig.svelte` — provider configuration**
+  (Phase 8). Kind-first configuration over the five provider operations (10.1): a local provider
+  configured from its endpoint or model alone and never asked for a key (10.3); the key input
+  masked with a hold-to-reveal, always empty on open, cleared after save so the engine's masked
+  tail is the only representation anywhere (10.5, 10.6); replace, clear and test-provider (10.8,
+  10.10); status rendered only from `GET /provider` (10.7). The shared-backend disclosure blocks
+  the first turn until explicitly acknowledged, stays readable afterwards, and is stored against
+  the engine-reported backend identity so changing backend re-arms it (10.4).
+- **`web/src/lib/components/HistoryPanel.svelte` and thread retention** (Phase 8). Retained
+  exchanges newest first with question and time (12.2); selecting one re-displays the stored
+  answer, scope-at-ask and citation records with no fetch (12.3, 12.4); re-ask starts a new
+  conversation against the current scope (12.5); clear-all behind a confirmation step (12.6);
+  mounted only while open, one activation each way, dismissed by Escape to its opener (12.8,
+  13.3). `history.svelte.ts` now records the client-minted conversation id on each entry so a
+  narrowing exchange is retained as part of its thread, never as a standalone unanswered
+  question (6.7).
+
+- **`web/src/lib/state/perf.svelte.ts` — per-turn marks and the slow-wait thresholds**
+  (`ui/ask-and-source-picker` Phase 7). `submit` is stamped at Turn construction in the submit
+  handler, `firstByte` when the first content event leaves the SSE reader, and `firstPaint` in a
+  requestAnimationFrame after that content is in the DOM; `measures()` computes 8.8
+  (firstPaint − submit) and 8.9 (firstPaint − firstByte), returning nothing where a mark is
+  absent. `SLOW_THRESHOLD_MS` fixes the "taking longer than usual" threshold per provider class —
+  hosted 3 s, local 5 s, inside 8.10's bands.
+- **`web/src/lib/components/WorkingIndicator.svelte` — the waiting states** (Phase 7). Shown
+  below the thread while the active turn awaits first content, so its removal cannot shift
+  painted text (8.2, Decision 2); the submitted question stays visible while waiting (8.3).
+  Unmistakably live by animation — the surface's only animation beside arriving text (11.9) — or,
+  under `prefers-reduced-motion`, an elapsed-seconds counter paired with the static shape,
+  excluded from the announcement region so ticks are never announced (13.6, Decision 7). Past the
+  per-provider-class threshold, plain "taking longer than usual" text and a cancel control appear
+  (8.5); cancelling returns to ready with the question preserved and partial output never
+  presented as finished (8.6).
+- **`web/src/lib/components/ErrorView.svelte` — the §9 error renderers** (Phase 7). Every error
+  outcome states what happened plainly with at least one action and never raw exception text
+  (9.1, 9.2): `provider-unconfigured` keyed on the `reason` sub-code alone, opening provider
+  configuration with the typed question preserved (9.5); `provider-unreachable` naming the
+  provider (9.6); `timeout` attributing the stall to the provider, distinct from unreachable
+  (9.7); `provider-rate-limited` counting `retry_after` down where supplied and stating honestly
+  where the provider gave no interval (9.8); `provider-error` retrying with `detail` behind the
+  disclosure (9.9), or offering configuration in place of retry on `authentication-failed`
+  (9.10); `unknown-source-id` naming the rejected ids, dropping them from the stored scope and
+  re-asking the remainder in one activation (9.11); `no-sources-selected` as the 3.2 empty-scope
+  state (9.12); `corpus-empty` naming `manuals/` and the ingestion step (9.13). Broken states
+  carrying no outcome render here too: a malformed-request rejection naming what was rejected
+  (9.15), an unknown turn-stream version naming both versions (9.19), and an unrecognised
+  outcome (9.4).
+- **`web/src/lib/components/DiagnosticsDisclosure.svelte` — the 9.3 disclosure** (Phase 7).
+  Renders exactly the engine's `detail`, `framing` and `timings` plus the client's per-turn
+  marks — nothing else, nothing parsed out of `detail`, no request echoed (which keeps 9.17
+  structural). Mounted on every failed/error/broken turn and on any turn carrying
+  `framing: unparsed`.
+
+### Changed
+
+- **`web/src/lib/components/ThreadView.svelte`** (Phase 7): per-turn state now signals through
+  two channels — a static glyph beside the text label, never colour alone (8.4); the error
+  family (including failed turns with no outcome) routes to `ErrorView`, `cancelled` retains
+  whatever arrived, `incomplete` turns keep their partial text marked with a retry (9.14), and an
+  engine-cancelled turn the user did not cancel is marked abandoned without disturbing its
+  replacement (9.16). One `aria-live="polite"` region announces streaming started, finished,
+  failed, coverage failure, partial answer and narrowing — with its candidates and that digits
+  select them — once each (13.5).
+- **`web/src/lib/components/AnswerView.svelte`** (Phase 7): the streamed body is
+  `aria-live="off"` with `aria-busy` while streaming, so fragments are never announced
+  individually (13.5); the first painted content schedules the `firstPaint` mark.
+- **`web/src/lib/engine/turn.svelte.ts`** (Phase 7): `Turn.marks` is reactive and the
+  `direct_answer`/`body_delta` handlers stamp `firstByte` on first content.
+
+### Added
+
+- **`web/src/lib/components/NarrowingView.svelte` — the narrowing renderer**
+  (`ui/ask-and-source-picker` Phase 6). `needs-narrowing` renders the question and its 2–4
+  candidates visually distinct from an answer, a coverage failure and an error (6.1), each a
+  separately activatable control numbered in the engine's order — never reordered, merged or
+  added to (6.2). The digits arm through the keyboard router's registry while the list is the
+  thread's last settled turn, with the armed keys indicated on screen (6.3, 1.11); selection
+  submits a follow-up turn in the current thread against the unchanged scope, keeping the
+  question and the chosen candidate visible (6.4); typing any other printable begins a free-text
+  reply through the router's capture without dismissing the list (6.5); the question paints from
+  its first event, never held back until the turn settles (6.8).
+- **`web/src/lib/components/RankedCausesView.svelte` — the ranked-causes renderer** (Phase 6).
+  `causes[]` renders in array order with each `rank` shown, as findings to read — never the
+  digit-armed controls of a narrowing question, the affordance split that keeps the two
+  candidate-bearing shapes apart (6.6). The rank-1 cause's `check` arrives as `direct_answer` and
+  paints first, so the first cause is never promoted to an answer; `cites[]` and `fix_cites[]`
+  resolve through the turn's one citation map by `passage_id` via the new shared
+  `citation-order.ts` numbering (also adopted by `CitationList`), and a cause with an empty
+  `fix_cites[]` carries the `unbacked` mark rather than simply appearing without a fix (5.16).
+- **`web/src/lib/components/CoverageFailureView.svelte` — the coverage-failure renderer**
+  (Phase 6). One renderer for `refused-not-covered`, `out-of-domain` and `no-manual-for-device`
+  with the per-outcome action table: plain not-covered wording with no synthesised answer (7.1)
+  naming the sources in scope at ask time (7.3); add-the-suggested-sources-and-re-ask in one
+  activation from addressable values (7.4); widen-all-and-re-ask where nothing is suggested and
+  out-of-scope sources exist, suppressed on the two outcomes the engine has already judged
+  uncoverable (7.5); technique wording with the question re-editable on `out-of-domain` (7.6);
+  the `required_device` with the copyable `required_manual` filename and its `placeholders[]`
+  named from the field — never split out of the filename, and the `manuals/` naming convention
+  stated where the dormant field is absent (7.7). Under a narrowing the gap is attributed to the
+  narrowing in force (3.10); a widen persists and decays like any scope change (7.9); with all
+  sources already in scope the state says so and falls through to the filename action or
+  re-editing, never dead-ending (7.8, 9.2).
+- **History entries carry their thread** (Phase 6). `HistoryStore.record` now stores the
+  client-minted conversation id as `entry.thread`, so a narrowing exchange is retained as part of
+  the thread it belongs to and never as a standalone unanswered question (6.7).
+
+### Changed
+
+- `ThreadView` routes the `narrowing`, `ranked-causes` and `coverage-failure` renderer families
+  to the new Phase 6 components, passing the keyboard router and a source-name resolver down;
+  only the Phase 7 error families keep the plain-text placeholder.
+
+### Added
+
+- **`web/src/lib/components/AnswerView.svelte` — the answer renderer** (`ui/ask-and-source-picker`
+  Phase 5). The §4 renderer over the reducer's blocks and envelope, presentation only:
+  `direct_answer` first (4.3), every CONTRACTS §4d block and inline type visually distinct —
+  headings, separately identifiable steps (4.5), bullets, paragraphs, `!caveat` in reading
+  position and never behind a disclosure, `!conflict` with both readings and their separate
+  citation markers, neither chosen (4.4) — backtick key terms as discrete `<kbd>` elements never
+  smaller than body text (4.12), and markers as their stable first-appearance integers
+  (Decision 3). A turn carrying `scope_dropped[]` names the dropped sources with that turn as the
+  engine's prune, never the user's own narrowing (3.11); `contributing_sources` are named
+  distinctly from the merely-in-scope (4.7); `partially-answered` renders as an answer with each
+  uncovered part visually subordinate and a per-part control that re-asks it alone, widening scope
+  to the engine-named sources with the answered part left on screen (4.8, 4.9). ThreadView routes
+  the `answer` renderer family here.
+- **`web/src/lib/components/CitationList.svelte` / `CitationEntry.svelte` — the citation list**
+  (Phase 5). One entry per marker integer in first-appearance order, each carrying every
+  CONTRACTS §3 obligation inline with no disclosure in the path (Decision 3): `doc_version`
+  (5.2), assumed `hardware_applicability` naming the revision described (5.3), "figure on pN"
+  (5.4), the authored kind as the user's own note distinguishable in greyscale (5.14), and
+  `unbacked` (5.16). The location slot renders `section_number` and `section_title` as the two
+  fields they are with only what exists (5.1); a pageless authored citation shows its symptom
+  title with page and section absent (5.15); `entry_location` sits beside the open action,
+  copyable in one activation, never in the location slot (5.19). A settled answer with no
+  citations is marked uncited (5.12) and `ungrounded` marks the rendered text as unverified
+  without blanking it (5.13).
+- **`web/src/lib/state/passages.svelte.ts` — the session passage cache** (Phase 5). A `Map` of
+  loading/ready/failed states over the fetch-passage operation, prefetched on focus and never on
+  hover (1.12, 5.18): focus precedes activation by a keystroke, so expansion is a cache hit in the
+  ordinary case, and a failed entry retries on the next activation. Components fetch nothing
+  themselves.
+- **Passage expansion and open-at-source on the citation entry** (Phase 5). Expansion reveals the
+  passage verbatim in place, visually distinguishable from summary text (5.6, 5.7), with a
+  working indicator only past 300 ms on a cache miss (5.18); collapse restores the entry's own
+  viewport offset via its rect, not `scrollY` (5.8); `degraded` is marked distinctly from the
+  unavailable state, which keeps the source, its cited location and the open action (5.10, 5.11).
+  openAtSource is two branches and no third (5.5, CONTRACTS §3a): a vendor manual is a plain link
+  — `target="_blank"`, `rel="noopener"`, the serve-document route at exactly `#page=N` — and an
+  authored entry is the expansion plus its copyable `entry_location`; no `file://` URL is ever
+  attempted.
+
+- **`web/src/lib/keys.ts` — the keyboard router and arming registry** (`ui/ask-and-source-picker`
+  Phase 4, Decision 5). One `keydown` listener on `window` with the design's decision table:
+  modifiers and foreign text-entry targets pass through; `Escape` dismisses the topmost overlay
+  region, returning focus to its opener (13.3); digits 1–4 activate an armed entry (1.11); any
+  other printable focuses the question input and inserts the character manually — `preventDefault`
+  then append, because the keydown already happened elsewhere (1.2). The registry enforces at most
+  one armed set by throwing on a second registration, and window focus restores the input unless a
+  region holds it (1.1). One recorded deviation: an armed digit fires even when the target is the
+  question input, since focus rests there and arming exists only while it is empty — a literal
+  pass-through would defeat 1.10/6.3's one-keypress rule.
+- **`web/src/lib/state/thread.svelte.ts` — the thread store** (Phase 4). The conversation on
+  screen: the composed draft, the turns oldest first, and submission through the scope store's
+  block and the turn state machine — whitespace submits contact no engine (1.5), zero scope blocks
+  (3.1), the 1000-character limit is enforced client-side (9.15), and the turn is acknowledged
+  synchronously before any fetch (8.7). A user stop retains what arrived and ends the turn as
+  cancelled, distinct from an engine abandonment (1.9, 8.6, 9.16); a mid-stream transport failure
+  is `incomplete` (9.14); request rejections are kept for the broken-state renderer with no
+  outcome synthesised. Conversation ids are minted client-side after the first turn of a thread
+  (decision log Decision 8); nothing listens to window focus, so leaving costs nothing (1.12).
+- **`web/src/lib/components/AskSurface.svelte` — the ask input and symptom shortcuts** (Phase 4).
+  Focus lands in the input on load and window focus (1.1); unmodified Enter submits and
+  Shift+Enter breaks the line (1.3); the four symptom shortcuts — no sound, distorting, latency,
+  wrong drum sound — render on an empty idle input with their armed digits printed, each
+  submitting in one keypress via the registry and equally by pointer (1.10, 1.11). A follow-up is
+  indicated with a single new-question control that starts a context-free thread (1.7, 1.8); a
+  stop control restores the question for re-editing (1.9, 8.6); the zero-scope state offers
+  select-all preserving the typed text (3.2) and the over-limit notice states limit and length
+  while the question stays editable (9.15).
+- **`web/src/lib/components/ThreadView.svelte` — the thread shell** (Phase 4). Turns oldest
+  first, each question inspectable and re-editable in one activation (1.4), with a textual
+  working/stopped/abandoned/incomplete/broken/finished state line and a plain-text body
+  placeholder until the Phase 5 answer renderer.
+- **`web/src/lib/testing/turn-channel.ts`** — the stubbed engine shared by the thread and
+  component tests: controllable SSE channels carrying the turn-stream version header, wired to
+  the abort signal the way a real fetch is.
+- **`ui/ask-and-source-picker` decision log Decision 8** — the thread mints its conversation id
+  client-side; the engine issues none and `null` remains the specced way to start a conversation.
+
+- **`web/src/lib/state/sources.svelte.ts` — the sources store** (`ui/ask-and-source-picker`
+  Phase 3). Available sources of both kinds plus both gap reports from `GET /sources` — no fixed
+  source count anywhere, an added or removed source reflected on the next load (2.1, 2.3). Carries
+  the owned-but-undocumented report (empty is the live case; the populated path is exercised
+  against a fixture, per CONTRACTS §5), the documented-but-unconfirmed report, assumed
+  `hardware_applicability` with the revision it describes, and `low_text` (2.9, 2.10). A failed
+  `GET /sources` is an `engine-unreachable` state that blocks submission, distinct from
+  `corpus-empty` — the engine answering that nothing is ingested (9.13) — and never renders as an
+  empty picker.
+- **`web/src/lib/state/history.svelte.ts` — the history store** (Phase 3). Persisted exchanges in
+  `localStorage`, read lazily on first access so nothing parses on boot inside 8.7's
+  acknowledgement budget (12.1). An entry stores the question, the envelope, the citation records,
+  the scope at ask time and a timestamp — never passage text; trimmed to the most recent 50 on
+  settle, with a `QuotaExceededError` dropping oldest entries until the write succeeds rather than
+  failing the turn (12.9). Cancelled and failed exchanges are not retained as answers; a partial
+  kept under 9.14 is marked incomplete (12.7).
+- **`web/src/lib/engine/client.ts` — the engine client** (`ui/ask-and-source-picker` Phase 2). The
+  nine `api/answer-engine` operations as stateless typed wrappers over relative routes — no host,
+  no port, no retries. Non-envelope HTTP failures (422 question-too-long, 403 host/origin) throw a
+  typed `EngineRejection` carrying the engine's machine-readable `rejected` name, distinct from any
+  outcome (9.15). `serveDocumentHref` builds the open-at-source link as the serve-document route
+  plus `#page=N` and nothing else (5.5).
+- **`web/src/lib/engine/sse.ts` — the SSE turn-stream reader.** Incremental UTF-8 decoding
+  (`TextDecoder` with `{stream: true}`) so a multi-byte character split across network chunks never
+  paints as U+FFFD; frames reassembled across arbitrary chunk boundaries; a data-less event never
+  dispatched. `turnEvents` checks the `dawmans-turn-stream` version header before reading a single
+  body byte, refusing an unknown version by naming both (9.19), and reports end-of-stream without
+  `done` as an explicit incomplete signal — never a settled turn (9.14). No reconnection and no
+  resumption exist.
+- **`web/src/lib/engine/blocks.ts` — the append-only block parser** over CONTRACTS §4d's closed
+  set (Decision 2). A block's type is fixed by its first line within at most 10 characters and
+  never revised across any chunk split; an unknown first line degrades to a paragraph and never
+  emits nothing (4.4); a `!conflict` with other than two readings stays the conflict it declared
+  itself. Citation markers `[[p:<passage_id>]]` are buffered from `[` until complete or disproved
+  and painted immediately as their first-appearance integer, so late citation resolution cannot
+  reflow the line (Decision 3); backtick spans become discrete key-term elements.
+- **`web/src/lib/engine/turn.svelte.ts` — the event → Turn reducer.** Fills
+  `Partial<AnswerEnvelope>` append-only from CONTRACTS §4b's sixteen events, with the citation map
+  keyed by `passage_id` and the marker order list. Two compile-time totality guards: every §6
+  outcome maps to a renderer (`Record<Outcome, TurnRenderer>`) and every §4b event has exactly one
+  handler (a mapped type over `TurnEvent`); an unknown outcome renders broken carrying `detail`
+  (9.4) while an unknown event is ignored (9.19) — deliberately opposite rules. End of stream
+  without `done` marks the turn incomplete, retaining the partial text.
+- **`web/src/lib/state/scope.svelte.ts` — the scope store** (Phase 3, carried with this change):
+  selection, persistence and decay per §3, with `sessionStorage` presence as the session boundary
+  and the 8-hour clause on `lastQuestionAt` (Decision 4), silent load-time pruning of stale ids
+  (3.8), release-with-reinstate (3.6) and the 2.4 admission rule for newly reported sources.
+
+### Fixed
+
+- **The turn reducer now clones the still-open block on snapshot**
+  (`web/src/lib/engine/turn.svelte.ts`, Phase 5). The parser streams into its last block by
+  mutating it in place, and under `$state.raw` a keyed render compares items referentially — so a
+  delta extending an already-painted paragraph never repainted. The snapshot now
+  `structuredClone`s the last block (the only one still open); every earlier block is closed and
+  keeps its reference (4.1).
+- **`web/vite.config.ts`** — vitest now resolves Svelte's browser entry
+  (`resolve.conditions: ['browser']` under `VITEST`), without which component tests fail with
+  `lifecycle_function_unavailable`.
+- **Web Storage in vitest under Node ≥ 22.** Node's experimental `localStorage`/`sessionStorage`
+  globals (lazy getters, undefined without `--localstorage-file`) shadow jsdom's in vitest, which
+  skips keys the Node global already owns — so storage was undefined in every test. A
+  `vitest-setup.ts` installs an in-memory `Storage` over both globals.
+
+- **`web/` — the browser surface scaffold** (`ui/ask-and-source-picker` Phase 1). A SvelteKit SPA
+  built to static assets with `adapter-static` (`ssr = false`, `prerender = true`), for the engine
+  to mount at `/` so the page shares its origin (Decision 1). The Vite dev proxy forwards `/turn`,
+  `/passages`, `/sources` and `/provider` to `$ENGINE_ORIGIN` and rewrites `Origin` as well as
+  `Host` in a `proxyReq` hook, since the engine's rebinding guard rejects a forwarded
+  `localhost:5173` origin. Test tooling installed: vitest, @testing-library/svelte, Playwright,
+  axe-core. Makefile gains `web-install` / `web-build` / `web-test` and a `make dev` pairing.
+- **`web/src/lib/engine/records.ts` — CONTRACTS §1–§4e, §6 and §6a as types**, the only place this
+  surface writes them down: `SourceRecord`, `Passage` and `Citation` (the source-kind variants as
+  discriminated unions), `AnswerEnvelope`, `Cause`, `required_manual`, the 16-event turn stream,
+  the §4d block set, `outcome` as the union of §6's 17 members and `reason` as §6a's five. Absent
+  is absent — never empty string, zero or empty array.
+- **Design tokens and their enforced floors** (Decision 6). One CSS file of custom properties —
+  background, surface, body/secondary text, accent with its 13.8 interactive-state variants, focus
+  ring, the four state colours, and the 11.1 type scale — with a unit test computing WCAG contrast
+  and luminance from the declared values: body ≥ 7:1, every other text element ≥ 4.5:1, non-text
+  indicators and focus ring ≥ 3:1, background luminance ≤ 0.08, and the 11.3-versus-11.5
+  resolution held as two enforced bounds (background ≥ 0.03, body text short of maximal white).
 
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
