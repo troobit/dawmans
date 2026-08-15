@@ -10,6 +10,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- `SPOUT.md` is now gitignored as a generated output artifact.
+
 ### Added
 
 - **The rig inventory and the two gap reports** (`dawmans/corpus/rig.py`, `rig.yaml`,

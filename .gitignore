@@ -82,3 +82,4 @@ manuals/*.pdf
 
 # Claude Code agent worktrees
 .claude/worktrees/
+SPOUT.md
