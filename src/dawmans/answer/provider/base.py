@@ -21,6 +21,11 @@ from typing import Any, Literal, Protocol, runtime_checkable
 # constant rather than a caller choice.
 MAX_WORDS = 400
 
+# 6.8: honour a stated retry interval up to 3 s; over it, surface
+# immediately. Compared unrounded — rounding 3.4 up would change which
+# branch runs. Provider-generic: every kind maps a rate-limit the same way.
+RETRY_AFTER_CEILING_S = 3.0
+
 
 class ProviderKind(StrEnum):
     KEYED_HOSTED = "keyed-hosted"

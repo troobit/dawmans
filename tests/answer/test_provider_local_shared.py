@@ -139,6 +139,77 @@ def test_whole_turn_makes_no_outbound_request():
     assert asyncio.run(provider.probe()).reachable is True
 
 
+# --- local: rate-limit classification and the single retry (6.8) -------------
+
+
+def _rate_limited_provider(responses, sleeps):
+    """Responses are consumed in order; sleeps records the retry waits."""
+    remaining = list(responses)
+
+    def handler(request):
+        return remaining.pop(0)
+
+    async def sleep(seconds):
+        sleeps.append(seconds)
+
+    return LocalProvider(
+        "http://127.0.0.1:8080",
+        client=poisoned_client("http://127.0.0.1:8080", handler),
+        sleep=sleep,
+    )
+
+
+def test_local_429_with_short_interval_retries_once_then_streams():
+    sleeps = []
+    ok = httpx.Response(
+        200, content=_sse_body(SCRIPT), headers={"content-type": "text/event-stream"}
+    )
+    provider = _rate_limited_provider(
+        [httpx.Response(429, headers={"retry-after": "1.4"}), ok], sleeps
+    )
+    assert collect(provider) == list(SCRIPT)
+    # The stated interval was honoured as stated, unrounded.
+    assert sleeps == [1.4]
+
+
+def test_local_429_twice_surfaces_rate_limited_with_the_stated_interval():
+    sleeps = []
+    provider = _rate_limited_provider(
+        [
+            httpx.Response(429, headers={"retry-after": "1.4"}),
+            httpx.Response(429, headers={"retry-after": "2.5"}),
+        ],
+        sleeps,
+    )
+    with pytest.raises(ProviderFailure) as exc:
+        collect(provider)
+    assert exc.value.kind == "rate-limited"
+    assert exc.value.retry_after == 2.5  # unrounded, as the provider stated it
+    assert sleeps == [1.4]  # retried exactly once
+
+
+def test_local_429_with_no_stated_interval_does_not_retry_or_invent_one():
+    sleeps = []
+    provider = _rate_limited_provider([httpx.Response(429)], sleeps)
+    with pytest.raises(ProviderFailure) as exc:
+        collect(provider)
+    assert exc.value.kind == "rate-limited"
+    assert exc.value.retry_after is None
+    assert sleeps == []
+
+
+def test_local_429_with_interval_over_the_ceiling_surfaces_immediately():
+    sleeps = []
+    provider = _rate_limited_provider(
+        [httpx.Response(429, headers={"retry-after": "3.4"})], sleeps
+    )
+    with pytest.raises(ProviderFailure) as exc:
+        collect(provider)
+    assert exc.value.kind == "rate-limited"
+    assert exc.value.retry_after == 3.4
+    assert sleeps == []
+
+
 def test_local_connection_failure_raises_unreachable():
     def handler(request):
         raise httpx.ConnectError("refused", request=request)

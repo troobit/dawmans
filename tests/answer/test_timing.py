@@ -15,11 +15,12 @@ and 4.1/4.6–4.8 need a real provider and a real index, so they are
 import asyncio
 import statistics
 import time
+from urllib.parse import quote
 
 import numpy as np
 import pytest
 from corpus_fixtures import make_view, passage, triage_source, vendor_source
-from http_fixtures import StubWatcher
+from http_fixtures import StubWatcher, get, make_app
 
 from dawmans.answer.provider.base import ProbeResult, ProviderKind, ProviderStatus
 from dawmans.answer.retrieve import retrieve
@@ -81,6 +82,25 @@ class TestRetrievalBudget:
             durations.append((time.perf_counter() - started) * 1000.0)
 
         assert statistics.median(durations) <= 10.0
+        assert p95(durations) <= 50.0
+
+
+class TestFetchPassageBudget:
+    def test_p95_at_most_50_ms_through_the_http_surface(self, synthetic):
+        # 3.4: full text of a cited passage by identifier in under 50 ms
+        # at p95 — measured through the route, not the bare dict lookup.
+        view, _ = synthetic
+        app = make_app(StubWatcher(view))
+        path = "/passages/" + quote(f"{LIVE}#c0500", safe="/")
+        assert get(app, path).status_code == 200  # warm out of the measurement
+
+        durations = []
+        for _ in range(100):
+            started = time.perf_counter()
+            response = get(app, path)
+            durations.append((time.perf_counter() - started) * 1000.0)
+            assert response.status_code == 200
+
         assert p95(durations) <= 50.0
 
 

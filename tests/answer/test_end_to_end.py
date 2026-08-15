@@ -442,9 +442,10 @@ class TestNarrowingRunToTheLimit:
         assert causes[1]["fix_cites"] == [f"{APC}#p1"]
 
         # direct_answer states the rank-1 check as an instruction, never
-        # the cause itself.
+        # the cause itself — engine-built on the entry path, replacing the
+        # model's line 2.
         [direct] = [d for n, d in events if n == "direct_answer"]
-        assert "dimmed track number" in direct["text"]
+        assert direct["text"] == "Check whether the track number is dimmed in the mixer."
         assert "Track Activator is off" not in direct["text"]
 
         # Every cites[]/fix_cites[] id resolves into the turn's citations.

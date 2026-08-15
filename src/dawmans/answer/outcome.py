@@ -104,7 +104,11 @@ def in_flight(flight: Flight) -> Classified | None:
         # and marked; it is never presented as finished.
         return Classified(Outcome.INCOMPLETE, detail=flight.detail)
     if flight.failure == "unreachable":
-        return Classified(Outcome.PROVIDER_UNREACHABLE, detail=flight.detail)
+        # 6.7: the result identifies the provider as well as the kind.
+        return Classified(
+            Outcome.PROVIDER_UNREACHABLE,
+            detail=f"{flight.provider}: {flight.detail or 'connection failed'}",
+        )
     if flight.failure == "rate-limited":
         return Classified(
             Outcome.PROVIDER_RATE_LIMITED,

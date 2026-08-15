@@ -374,3 +374,40 @@ wiring and timing).
   first-token target only, 7.3), estimates 4.1 as first token + 100 ms paint allowance, and
   calibrates Decision 8's 10% margin via `anthropic.Anthropic().messages.count_tokens` vs the BGE
   count. Exits 1 on a missed budget. Never run in CI, so keep it lint-clean by hand.
+
+## Post-implementation spec review (2026-08-15)
+
+A four-way requirements audit after phase 9 found and fixed four behaviour gaps, all now tested:
+
+- **2.3** — the model-`!suggest` path resolved against *all* sources, so a `!suggest` naming an
+  already-selected source reached `suggested_sources[]`. The engine now drops selected ids in the
+  turn's merge (turn.py), same rule as an invented id.
+- **7.6** — `direct_answer` on an entry-path `ranked-causes` turn streamed the model's line 2.
+  It is now engine-built: `Check whether {rank-1 cause's check}.` replaces line 2 at drain time
+  (`terminal_answer` threaded into `_drain`), and `parser.result` is `replace()`d so grounding and
+  the conversation record match what streamed. The fallback (no-entry) path stays prompt-level: a
+  line-2 direction added to `_TERMINAL_DIRECTION` — same enforcement tier the design accepts for
+  7.5 there.
+- **6.8** — the local provider mapped a 429 to `ProviderFailure("error")`. It now classifies
+  `rate-limited`, parses `Retry-After` unrounded, and retries at most once ≤ 3 s before any
+  output, mirroring the Anthropic provider. `RETRY_AFTER_CEILING_S` moved to provider/base.py
+  (anthropic.py re-exports it; a test imports it from there).
+- **6.7** — the unreachable result now names the provider in `detail`, matching the timeout path.
+
+Known, deliberate gaps left as-is (each argued in design.md or vacuous under NullStateSource):
+- **7.8** — `build_narrowing(state_supplies=…)` exists but the pipeline never passes a predicate:
+  there is no defined mapping from `StateValue.key` to a candidate, and inventing a fuzzy match
+  would silently remove candidates. Wire it when a real StateSource defines the mapping.
+- **7.5** — prompt-only enforcement of the 2-question limit is the design's recorded choice
+  (§The narrowing limit); a non-compliant model at the limit can still emit a third question.
+- **2.7** — a model that frames `answered` over zero supplied passages is not overridden
+  (Decision 3 keeps content outcomes model-chosen); the `ungrounded` signal is the backstop, and
+  the empty-supplied path now has a pipeline test.
+- **8.8** — "note that state was unavailable" is INFO-log-only; the §4b event set is closed
+  (rationale in turn.py's module docstring). Needs a CONTRACTS event if it should reach the caller.
+- **5.12** — device scope is deliberately wider than the requirement text when no vendor manual is
+  selected (design §Device scope argues it; requirements.md was never amended, no decision-log
+  entry). Spec-hygiene item, not a code defect.
+- **needs-narrowing with <2 candidates** — a one-cause entry plus a model choosing
+  `needs-narrowing` ends the turn with that outcome but no `narrowing` event; the outcome has
+  already streamed by the time `build_narrowing` returns None.

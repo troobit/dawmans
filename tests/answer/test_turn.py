@@ -588,6 +588,62 @@ class TestNarrowingPath:
         # The prompt carried the terminal direction (7.5's mechanism).
         assert "Narrowing limit reached" in provider.requests[0].user
         assert conversation.narrowing_count == 0
+        # 7.6: direct_answer is engine-built — the rank-1 cause's check
+        # stated as an instruction, never the model's line 2 and never
+        # an assertion of the cause.
+        assert only(events, "direct_answer") == (
+            "Check whether the track number is dimmed in the mixer."
+        )
+
+
+class TestSuggestionScope:
+    def test_a_suggested_source_already_in_scope_is_dropped(self):
+        # 2.3: suggestions are unselected sources only. The model names
+        # one selected and one unselected source; only the unselected one
+        # reaches suggested_sources[].
+        script = (
+            "refused-not-covered\n",
+            "The selected source does not cover this question.\n",
+            "---\n",
+            f"!suggest {LIVE}\n",
+            f"!suggest {APC}\n",
+        )
+        pipeline, _, _ = make_pipeline(ScriptedProvider(script=script))
+        events = run_turn(pipeline, sources=(LIVE,))
+        assert only(events, "suggested_sources") == (
+            SourceRef(source_id=APC, display_name=APC),
+        )
+
+
+class TestUncoveredRetrieval:
+    def test_below_threshold_retrieval_supplies_no_passages(self):
+        # 2.7: nothing above the threshold means nothing is supplied to
+        # synthesis — the prompt-directed refusal is the model's only
+        # grounded move, and no weak match exists to synthesise from.
+        script = (
+            "refused-not-covered\n",
+            "The selected sources do not cover this question.\n",
+            "---\n",
+            "None of the selected sources describes this.\n",
+        )
+        pipeline, provider, _ = make_pipeline(
+            ScriptedProvider(script=script),
+            query=np.zeros(4, dtype=np.float32),
+        )
+        events = run_turn(pipeline, "flumph gargle wibble", sources=ALL)
+        assert provider.requests[0].passages == ()
+        assert only(events, "outcome").outcome is Outcome.REFUSED_NOT_COVERED
+        assert only(events, "contributing_sources") == ()
+        assert each(events, "citation") == []
+
+    def test_an_explicitly_empty_selection_declines_without_a_provider_call(self):
+        # 5.2's primary branch: sources=() submitted, not merely pruned to
+        # empty — the turn declines and never falls back to all sources.
+        pipeline, provider, _ = make_pipeline()
+        events = run_turn(pipeline, sources=())
+        assert only(events, "outcome").outcome is Outcome.NO_SOURCES_SELECTED
+        assert provider.requests == []
+        assert names(events) == ["outcome", "done"]
 
 
 class TestScopeAtTurnTime:

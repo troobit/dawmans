@@ -434,6 +434,18 @@ class TestLogging:
         for record in caplog.records:
             assert question not in record.getMessage()
 
+    def test_answer_and_passage_text_do_not_log_at_default_level(self, caplog):
+        # 9.11 covers all three content classes: the answer text streamed
+        # by the provider and the passage content supplied to it stay out
+        # of INFO-level records exactly as the question does.
+        app, _, _ = turn_app()
+        with caplog.at_level(logging.INFO):
+            stream_turn(app, {"question": "why is track 3 silent", "sources": list(ALL)})
+        for record in caplog.records:
+            message = record.getMessage()
+            assert "Turn the Track Activator back on" not in message
+            assert "The Track Activator mutes the track output" not in message
+
 
 class TestStaticMount:
     def test_the_built_surface_is_served_at_root_same_origin(self, tmp_path):

@@ -267,6 +267,13 @@ class TurnPipeline:
                 supplied_order.extend(expansion.admitted)
         supplied = {pid: view.passages_by_id[pid] for pid in supplied_order}
 
+        # 7.6: on the entry path direct_answer is engine-built — the rank-1
+        # cause's check stated as an instruction to perform, never the
+        # cause itself. Applied only where line 1 is ranked-causes.
+        terminal_answer = None
+        if expansion is not None and expansion.causes:
+            terminal_answer = f"Check whether {expansion.causes[0].check}."
+
         selected = set(scope)
         assembled = assemble(
             question,
@@ -335,7 +342,9 @@ class TurnPipeline:
                     first_token_ms = (time.perf_counter() - issued) * 1000.0
                 streamed = True
                 parser.feed(delta)
-                for event in self._drain(parser, supplied, body_queue, stream_state):
+                for event in self._drain(
+                    parser, supplied, body_queue, stream_state, terminal_answer
+                ):
                     yield event
         finally:
             supersede_wait.cancel()
@@ -375,9 +384,19 @@ class TurnPipeline:
         # -- parse result, grounding, envelope tail (§4b ordering) -------
 
         parser.close()
-        for event in self._drain(parser, supplied, body_queue, stream_state):
+        for event in self._drain(
+            parser, supplied, body_queue, stream_state, terminal_answer
+        ):
             yield event
         result = parser.result(covered=covered, sources=view.sources_by_id)
+        if result.outcome is Outcome.RANKED_CAUSES and terminal_answer is not None:
+            # Keep the envelope coherent with what streamed (7.6): the
+            # grounding pass and the conversation record carry the
+            # engine-built instruction, not the model's line 2.
+            result = replace(result, direct_answer=terminal_answer)
+            if stream_state.outcome_emitted and not stream_state.answer_emitted:
+                yield TurnEvent("direct_answer", terminal_answer)
+                stream_state.answer_emitted = True
         ground = ground_turn(result.direct_answer, result.body, supplied, view.sources_by_id)
 
         if not stream_state.outcome_emitted:
@@ -439,7 +458,11 @@ class TurnPipeline:
                             source_id=source_id, display_name=record["display_name"]
                         )
             for ref in result.suggested_sources or ():
-                merged.setdefault(ref.source_id, ref)
+                # 2.3: suggestions are unselected sources only. A !suggest
+                # naming a source already in scope is dropped like any
+                # other non-addressable target.
+                if ref.source_id not in selected:
+                    merged.setdefault(ref.source_id, ref)
             suggested = tuple(list(merged.values())[:SUGGESTIONS_MAX]) or None
 
         device = manual = None
@@ -498,12 +521,14 @@ class TurnPipeline:
         supplied: dict[str, Any],
         body_queue: list[str],
         stream_state: _StreamState,
+        terminal_answer: str | None = None,
     ) -> list[TurnEvent]:
         """Events the accumulated parse can already justify, in §4b order:
         outcome from line 1, direct_answer from line 2, then body deltas.
         The unparsed path emits nothing here — its events are derived at
         close, which is the honest degradation for a provider that ignored
-        the framing."""
+        the framing. On an entry-path ranked-causes turn the engine's
+        `terminal_answer` replaces the model's line 2 (7.6)."""
         if parser.line_one is None or not parser.hoisting:
             return []
         events: list[TurnEvent] = []
@@ -511,12 +536,11 @@ class TurnPipeline:
             events.append(TurnEvent("outcome", Classified(Outcome(parser.line_one))))
             stream_state.outcome_emitted = True
         if not stream_state.answer_emitted and parser.line_count >= 2:
-            events.append(
-                TurnEvent(
-                    "direct_answer",
-                    _clean_delta(parser.direct_answer_line or "", supplied),
-                )
-            )
+            if terminal_answer is not None and parser.line_one == Outcome.RANKED_CAUSES.value:
+                text = terminal_answer
+            else:
+                text = _clean_delta(parser.direct_answer_line or "", supplied)
+            events.append(TurnEvent("direct_answer", text))
             stream_state.answer_emitted = True
         if stream_state.answer_emitted:
             while body_queue:

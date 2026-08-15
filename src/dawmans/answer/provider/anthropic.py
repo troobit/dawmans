@@ -21,6 +21,7 @@ import httpx
 
 from dawmans.answer.prompt import SYSTEM_PROMPT
 from dawmans.answer.provider.base import (
+    RETRY_AFTER_CEILING_S,
     ProbeResult,
     ProviderFailure,
     ProviderKind,
@@ -31,10 +32,6 @@ from dawmans.answer.provider.base import (
 )
 
 DEFAULT_MODEL = "claude-opus-5"
-
-# 6.8: honour a stated interval up to 3 s; over it, surface immediately.
-# Compared unrounded — rounding 3.4 up would change which branch runs.
-RETRY_AFTER_CEILING_S = 3.0
 
 # Per-model prompt-cache minimums (claude-api skill). The ~600-token
 # system prompt clears Opus 5's 512 only; the others silently lose the

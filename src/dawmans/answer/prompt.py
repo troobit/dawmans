@@ -207,7 +207,9 @@ _TERMINAL_DIRECTION = (
     "## Narrowing limit reached\n"
     "Two narrowing questions have already been asked for this symptom. "
     "Do not emit ?narrow. If the cause is still ambiguous, emit ranked-causes with "
-    "one ?cause block per candidate, most likely first."
+    "one ?cause block per candidate, most likely first. On ranked-causes, line 2 "
+    "states the most likely cause's check as an instruction to perform — never "
+    "assert the cause itself."
 )
 
 NARROWING_LIMIT = 2

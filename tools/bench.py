@@ -27,6 +27,7 @@ from pathlib import Path
 
 HOSTED_TARGETS = {"first_token_ms": 1200.0, "completion_ms": 6000.0}  # 4.6, 4.8
 LOCAL_TARGETS = {"first_token_ms": 2500.0, "completion_ms": 15000.0}  # 4.7, 4.8
+RETRIEVAL_TARGETS_MS = {"median": 10.0, "p95": 50.0}  # 4.2, real embed + real index
 PAINT_ALLOWANCE_MS = 100.0  # 4.1's transport-and-paint share, owned by the UI
 COMPOSED_TARGETS_MS = {"hosted": 1500.0, "local": 2800.0}  # 4.1
 HISTORY_MARGIN = 0.10  # Decision 8
@@ -72,13 +73,14 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
         count_tokens=count_tokens,
     )
     sources = [record["source_id"] for record in watcher.view.sources]
-    first_token, completion = [], []
+    first_token, completion, retrieval = [], [], []
     print(f"\n== {label} ==")
     for question, shape in QUESTIONS:
         outcome, timings = asyncio.run(run_turn(pipeline, question, sources))
         if timings is None or timings.first_token_ms is None:
             print(f"  {question!r}: outcome={outcome} — no stream, not measured")
             continue
+        retrieval.append(timings.retrieval_ms)
         first_token.append(timings.first_token_ms)
         line = f"  {question!r}: outcome={outcome} first_token={timings.first_token_ms:.0f}ms"
         if shape == "narrowing":
@@ -91,6 +93,22 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
         print(line)
 
     failed = False
+    if retrieval:
+        import statistics
+
+        # 4.2 over the full reference corpus with the real embed — CI's
+        # figure comes from a synthetic index with the embed stubbed.
+        median = statistics.median(retrieval)
+        tail = p95(retrieval)
+        ok = (
+            median <= RETRIEVAL_TARGETS_MS["median"] and tail <= RETRIEVAL_TARGETS_MS["p95"]
+        )
+        failed |= not ok
+        print(
+            f"  retrieval median {median:.1f}ms vs {RETRIEVAL_TARGETS_MS['median']:.0f}ms, "
+            f"p95 {tail:.1f}ms vs {RETRIEVAL_TARGETS_MS['p95']:.0f}ms "
+            f"[{'ok' if ok else 'MISSED'}]"
+        )
     if first_token:
         observed = p95(first_token)
         ok = observed <= targets["first_token_ms"]
