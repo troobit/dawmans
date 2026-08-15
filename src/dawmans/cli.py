@@ -511,7 +511,11 @@ def run_coverage(index_root: Path, *, root: Path | None = None) -> tuple[int, li
 
     try:
         loader = _triage_loader(root, index_root / manifest.view_dir)
-    except (LedgerUnparseable, RigError) as error:
+    except (LedgerUnparseable, RigError, OSError) as error:
+        # `OSError` as well, unlike `validate`, which reaches its loader only after
+        # checking that every file the manifest names is present: an incomplete view is
+        # the one thing this command reads that it has not already verified, and it is a
+        # line saying which file is missing rather than a traceback.
         return 1, [f"failed: {error}"]
     if loader is None:
         return 0, [f"{TRIAGE_DIR}: store unavailable — nothing to report"]

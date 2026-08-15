@@ -80,6 +80,24 @@ def test_a_non_entry_file_gets_a_report_line(tmp_path: Path) -> None:
     assert ".md" in rejection.rejection.detail  # what to rename it to
 
 
+def test_a_file_the_scan_does_not_read_is_reported_whatever_its_case(tmp_path: Path) -> None:
+    """`skipped_files` is the complement of `entry_files`, not a second suffix test.
+
+    A `no-sound.MD` is not matched by the scan's `*.md` glob on a case-sensitive
+    filesystem, so it has to be reported: a file the author expected to be ingested must
+    not disappear quietly, and the case of a suffix they typed by hand is exactly the
+    kind of slip the report line exists for.
+    """
+    root = store(tmp_path, {"no-sound.md": DEFAULT})
+    (root / "distorting.MD").write_text(second_entry(), encoding="utf-8")
+
+    read = set(entry_files(root))
+    reported = set(skipped_files(root))
+
+    assert read | reported == {root / "no-sound.md", root / "distorting.MD"}
+    assert read & reported == set()
+
+
 def test_a_dotfile_is_neither_discovered_nor_reported(tmp_path: Path) -> None:
     """The ledger is the machine's own artefact and must not warn about itself."""
     root = store(tmp_path, {"entry.md": DEFAULT})

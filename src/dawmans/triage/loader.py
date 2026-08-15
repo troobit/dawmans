@@ -131,11 +131,18 @@ def skipped_files(store: Path) -> list[Path]:
     the author expected to be ingested must not disappear quietly. `manuals/` holds a
     README nobody expects to be indexed; this store holds only what the author wrote to
     be read.
+
+    Stated as the **complement of `entry_files`** rather than as a second suffix test, so
+    that whatever the scan does not read is reported whatever the filesystem's case rules
+    are. Compared on the suffix alone, a `no-sound.MD` is read by neither function on a
+    case-sensitive filesystem and by both on a case-insensitive one — invisible in the
+    first, ingested and reported in the second.
     """
+    entries = set(entry_files(store))
     return sorted(
         path
         for path in store.rglob("*")
-        if path.is_file() and path.suffix.lower() != ENTRY_SUFFIX and not _hidden(path, store)
+        if path.is_file() and path not in entries and not _hidden(path, store)
     )
 
 

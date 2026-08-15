@@ -336,6 +336,26 @@ def test_dawmans_coverage_renders_the_report_to_stdout(tmp_path: Path, capsys) -
     assert "%" not in out
 
 
+def test_dawmans_coverage_reports_an_incomplete_view_rather_than_raising(tmp_path: Path) -> None:
+    """An unreadable index is a failure line, not a traceback.
+
+    `validate` reaches its loader only after checking every file the manifest names;
+    coverage reads the same view without that check, so a view whose passages went
+    missing — an interrupted commit, a half-copied index — has to come back as one line
+    naming the file."""
+    from runs import ENTRY, run, write
+
+    write(tmp_path, {"no-sound.md": ENTRY})
+    result, _ = run(tmp_path)
+    assert result.manifest is not None
+    (tmp_path / "index" / result.manifest.view_dir / "passages.jsonl").unlink()
+
+    code, lines = cli.run_coverage(tmp_path / "index", root=tmp_path)
+
+    assert code == 1
+    assert any("passages.jsonl" in line for line in lines), lines
+
+
 def test_dawmans_coverage_writes_nothing(tmp_path: Path) -> None:
     """A report is a reading of the store, not a run over it: no ledger row, no shard,
     no view — the same rule `dawmans validate` follows (5.4)."""
