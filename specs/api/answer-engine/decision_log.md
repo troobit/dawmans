@@ -705,3 +705,67 @@ it (1.13, 3.3), and the entry itself is not broken — only out of scope.
   for this turn — and the UI cannot currently distinguish them.
 - The suggestion path carries more weight than 2.3 was written for, since it is now the mechanism
   that recovers a fix rather than merely proposing a better source.
+
+---
+
+## Decision 11: Carry the assembled user prompt on `SynthesisRequest` rather than re-rendering it per provider
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design states `SynthesisRequest` as (system, passages, question, history, state, max_words),
+and Decision 4 requires one renderer of the varying prompt half shared by every provider —
+implemented as `provider/base.user_text`. Prompt assembly (`prompt.assemble`) meanwhile carries two
+things that shape has no field for: the unselected-source roster that 2.3's suggestion path depends
+on, and the narrowing-counter terminal direction that is 7.5's only mechanism. When the turn
+pipeline landed, the two halves had to be reconciled: rendering from the structured fields alone
+would silently drop both, and duplicating the roster and terminal blocks into `user_text` would
+create the second renderer Decision 4 forbids.
+
+### Decision
+
+Add one optional field, `user: str | None`, to `SynthesisRequest`. The turn pipeline calls
+`prompt.assemble` — the single renderer, which needs the view's source records and the resident
+tokeniser that providers must not hold — and passes the assembled user half through the request.
+`user_text` returns it verbatim when set; the structured fields document what went into it and
+still back the fallback rendering for requests built without prompt assembly.
+
+### Rationale
+
+The roster and the terminal direction must reach the provider or 2.3 and 7.5 have no mechanism, so
+the design's stated shape was incomplete, not merely inconvenient. Assembly needs `sources_by_id`
+for passage display names and `count_tokens` for the history budget; pushing those into the
+provider seam would couple every provider to the view and the tokeniser, which is the
+provider-specific prompt assembly Decision 8 removed. Rendering once in the pipeline and carrying
+the string keeps Decision 4 true — there is exactly one renderer — and keeps the seam's fields as
+documentation of the request rather than the thing each provider re-renders.
+
+### Alternatives Considered
+
+- **Widen `SynthesisRequest` with `roster` and `narrowing_count` and extend `user_text`**: Keeps
+  the request fully structured - Rejected because `user_text` would then need `sources_by_id` and
+  `count_tokens` too, coupling every provider to the view and tokeniser, and it duplicates
+  `prompt.assemble` block for block — two renderers that drift is the Decision 4 failure.
+- **Fold the roster and terminal direction into the `question` field**: No schema change -
+  Rejected because `user_text` wraps `question` in its own `## Question` heading, so the blocks
+  would arrive mislabelled, and the field would no longer mean what it says.
+- **Have providers call `prompt.assemble` themselves**: One renderer, provider-side - Rejected
+  because it hands every provider the view and the tokeniser, makes the seam untestable without a
+  corpus, and puts cache-layout ordering decisions inside each provider.
+
+### Consequences
+
+**Positive:**
+- Decision 4 holds structurally: `prompt.assemble` is the one renderer, and providers send its
+  output verbatim.
+- The roster (2.3) and the terminal direction (7.5) reach every provider with no per-provider code.
+- Phase-6 provider tests stand unchanged — the fallback rendering still serves requests built
+  without assembly.
+
+**Negative:**
+- The request carries the same content twice (structured fields and rendered string), and nothing
+  enforces their agreement.
+- A provider constructed directly with structured fields but no `user` gets the poorer fallback
+  rendering — no roster, no terminal direction — with no warning.

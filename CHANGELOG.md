@@ -246,6 +246,202 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   `Region`, `Unit`, `UnitFlags` and the closed `Rejection` reason set. Interfaces only —
   `TriageLoader` is `data/symptom-triage`'s to write, and everything from `Region` onwards is the
   shared code that makes 12.2 structural.
+- **End-to-end, serve wiring and timing** (`api/answer-engine` phase 9, `dawmans/cli.py`,
+  `tools/bench.py`). `dawmans serve` is wired on `run_serve` in `cli.py` with the four-step
+  startup order of design §What the engine reads: the loopback check first of all — a refusal
+  never pays the 7.2 s model load — then the manifest read and view load (raising on a
+  present-but-unreadable manifest, serving an empty corpus on a missing one), then the embedding
+  model loaded and warmed with one throwaway encode, and the bind last, so no listener accepts
+  before the warm. The model loader and server runner are injectable seams; the resident BGE
+  tokeniser backs `count_tokens` (Decision 8 — no provider SDK call before `stream()`), the
+  provider factory constructs each kind against its own base URL with the keyed constructor as
+  the stored key's only reader, and the 6.11 `SecretFilter` is installed on the logging handler.
+  All serve-side imports are deferred so the shared CLI stays importable in an ingest-only
+  environment. End-to-end tests (`tests/answer/test_end_to_end.py`) drive the full stack minus
+  the socket — a real `ViewWatcher` over a synthetic on-disk index written view-directory-first
+  and manifest-last, the guarded app, the pipeline, scripted providers — covering one turn per
+  content outcome (answered with citations from both kinds, a `!conflict` with both readings
+  separately cited, a partial answer naming `uncovered_parts`, a refusal with resolved
+  suggestions, out-of-domain with suggestions suppressed, no-manual-for-device resolving
+  `required_device` and `required_manual` through a fixture gaps report), the narrowing entry
+  path run to its limit and terminating in `ranked-causes`, `contributing_sources[]` on every
+  answer, and the mid-conversation corpus swap (a removed source drops with `scope_dropped`;
+  removing the last yields `no-sources-selected`). Startup order and wiring tests are
+  `tests/answer/test_serve.py`. The CI timing tests (`tests/answer/test_timing.py`) hold 4.2
+  (retrieval ≤ 10 ms median / ≤ 50 ms p95) and 4.3 (engine overhead ≤ 150 ms p95, stub provider)
+  against a synthetic 1,200-chunk index, with retrieval and state acquisition excluded from the
+  overhead cap and each held to its own budget; `make bench` (`tools/bench.py`) covers 4.1 and
+  4.6–4.8 against a real provider and a real index, skipping honestly when either is absent,
+  measures a narrowing question against the first-token target only (7.3), and calibrates
+  Decision 8's 10% history-token margin against the provider's `count_tokens`.
+
+- **The local HTTP surface** (`api/answer-engine` phase 8, `dawmans/answer/http/guard.py` and
+  `dawmans/answer/http/app.py`). `guard.py` holds the two 9.1–9.3 guards: `ensure_loopback_bind`
+  refuses a non-loopback bind before uvicorn exists — exiting non-zero naming the address and the
+  constraint, no fallback bind — and `HostOriginGuard` is the pure-ASGI middleware rejecting any
+  request whose `Host` is not the loopback service with the port (the check that closes DNS
+  rebinding) or whose `Origin` falls outside the same set, including `null` and the cross-port
+  dev-server origin; rejection is 403 with a machine-readable reason and no `outcome`. `app.py`
+  carries the design's route table: `GET /passages/{id}` as a dict lookup routed on the source_id
+  prefix running the same stat change check as a turn (3.4), `GET /sources` relaying every 9.5
+  field for both kinds plus both gap reports verbatim — owned-but-undocumented as an empty list,
+  never an omission (9.6–9.7) — and reporting an unreadable new manifest as a fixed notice with no
+  filesystem path in any payload; the five provider operations over a new `ProviderRegistry`
+  (masked-only throughout per 9.8, shared-backend selection recording nothing until the 6.15
+  disclosure is acknowledged, credential changes re-constructing the keyed provider so 6.3 holds,
+  test-provider probing reachability without synthesising a turn); serve-document rebuilding
+  `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` from the record's own fields,
+  realpath-confined to the manuals root, served inline with Range honoured and no
+  Content-Disposition filename so `#page=N` survives (9.4); and `POST /turn` streaming the
+  CONTRACTS §4b sixteen-event set over SSE with per-event payload mapping, `done` carrying
+  `{"complete": true}` (9.14), the `dawmans/turn-stream/1` version header plus the minted
+  conversation id readable before the first body byte (9.15), the 9.12 over-length rejection as a
+  422 with no outcome and no turn started, and the `web/build` static mount that makes the surface
+  same-origin. A caller disconnect now cancels the turn deterministically (9.10): the response
+  finalises its body iterator, the encoder closes the turn generator, `TurnPipeline._run` closes
+  its inner event generator, and the provider release cancels an in-flight `anext` before
+  `aclose` — previously the provider stream was only released at garbage collection. Tests cover
+  the guard matrix, the gap relay, credential masking against captured logs, filename round-trip
+  and confinement probes, stream completeness against the pipeline's own event sequence, §4b
+  ordering on the wire, and incremental delivery and disconnect at the raw ASGI layer.
+- **Conversation and the turn pipeline** (`api/answer-engine` phase 7,
+  `dawmans/answer/conversation.py` and `dawmans/answer/turn.py`). `conversation.py` holds one
+  conversation's in-memory state: the last 6 content-outcome turns rendered for the prompt's
+  context-only history block (10.1), the carried scope with display names captured at set time so
+  5.11's turn-time prune can report a source the view no longer names, the per-symptom
+  consecutive-narrowing counter that 7.5's terminal direction rides on (incremented by
+  needs-narrowing, reset by an answer, untouched by engine failures), and 7.4's follow-up query
+  assembly — a turn answering a narrowing question retrieves with the original symptom question
+  plus the answer, never the previous turn's passages, and there is structurally nowhere to retain
+  a passage. `turn.py` is the pipeline the design pins there: retrieval under `asyncio.to_thread`
+  gathered with `StateSource.snapshot` under `wait_for(0.100)` so the state task genuinely runs
+  alongside synchronous numpy work (4.4, 8.9), the pre-flight and in-flight gates, engine-side
+  narrowing/`causes[]` construction on the entry path with back-filled citations and the per-turn
+  `unbacked` reading, prompt assembly carried to providers as the new pre-rendered
+  `SynthesisRequest.user` (Decision 11 — the roster and the terminal direction reach every
+  provider through the one renderer), the 10 s first-token watchdog naming the provider (4.9),
+  supersede-based per-conversation cancellation whose old stream emits `outcome: cancelled` then
+  `done` before the new one opens with the provider released by a close, not a drain (4.10, 9.13),
+  incremental §4b event emission with unresolvable markers stripped from the streamed text,
+  mid-stream failure degrading to `incomplete` with the partial retained (6.10), state faults
+  degrading to manual-only with the note logged (8.8 — the closed event set has no field for it),
+  supplied-derived `contributing_sources[]` (5.9), and `timings` as durations only for the five
+  stages (4.11). `parse.py` gains the streaming seam (`on_body_line` plus read-only header
+  properties) so deltas can flow without envelope fields leaking into `body`. Tests cover the
+  concurrency shape by wall clock, every degradation path, the watchdog, the cancellation
+  property over arbitrary stream prefixes, provider switching without restart, cross-source
+  citation with the small guide under the floor, and the scope prune to `no-sources-selected`.
+- **Providers, credentials and the state seam** (`api/answer-engine` phase 6,
+  `dawmans/answer/provider/` and `dawmans/answer/state/`). `provider/base.py` defines the seam:
+  `ProviderKind` with `requires_key` derived from the kind (6.4), the verbatim `SynthesisRequest`
+  with `max_words` fixed at 400, the masked-only `ProviderStatus` (no field can hold a full key),
+  the four-kind `ProviderFailure`, the `Provider` protocol whose `stream()` yields text deltas and
+  nothing else (Decision 4), and the single shared user-prompt renderer that keeps 6.2 structural.
+  `provider/anthropic.py` drives `AsyncAnthropic` against `claude-opus-5` with the pinned settings
+  table — thinking disabled at effort low, `max_retries=0`, a 30 s / 2 s-connect timeout so the
+  engine's watchdog fires first, `cache_control` on the last system block — the single-retry
+  rate-limit policy (retry only a stated interval ≤ 3 s, before any output, the value unrounded on
+  both branches and absent when unstated), connection/auth/status errors mapped to the failure
+  kinds, and `prompt_cache: unavailable` reported for models whose cache minimum the system prompt
+  does not clear. `provider/local.py` is an OpenAI-compatible httpx client that refuses any
+  non-loopback base URL at construction, so 6.14 holds by construction; `provider/shared.py` is
+  the stub behind the 6.15 disclosure gate. `provider/credentials.py` stores keys in the macOS
+  Keychain via keyring under service `dawmans`, account `anthropic` (Decision 6), returns only the
+  last-4 masked form on every read path but the client constructor, and ships the secret-dropping
+  `logging.Filter` whose predicate also scrubs CONTRACTS §4 `detail`. `state/base.py` and
+  `state/null.py` land the flat `StateValue` triple (Decision 7), `StateSnapshot`, the
+  `StateSource` protocol and the immediate-empty `NullStateSource` (8.3). Tests cover the pinned
+  SDK settings, the rate-limit branches, failure-kind mapping, loopback-by-construction with
+  networking poisoned, the disclosure gate, the same envelope shape through all three provider
+  classes, and credential storage/masking with keyring stubbed (the live Keychain path runs on a
+  developer machine only, per `prerequisites.md`). `httpx` is now an explicit member of the
+  `serve` extra.
+- **Prompt, parser, grounding and the outcome procedure** (`api/answer-engine` phase 5,
+  `dawmans/answer/prompt.py`, `parse.py`, `ground.py`, `outcome.py` and the new
+  `dawmans/triage/terms.py`). `prompt.py` assembles the turn in cache order — the static system
+  prompt as the cache prefix (framing spec, no-uncited-facts rule with the facts-versus-reasoning
+  split, length caps, edition caveat, kind trust split, refusal and out-of-domain directions with
+  2.9's authored-entry carve-out, the no-XML instruction and no "do not think" anywhere), then
+  passages, the metadata-only unselected-source roster, the labelled uncitable state and history
+  blocks and the question — with history bounded oldest-first to 800 tokens at a 10% margin by an
+  injected local tokeniser (Decision 8, no provider SDK call before `stream()`), and the narrowing
+  counter carried into assembly at the limit (7.5). `parse.py` is the incremental line-oriented
+  parser for `dawmans/answer-framing/1`: total over bytes, line 1 validated against the
+  seven-member content enum with the unparsed fallback restricted to the coverage pair, §4d block
+  typing at column 0 with unknown lines degrading to paragraphs, `!conflict` arity reported
+  through `framing` without re-typing, and sigil hoists (`~uncovered`, `?narrow`, `?cause` with
+  rank from emitted order, `@device`, `!suggest` resolved against sources.json — at most 3,
+  absent when none survives). `ground.py` makes 3.6 structural: citations assemble only from the
+  supplied set, unknown markers are stripped and counted, the field copy emits absent as absent
+  on pageless sources, and the two-arm ungrounded rule (fact-shaped tokens via the reused
+  `dawmans.triage.terms` extraction primitives, plus uncited ordered steps) executes the
+  CONTRACTS §8 split. `outcome.py` classifies every turn totally and disjointly: four pre-flight
+  and six in-flight gates in fixed order (cancelled ahead of incomplete, incomplete ahead of
+  every error kind, 401 as `authentication-failed` distinguishable from `missing-credential` by
+  sub-code alone), plus the `required_device` resolver over the gaps report and `required_manual`
+  assembly with named placeholders — absent where the device does not resolve. 107 tests
+  including totality, disjointness, round-trip and non-citability properties.
+- **Narrowing from triage entries** (`api/answer-engine` phase 4, `dawmans/answer/narrow.py`).
+  The engine-built entry path of Decision 9: `matched_entry` finds the first supplied passage
+  keying the triage sidecar, `expand_entry` takes the entry's first ≤ 4 causes in the author's
+  order and resolves each cause's fix pointers against the view — filtered through the turn's
+  source scope (Decision 10), bounded over resolved passages rather than pointers at the
+  12-passage cap, with excess dropped in cause order and within a cause in section order, and
+  passages retrieval already supplied cited without re-admission. `build_narrowing` constructs
+  the 7.2 candidate list (label from `check`, value from `statement`, no reorder/merge/add) with
+  7.8's state-value suppression behind a caller-supplied predicate, asking nothing when fewer
+  than two candidates survive; `build_causes` builds the 7.6 terminal `causes[]` with positional
+  ranks, the entry passage as `cites[]`, and scope-filtered `fix_cites[]` — empty `fix_cites[]`
+  reads as unbacked for the turn (the engine reads the authored flag, never sets it), and
+  out-of-scope holding sources are named for 2.3's suggestion path. 20 tests cover the
+  provenance, scope, bound, suppression and terminal-form properties.
+- **Retrieval and scoping** (`api/answer-engine` phase 3, `dawmans/answer/scope.py` and
+  `dawmans/answer/retrieve.py`). `device_scope` derives the turn's device scope over source kind —
+  the selected vendor manuals' `hardware_applicability.device` unioned with the
+  owned-but-undocumented gaps, widening to every indexed vendor-manual device when no vendor
+  manual is selected — and `in_device_scope` is 5.13's predicate: a passage declaring devices
+  disjoint from the scope is excluded from the turn entirely, a filter and never a ranking input.
+  `candidate_pool` runs the design's retrieval order — BGE query-prefix embed, candidate mask
+  (selected row slices minus device-filtered rows), masked dense and lexical rankings, RRF fusion
+  at k=10 — with masking *preceding* top-k on both retrievers so out-of-scope rows never consume
+  the depth-50 slots. `retrieve` applies the two-arm relevance threshold (cosine ≥ 0.30, or BM25
+  rank 1 *within its own source* sharing a query term of document frequency ≤ 5%) with both
+  constants as configuration, per-source qualification, and Decision 5's allocation: one floor
+  slot per qualifying source, remaining slots by fused rank, cap `max(8, |qualifying|, 12 on a
+  narrowing expansion)`. No qualifying in-scope candidate means the turn is uncovered per 2.1.
+  38 tests cover the scope derivation, the mask-precedes-top-k behaviour, the fusion
+  monotonicity/invariance/decisiveness properties Decision 1 rests on, the threshold arms and the
+  floor/cap precedence property.
+- **The corpus view** (`api/answer-engine` phase 2, `dawmans/answer/view.py`). `CorpusView` loads
+  one immutable revision of the merged index view in the design's load order — manifest first,
+  refusing to serve on an `index_version` the engine cannot interpret — then mmaps `vectors.npy`
+  and reads `passages.jsonl`, `lexical/`, `sources.json`, `gaps.json` and the triage sidecar.
+  Source scoping is a row slice from `manifest.sources`, not a scan. The sidecar filename is
+  derived by the slug rule from the `authored/triage` constant, never spelled; a view whose
+  sidecar is missing (e.g. hyphenated) fails loudly rather than serving with no device
+  declarations. `ViewWatcher` stats the manifest before each turn: a `corpus_revision` change
+  discards the view wholesale so no answer can mix revisions, an in-flight turn keeps the view
+  object it holds, an unreadable new manifest keeps the live view and records the fault for
+  `GET /sources` (never `corpus-empty`), and the reload cost lands on the run-level
+  `corpus_reload_ms`, never on a turn. 21 tests cover load, refusal, slices, the sidecar rule and
+  the revision watch.
+- **The `dawmans` Python package** (`api/answer-engine` phase 1). `src/` layout on uv + hatchling,
+  with the `dawmans.answer` module tree from the design's module placement, a `dawmans` CLI whose
+  only registered subcommand is the `serve` stub, and `make build`/`test`/`lint` wired to uv,
+  pytest and ruff.
+- **The ingest/serve dependency split.** `[project.optional-dependencies]` confines PyMuPDF (AGPL),
+  lingua and fonttools to `ingest`; the API host syncs `serve` (fastembed, bm25s, numpy, anthropic,
+  starlette, uvicorn, keyring) and never installs PyMuPDF. A subprocess test imports every
+  `dawmans.answer.*` module with `fitz`/`pymupdf` poisoned on `sys.meta_path`, catching the
+  accidental corpus import a dual-group dev environment hides.
+- **The envelope records and outcome enums** (`dawmans/answer/envelope.py`). Frozen dataclasses
+  `Citation`, `AnswerEnvelope`, `Cause` and `RequiredManual` whose field sets are exactly the
+  CONTRACTS §3/§4/§4c/§4e tables, and `Outcome` (17 members) / `Reason` (5 values) StrEnums closed
+  to CONTRACTS §6/§6a. Construction enforces the contract invariants: absent is `None` and never an
+  empty string, an authored-triage citation cannot carry a page, section number or `doc_version`,
+  `entry_location` is authored-only, a cause's `rank` equals its position in `causes[]`, and
+  `retry_after` is non-negative and unrounded. 32 tests assert the field sets and invariants.
+
 - **`data/manual-corpus` task ledger and prerequisites.** 45 tasks over 8 phases, test-then-implement
   throughout, two work streams. `prerequisites.md` records the three things no task can do for
   itself: place the four gitignored PDFs, run `make fetch-model` once, and declare the Focusrite

@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Comparison Report: main</title>
+    <style>
+ 
+
+ 
+:root {
+    --bg-primary: #ffffff;
+    --bg-secondary: #f8f9fa;
+    --bg-card: #ffffff;
+    --bg-code: #f4f4f4;
+    --text-primary: #212529;
+    --text-secondary: #6c757d;
+    --border-color: #dee2e6;
+    --success-color: #198754;
+    --error-color: #dc3545;
+    --warning-color: #ffc107;
+    --info-color: #0d6efd;
+    --link-color: #0d6efd;
+    --link-hover: #0a58ca;
+    --diff-add-bg: #d4edda;
+    --diff-add-text: #155724;
+    --diff-del-bg: #f8d7da;
+    --diff-del-text: #721c24;
+    --diff-hunk-bg: #e7f1ff;
+    --diff-hunk-text: #0c5460;
+}
+
+ 
+@media (prefers-color-scheme: dark) {
+    :root {
+        --bg-primary: #1a1a1a;
+        --bg-secondary: #2d2d2d;
+        --bg-card: #2d2d2d;
+        --bg-code: #2d2d2d;
+        --text-primary: #e9ecef;
+        --text-secondary: #adb5bd;
+        --border-color: #495057;
+        --link-color: #6ea8fe;
+        --link-hover: #9ec5fe;
+        --diff-add-bg: #1e3a1e;
+        --diff-add-text: #75b798;
+        --diff-del-bg: #3d1f1f;
+        --diff-del-text: #ea8685;
+        --diff-hunk-bg: #1e3a5f;
+        --diff-hunk-text: #8bb9e0;
+    }
+}
+
+ 
+* {
+    box-sizing: border-box;
+}
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+    line-height: 1.6;
+    color: var(--text-primary);
+    background-color: var(--bg-primary);
+    margin: 0;
+    padding: 0;
+}
+
+ 
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 1rem;
+}
+
+ 
+header {
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    padding: 1.5rem 0;
+}
+
+header h1 {
+    margin: 0 0 0.25rem 0;
+    font-size: 1.75rem;
+}
+
+header .subtitle {
+    margin: 0;
+    color: var(--text-secondary);
+    font-size: 1.1rem;
+}
+
+ 
+footer {
+    margin-top: 3rem;
+    padding: 1.5rem 0;
+    border-top: 1px solid var(--border-color);
+    text-align: center;
+    color: var(--text-secondary);
+    font-size: 0.9rem;
+}
+
+ 
+h1, h2, h3, h4 {
+    color: var(--text-primary);
+    margin-top: 0;
+}
+
+h2 {
+    font-size: 1.3rem;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    padding-bottom: 0.5rem;
+}
+
+h3 {
+    font-size: 1.1rem;
+    margin-bottom: 0.75rem;
+}
+
+ 
+a {
+    color: var(--link-color);
+    text-decoration: none;
+}
+
+a:hover {
+    color: var(--link-hover);
+    text-decoration: underline;
+}
+
+ 
+code {
+    background-color: var(--bg-code);
+    padding: 0.15rem 0.4rem;
+    border-radius: 4px;
+    font-family: "SF Mono", Monaco, "Cascadia Code", Consolas, monospace;
+    font-size: 0.9em;
+}
+
+pre {
+    background-color: var(--bg-code);
+    padding: 1rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 0;
+}
+
+pre code {
+    padding: 0;
+    background: none;
+}
+
+ 
+.summary {
+    background-color: var(--bg-secondary);
+    padding: 1.5rem;
+    border-radius: 8px;
+    margin-bottom: 1.5rem;
+}
+
+.summary h2 {
+    margin-top: 0;
+    border: none;
+}
+
+.recommendation {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    margin-bottom: 1rem;
+    flex-wrap: wrap;
+}
+
+.recommendation-variant {
+    display: flex;
+    flex-direction: column;
+}
+
+.recommendation-variant .label {
+    font-size: 0.8rem;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+}
+
+.recommendation-variant .variant-id {
+    font-size: 1.5rem;
+    font-weight: 700;
+    color: var(--success-color);
+}
+
+.confidence {
+    padding: 0.35rem 0.75rem;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.confidence-high {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+}
+
+.confidence-medium {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #997404;
+}
+
+.confidence-low {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--error-color);
+}
+
+.executive-summary {
+    margin: 0;
+    font-size: 1.05rem;
+    line-height: 1.7;
+}
+
+ 
+.metadata {
+    margin-bottom: 1.5rem;
+}
+
+.metadata dl {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1.5rem;
+    margin: 0;
+}
+
+.metadata dt {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.metadata dd {
+    margin: 0;
+}
+
+ 
+.variants-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.variants-table th,
+.variants-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.variants-table th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+}
+
+.variants-table tbody tr:hover {
+    background-color: var(--bg-secondary);
+}
+
+ 
+.status {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.status-completed {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+}
+
+.status-failed {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--error-color);
+}
+
+.status-pending, .status-running, .status-canceled {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--text-secondary);
+}
+
+.recommended-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    background-color: var(--success-color);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    margin-left: 0.5rem;
+    vertical-align: middle;
+}
+
+.agent-badge {
+    display: inline-block;
+    padding: 0.15rem 0.5rem;
+    background-color: var(--info-color);
+    color: white;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 500;
+    vertical-align: middle;
+}
+
+ 
+.observations ul {
+    margin: 0;
+    padding-left: 1.5rem;
+}
+
+.observations li {
+    margin-bottom: 0.5rem;
+}
+
+ 
+.file-analysis {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    margin-bottom: 1rem;
+}
+
+.file-analysis h3 {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.file-preference {
+    font-size: 0.8rem;
+    font-weight: 500;
+    color: var(--success-color);
+    background-color: rgba(25, 135, 84, 0.1);
+    padding: 0.2rem 0.5rem;
+    border-radius: 4px;
+}
+
+.variant-assessments {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 0.5rem 1rem;
+    margin: 0;
+}
+
+.variant-assessments dt {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.variant-assessments dd {
+    margin: 0;
+}
+
+ 
+.variant-diff {
+    margin-bottom: 2rem;
+    border: 1px solid var(--border-color);
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.variant-diff h3 {
+    background-color: var(--bg-secondary);
+    margin: 0;
+    padding: 1rem;
+    border-bottom: 1px solid var(--border-color);
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+}
+
+.variant-error {
+    padding: 1rem;
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--error-color);
+}
+
+.diff-external {
+    padding: 1rem;
+}
+
+.no-changes {
+    padding: 1rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin: 0;
+}
+
+ 
+details {
+    margin: 0;
+}
+
+details summary {
+    padding: 0.75rem 1rem;
+    cursor: pointer;
+    background-color: var(--bg-secondary);
+    border-bottom: 1px solid var(--border-color);
+    font-weight: 500;
+}
+
+details summary:hover {
+    background-color: var(--bg-code);
+}
+
+details[open] summary {
+    border-bottom: 1px solid var(--border-color);
+}
+
+ 
+.diff {
+    font-size: 0.85rem;
+    line-height: 1.4;
+    white-space: pre;
+    overflow-x: auto;
+    margin: 0;
+    border-radius: 0;
+}
+
+ 
+.doc-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-bottom: 1.5rem;
+}
+
+.doc-table th,
+.doc-table td {
+    padding: 0.75rem 1rem;
+    text-align: left;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.doc-table th {
+    background-color: var(--bg-secondary);
+    font-weight: 600;
+    font-size: 0.9rem;
+}
+
+.doc-status {
+    text-align: center;
+    font-size: 1.1rem;
+}
+
+.missing-docs {
+    margin: 0;
+    padding-left: 1.2rem;
+    font-size: 0.9rem;
+}
+
+.missing-docs li {
+    margin-bottom: 0.25rem;
+}
+
+.all-docs {
+    color: var(--success-color);
+    font-size: 0.9rem;
+}
+
+ 
+.cross-variant-improvements {
+    margin-bottom: 2rem;
+}
+
+.improvements-intro {
+    color: var(--text-secondary);
+    margin-bottom: 1rem;
+}
+
+.improvements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 1rem;
+}
+
+.improvement {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+    border-left: 4px solid var(--info-color);
+}
+
+.improvement.priority-high {
+    border-left-color: var(--error-color);
+}
+
+.improvement.priority-medium {
+    border-left-color: var(--warning-color);
+}
+
+.improvement.priority-low {
+    border-left-color: var(--text-secondary);
+}
+
+.improvement-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.source-variant {
+    font-weight: 600;
+    color: var(--text-secondary);
+}
+
+.priority-badge {
+    padding: 0.2rem 0.6rem;
+    border-radius: 999px;
+    font-size: 0.8rem;
+    font-weight: 500;
+    text-transform: capitalize;
+}
+
+.priority-badge.priority-high {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--error-color);
+}
+
+.priority-badge.priority-medium {
+    background-color: rgba(255, 193, 7, 0.15);
+    color: #997404;
+}
+
+.priority-badge.priority-low {
+    background-color: rgba(108, 117, 125, 0.1);
+    color: var(--text-secondary);
+}
+
+.improvement-description {
+    margin: 0 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.improvement-rationale {
+    margin: 0;
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+}
+
+ 
+.learnings {
+    margin-bottom: 2rem;
+}
+
+.learnings-disclaimer {
+    font-size: 0.9rem;
+    color: var(--text-secondary);
+    font-style: italic;
+    margin-bottom: 1.5rem;
+}
+
+.variant-learnings {
+    margin-bottom: 1.5rem;
+}
+
+.variant-learnings h3 {
+    margin-bottom: 1rem;
+}
+
+.learnings-list {
+     
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+    gap: 1.5rem;
+}
+
+.learning {
+    background-color: var(--bg-card);
+    border: 1px solid var(--border-color);
+    border-radius: 6px;
+    padding: 1rem;
+     
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.learning:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+@media (prefers-color-scheme: dark) {
+    .learning:hover {
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+}
+
+.learning-header {
+    display: flex;
+    align-items: center;
+    gap: 0.75rem;
+    margin-bottom: 0.75rem;
+    flex-wrap: wrap;
+}
+
+.learning-title {
+    font-weight: 600;
+    font-size: 1.05rem;
+}
+
+ 
+.category-badge {
+    display: inline-block;
+    padding: 0.2rem 0.6rem;
+    border-radius: 4px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+     
+    background-color: rgba(128, 128, 128, 0.1);
+    color: var(--text-secondary);
+}
+
+.category-code-pattern {
+    background-color: rgba(13, 110, 253, 0.1);
+    color: var(--info-color);
+}
+
+.category-architecture {
+    background-color: rgba(111, 66, 193, 0.1);
+    color: #6f42c1;
+}
+
+.category-testing {
+    background-color: rgba(25, 135, 84, 0.1);
+    color: var(--success-color);
+}
+
+.category-error-handling {
+    background-color: rgba(220, 53, 69, 0.1);
+    color: var(--error-color);
+}
+
+.learning-description {
+    margin: 0 0 0.75rem 0;
+}
+
+.learning-rationale {
+    margin: 0 0 0.75rem 0;
+    font-size: 0.95rem;
+    color: var(--text-secondary);
+}
+
+.learning-files {
+    font-size: 0.9rem;
+}
+
+ 
+.learning-files code {
+    margin-right: 0.5rem;
+}
+
+ 
+@media print {
+    body {
+        background: white;
+        color: black;
+    }
+
+    header, footer {
+        background: none;
+        border: none;
+    }
+
+    .container {
+        max-width: 100%;
+        padding: 0;
+    }
+
+    details {
+        display: block;
+    }
+
+    details summary {
+        display: none;
+    }
+
+    details > *:not(summary) {
+        display: block !important;
+    }
+
+    .variant-diff {
+        break-inside: avoid;
+    }
+
+    a {
+        color: inherit;
+        text-decoration: underline;
+    }
+
+    a[href]:after {
+        content: " (" attr(href) ")";
+        font-size: 0.8em;
+    }
+
+    a[href^="#"]:after {
+        content: "";
+    }
+}
+
+ 
+@media (max-width: 768px) {
+    .metadata dl {
+        grid-template-columns: 1fr;
+    }
+
+    .metadata dt {
+        margin-top: 0.5rem;
+    }
+
+    .metadata dt:first-child {
+        margin-top: 0;
+    }
+
+    .variants-table {
+        display: block;
+        overflow-x: auto;
+    }
+
+    .recommendation {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+
+    .variant-assessments {
+        grid-template-columns: 1fr;
+    }
+
+    .variant-assessments dt {
+        margin-top: 0.5rem;
+    }
+
+    .variant-assessments dt:first-child {
+        margin-top: 0;
+    }
+
+     
+    .learning-header {
+        flex-direction: column;
+        align-items: flex-start;
+    }
+}
+
+@media (max-width: 320px) {
+    .container {
+        padding: 0.5rem;
+    }
+
+    header {
+        padding: 1rem 0;
+    }
+
+    header h1 {
+        font-size: 1.4rem;
+    }
+}
+
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1>Comparison Report</h1>
+            <p class="subtitle">main</p>
+        </div>
+    </header>
+
+    <main class="container">
+        
+
+        <section class="metadata">
+            <h2>Run Information</h2>
+            <dl>
+                <dt>Base Commit</dt>
+                <dd><code>6859ff9a1b14f1ebc253ec1f838a5af1abbecf9e</code></dd>
+                <dt>Original Branch</dt>
+                <dd>main</dd>
+                <dt>Generated</dt>
+                <dd>2026-08-15 10:55:22</dd>
+            </dl>
+        </section>
+
+        <section class="variants-overview">
+            <h2>Variants Overview</h2>
+            <table class="variants-table">
+                <thead>
+                    <tr>
+                        <th>Variant</th>
+                        <th>Branch</th>
+                        <th>Agent</th>
+                        <th>Status</th>
+                        <th>Cost</th>
+                        <th>Duration</th>
+                        <th>Turns</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    
+                    <tr class="variant-row status-completed">
+                        <td>
+                            <a href="#variant-1">Variant 1</a>
+                            
+                        </td>
+                        <td><code>orbit-impl-1/manual-corpus</code></td>
+                        <td>opus</td>
+                        <td><span class="status status-completed">completed</span></td>
+                        <td>$113.52</td>
+                        <td>11h10m28s</td>
+                        <td>993</td>
+                    </tr>
+                    
+                </tbody>
+            </table>
+        </section>
+
+        
+
+        <section class="variant-diffs">
+            <h2>Implementation Diffs</h2>
+            
+            <article class="variant-diff" id="variant-1">
+                <h3>
+                    Variant 1 <span class="agent-badge">opus</span>
+                    
+                </h3>
+                
+                <div class="diff-external">
+                    <p>Diff is large (>500 lines). <a href="diffs/variant-1.html">View full diff</a></p>
+                </div>
+                
+            </article>
+            
+        </section>
+    </main>
+
+    <footer>
+        <div class="container">
+            <p>Generated by Orbit</p>
+        </div>
+    </footer>
+</body>
+</html>

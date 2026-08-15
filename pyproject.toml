@@ -1,29 +1,47 @@
 [project]
 name = "dawmans"
 version = "0.1.0"
-description = "Ingestion over a local corpus of DAW and hardware manuals"
+description = "Grounded answers over DAW manuals: corpus ingestion, retrieval and a loopback answer engine"
 readme = "README.md"
 requires-python = ">=3.12"
-dependencies = [
-    # AGPL-3.0-or-later. Importable only under `dawmans/corpus/pdf/` — see
-    # specs/data/manual-corpus/decision_log.md Decision 6 and the banned-api rule below.
+dependencies = []
+
+# The split keeps PyMuPDF (AGPL) out of the served process: the API host runs
+# `uv sync --extra serve` and never installs the ingest extra. `data/manual-corpus`
+# decision_log.md Decision 6 is the rule; the banned-api below and
+# `tests/test_agpl_confinement.py` are what enforce it inside the package, and
+# `tests/answer/test_no_pymupdf.py` is what enforces it at the process boundary.
+[project.optional-dependencies]
+ingest = [
+    # AGPL-3.0-or-later. Importable only under `dawmans/corpus/pdf/`.
     "pymupdf>=1.24",
-    # Embedding. Network-capable, so ingestion runs it with HF_HUB_OFFLINE=1 against a
-    # `models/` cache populated once by `make fetch-model` (requirement 8.5).
-    "fastembed>=0.4",
+    "lingua-language-detector>=2.2.0", # lingua-py's name on PyPI
     "fonttools>=4.63.0",
-    "lingua-language-detector>=2.2.0",
+]
+serve = [
+    # Embedding. Network-capable, so ingestion runs it with HF_HUB_OFFLINE=1 against a
+    # `models/` cache populated once by `make fetch-model` (manual-corpus 8.5).
+    "fastembed>=0.4",
     "bm25s>=0.3.10",
     "numpy>=2.5.2",
-    # The declared rig inventory, `rig.yaml` at the repository root (requirement 11.3).
+    # The declared rig inventory, `rig.yaml` at the repository root (manual-corpus 11.3).
     "pyyaml>=6.0",
+    "anthropic>=0.40",
+    "httpx>=0.27", # the local provider's own client; already a transitive dep of anthropic
+    "starlette>=0.40",
+    "uvicorn>=0.30",
+    "keyring>=25.0",
 ]
 
 [project.scripts]
 dawmans = "dawmans.cli:main"
 
 [dependency-groups]
+# The dev environment installs both extras, so `uv run pytest` covers ingestion and
+# the served side at once. The confinement tests are what stop that convenience from
+# hiding an AGPL leak.
 dev = [
+    "dawmans[ingest,serve]",
     "pytest>=8.0",
     "hypothesis>=6.100",
     "ruff>=0.6",
@@ -43,7 +61,7 @@ testpaths = ["tests"]
 # `-m` it is given, so the two do not fight.
 addopts = "--strict-markers -m 'not bench'"
 markers = [
-    "bench: the full-corpus timing of requirement 8.1; run by `make bench`, never by `make test`",
+    "bench: the full-corpus timing of manual-corpus 8.1; run by `make bench`, never by `make test`",
 ]
 
 [tool.ruff]

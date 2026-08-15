@@ -2,13 +2,17 @@
 # and lint; the targets wrap `uv run …` rather than replacing it.
 
 .DEFAULT_GOAL := help
-.PHONY: help build test lint spelling clean fetch-model fixtures bench
+.PHONY: help build build-serve test lint spelling clean fetch-model fixtures \
+	bench bench-ingest bench-answer serve
 
 help: ## List available targets
-	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-12s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
+	@awk 'BEGIN {FS = ":.*## "} /^[a-zA-Z_-]+:.*## / {printf "  %-14s %s\n", $$1, $$2}' $(MAKEFILE_LIST)
 
-build: ## Sync the virtual environment and install the package
-	uv sync
+build: ## Sync the dev environment (both extras) and install the package
+	uv sync --all-extras
+
+build-serve: ## Sync what the API host runs — serve only, never ingest (AGPL, Decision 6)
+	uv sync --extra serve
 
 test: ## Run the tests
 	uv run pytest
@@ -19,6 +23,9 @@ lint: spelling ## Run linters (spelling, ruff)
 
 spelling: ## Check spelling
 	bash tools/check_spelling.sh
+
+serve: ## Run the answer engine on loopback
+	uv run dawmans serve
 
 clean: ## Remove build artefacts
 	rm -rf dist .pytest_cache .ruff_cache
@@ -37,14 +44,19 @@ fixtures: ## Recapture tests/fixtures/ from manuals/; needs the vendor PDFs loca
 		uv run python tools/capture_fixture.py --all; \
 	fi
 
-bench: ## Time a full-corpus rebuild (requirement 8.1); skipped when manuals/ is empty
+bench: bench-ingest bench-answer ## Run both timing suites
+
+bench-ingest: ## Time a full-corpus rebuild (manual-corpus 8.1); skipped when manuals/ is empty
 	@if ! ls manuals/*.pdf >/dev/null 2>&1; then \
 		echo "manuals/ holds no PDFs - skipping the 8.1 full-corpus benchmark."; \
 		exit 0; \
 	fi; \
 	uv run pytest -m bench --no-header; status=$$?; \
 	if [ $$status -eq 5 ]; then \
-		echo "No benchmark is registered yet (requirement 8.1)."; \
+		echo "No benchmark is registered yet (manual-corpus 8.1)."; \
 		exit 0; \
 	fi; \
 	exit $$status
+
+bench-answer: ## Real-provider, real-index answer timing (skips when either is absent)
+	uv run python tools/bench.py
