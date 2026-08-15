@@ -28,6 +28,7 @@ FIXTURES = Path(__file__).resolve().parents[1] / "tests" / "fixtures" / "section
 LIVE = "ableton/live-12"
 APC = "akai/apc-key-25"
 SCARLETT = "focusrite/scarlett-solo-4g"
+ALESIS = "alesis/nitro-max"
 
 #: The Live sections the starter set (7.2-7.6) points at, by section number. Numbers
 #: rather than titles because a pointer that names both is selected by the number and only
@@ -37,9 +38,10 @@ LIVE_SECTIONS: tuple[tuple[str, str], ...] = (
     ("18.1", "the Track Activator"),
     ("18.6", "another track soloed"),
     ("17.1", "the track's Monitor set to Off, and the Overall Latency adjustment"),
-    ("17.2", "Audio To routed to nothing"),
+    ("17", "the Audio/MIDI To chooser — the track's output routed elsewhere"),
     ("23.2.1", "the device chain or a device in it deactivated"),
     # 7.3 — a track is distorting
+    ("17.2", "the Input Channel meter, which is where clipping arrives"),
     ("18.1.1", "the mixer's gain stages, and the section printing `0 dB`"),
     ("28.24", "the master limiter"),
     ("28.34", "Saturator — a deliberate distortion device, for the elimination step"),
@@ -49,16 +51,25 @@ LIVE_SECTIONS: tuple[tuple[str, str], ...] = (
     ("28.13", "Dynamic Tube — deliberate distortion"),
     ("28.1", "Amp — deliberate distortion"),
     # 7.4 — latency when monitoring
-    ("18.8", "monitoring latency in a recording track"),
     ("39.5", "buffer size"),
     # 7.5 — a drum pad triggers the wrong sound
-    ("24.6", "the Drum Rack pad's receive note"),
-    ("33.2.2", "the pad's transmitted note, mapped"),
+    ("24.6", "the Drum Rack pad's Receive note"),
+    ("17.3.1", "the MIDI port the module is heard on"),
     # 7.6 — the controller does nothing
-    ("17.3.1", "the Track, Sync and Remote flags for that input or output"),
+    ("17.3.1.1", "Track, on its own"),
+    ("17.3.1.2", "Sync, on its own"),
     ("17.3.1.3", "Remote, on its own"),
     ("33.1.1", "the control surface selection"),
     ("33.1.2", "the control surface selection, set by hand"),
+)
+
+#: The Nitro Max sections 7.5 points at. The drum module's own manual is the only place
+#: General MIDI mode and the pads' note numbers are documented, and 7.8 admits no
+#: exception: pointing 7.5's General MIDI cause at Live's Drum Rack section instead would
+#: cite a manual that documents a different control.
+ALESIS_SECTIONS: tuple[tuple[str, str], ...] = (
+    ("4.4", "General MIDI Mode, and the channel the module sends on"),
+    ("5.2", "the note number each pad transmits"),
 )
 
 #: One section chunked into three: a pointer resolves to all three and the term check sees
@@ -112,20 +123,37 @@ def write(
     print(f"{path.relative_to(FIXTURES.parents[2])}: {len(passages)} passages")
 
 
+def _sections(
+    rows: Sequence[dict[str, Any]],
+    source_id: str,
+    wanted: Sequence[tuple[str, str]],
+    view: Path,
+) -> list[dict[str, Any]]:
+    """One manual's wanted sections, concatenated in the order they are listed.
+
+    A section that is not in the view is a hard stop rather than a short fixture: a
+    starter-set pointer with nothing behind it would reject its whole entry at first
+    ingest (2.2), and a fixture missing it would report that as a test failure about
+    resolution rather than about the fixture.
+    """
+    out: list[dict[str, Any]] = []
+    for number, why in wanted:
+        section = by_number(rows, source_id, number)
+        if not section:
+            raise SystemExit(
+                f"{source_id} §{number} ({why}) is not in {view} — refusing a short fixture"
+            )
+        out.extend(section)
+    return out
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("view", type=Path, help="a committed view directory, index/views/<hex>")
     view = parser.parse_args().view
     rows = read_view(view)
 
-    live: list[dict[str, Any]] = []
-    for number, why in LIVE_SECTIONS:
-        section = by_number(rows, LIVE, number)
-        if not section:
-            raise SystemExit(
-                f"{LIVE} §{number} ({why}) is not in {view} — refusing a short fixture"
-            )
-        live.extend(section)
+    live = _sections(rows, LIVE, LIVE_SECTIONS, view)
     write(
         "live_sections.json",
         captured_from=f"{LIVE} (Ableton Live 12 Reference Manual v12)",
@@ -158,6 +186,13 @@ def main() -> int:
         captured_from=f"{APC} (Akai APC Key 25 User Guide v1.0)",
         asserts="the title form resolves where the manual carries no section numbers at all",
         passages=unnumbered(rows, APC),
+    )
+
+    write(
+        "alesis_sections.json",
+        captured_from=f"{ALESIS} (Alesis Nitro Max User Guide v1.1)",
+        asserts="7.5's General MIDI and channel causes resolve in the drum module's own manual",
+        passages=_sections(rows, ALESIS, ALESIS_SECTIONS, view),
     )
 
     split = by_number(rows, LIVE, SPLIT_SECTION)

@@ -16,6 +16,30 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 7 — the starter set, and the acceptance and timing targets.**
+  `triage/` now holds the five committed entries of 7.2–7.6: no sound from a track, a track is
+  distorting, latency when monitoring, a drum pad triggers the wrong sound, and the controller does
+  nothing. Every cause carries an observable check and a fix pointer into a vendor manual, every
+  pointer resolves against the real index, and 2.3's carve-out is used nowhere — all four manuals are
+  ingested, so 7.8 admits no exception. The distortion entry carries 7.3's elimination step as an
+  ordinary ranked cause naming Saturator, Drum Buss, Overdrive, Vinyl Distortion, Dynamic Tube and
+  Amp, so an answer does not offer a distortion device as the cause of unwanted distortion.
+
+- **A fourth section fixture, `alesis_sections.json`.** 7.5's General MIDI and channel causes are
+  documented by the Nitro Max and by nothing else; citing Live's Drum Rack section instead would
+  resolve and would pass the term check while pointing at a different control. The fixture is cut by
+  the same tool as the others, and `tests/triage/test_starter_set.py` asserts the cited `source_id`
+  rather than only the resolution.
+
+- **The acceptance and timing targets** (`tests/triage/test_acceptance.py`). 5.6's budget is measured
+  over a synthetic 200-entry store — ingested and validated, with all 400 pointers re-checked, inside
+  5 seconds warm. The cold deviation stands as designed and is asserted structurally rather than
+  hidden in the budget: `dawmans ingest` loads the embedding model before it reaches any loader, so
+  an authored-only run still pays it. 7.7 needs `api/answer-engine`, which has no implementation, so
+  its end-to-end half skips under `make bench` naming what it waits on, while its corpus-side
+  precondition — the five entries in the committed view with their devices, causes and citations —
+  runs.
+
 - **`data/symptom-triage` Phase 6 — validation messages, `dawmans validate` over the store and
   `dawmans coverage`.** `triage/messages.py` renders a rejection or a flag as the design prints it:
   a header naming the file and the symptom, then the prose saying what is wrong and what to change

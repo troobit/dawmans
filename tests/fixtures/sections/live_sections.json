@@ -95,15 +95,15 @@
    "entry_location": null
   },
   {
-   "passage_id": "ableton/live-12#850d2590c55f843c",
+   "passage_id": "ableton/live-12#e4c358f5a8c5d1d9",
    "source_id": "ableton/live-12",
-   "section_number": "17.2",
-   "section_title": "External Audio In/Out",
-   "page_start": 370,
-   "page_end": 370,
-   "text": "17.2 External Audio In/Out\nAn audio interface’s inputs are selected by choosing “Ext. In“ from the Input Type chooser of an audio\ntrack. The Input Channel chooser then offers the individual input channels. Entries in this chooser each\nhave meters next to their names to help you identify signal presence and overload (when the meter\nflashes red). Setting up the audio interface’s outputs works the same way via the output chooser pair.\nIf multiple tracks are selected, any changes you make to these choosers will be applied to all selected\ntracks.\nThe list of available inputs and outputs depends on the Audio Settings, which can be reached via the\nInput and Output Channel choosers’ “Configure…“ option. Note that the Audio Settings also provide\naccess to the Channel Configuration dialogs, which determine which inputs and outputs are used, and\nwhether they are available to Live as mono or stereo pairs. Essentially, the Channel Configuration\ndialog tells Live what it needs to know about how the computer is connected to the other audio\ncomponents in your studio.\nYou can rename any input and output channels that appear in the Channel Configuration dialogs. If\nchanged, the new name(s) will be displayed in the corresponding Input / Output Channel chooser\ndrop-down. You can rename channels more quickly by using the Tab key to move between them.\nNote that changed names are always associated with their respective audio device.",
+   "section_number": "17",
+   "section_title": "Routing and I/O",
+   "page_start": 367,
+   "page_end": 368,
+   "text": "17. Routing and I/O\nIn the context of Live, “routing“ is the setup of the tracks’ signal sources and destinations (i.e., their\ninputs and outputs). Most routing happens in the mixer’s track In/Out section, which offers, for every\ntrack, choosers to select a signal source and destination. The mixer’s In/Out section is Live’s\n“patchbay.“\nThe Mixer’s In/Out Section.\nYou can show or hide the I/O section of the mixer in either Session or Arrangement View using the\nIn/Out entry in the mixer’s view control menu in the bottom right corner of Live’s window, or via the\nView menu’s In/Out option in the Mixer Controls submenu, or using the shortcut Ctrl Alt I\n(Win) / Ctrl Option I (Mac).\nThe Mixer View Control’s Options Menu.\nFor every track that can play clips, the In/Out section has the same layout:\n• The upper chooser pair (“Audio/MIDI From“) selects the track’s input. Audio tracks have an\naudio input, and MIDI tracks have a MIDI input. Return tracks receive their input from the\nrespective sends.\n• The Monitor radio button selects the monitor mode: the conditions under which the track’s input\nis heard through the track.\n• The lower chooser pair (“Audio/MIDI To“) selects the track’s output. All tracks have audio\noutputs, except for MIDI tracks without instruments. Remember that instruments convert MIDI to\naudio.\nWithin a chooser pair, the upper chooser selects the signal category (“Ext.,“ for instance, for external\nconnections via an audio or MIDI interface), and is called the Input/Output Type chooser. If this\nsignal type offers sub-selections or channels, they are available from the lower chooser, or the Input/\nOutput Channel chooser. In our “Ext.“ example, these would be the individual audio/MIDI inputs and\noutputs.",
    "degraded": false,
-   "has_figures": false,
+   "has_figures": true,
    "unbacked": false,
    "entry_location": null
   },
@@ -117,6 +117,19 @@
    "text": "23.2.1 Device Title Bar\nThe controls in a device’s title bar can be used to activate or deactivate the device, save and hot-swap\npresets, create default presets, and open the device’s context menu.\nCertain title bar controls are only available for some devices, such as the scale awareness toggle for\ndevices that can follow a clip’s scale, and the Learn toggle for the Chord device.\nDevices are turned on or off using their Activator toggles.\nDevice Activator Toggles.\nTurning a device off is like temporarily deleting it: the signal remains unprocessed, and the device\ndoes not consume CPU cycles. Live devices generally have no impact on CPU usage unless they are\nactive. For more information, please refer to the Managing the CPU Load section. The Freeze Track\ncommand discussed there is especially helpful when working with CPU-intensive devices.\nSome devices have views that you can expand above the Device View, such as the Gain Stage and\nModulation Matrix sections in Roar and the Frequency Display in EQ Eight.\nDevices with this kind of view have an arrow toggle to the right of the Activator toggle. Use the toggle\nto show or hide the view.\nThe Expanded View Toggle for Roar.\nRoar’s Expanded View.\nSome views can also be expanded within a device itself, for example, the LFO and Envelope Follower\nsections in Phaser-Flanger. This kind of view is indicated by a triangle icon in the device title bar.\nThe Expanded View Toggle for Phaser-Flanger.\nPhaser-Flanger’s Expanded View.\nA context menu is available for every device and contains general editing commands such as Cut,\nCopy, and Rename. Some commands are unique to a particular device, such as the Mono Sidechain\noption in Auto Filter.\nContext Menu Options for Auto Filter.\nYou can right-click a device’s title bar or use the Show Options toggle to open the context menu.\nThe Show Options Toggle.",
    "degraded": false,
    "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#850d2590c55f843c",
+   "source_id": "ableton/live-12",
+   "section_number": "17.2",
+   "section_title": "External Audio In/Out",
+   "page_start": 370,
+   "page_end": 370,
+   "text": "17.2 External Audio In/Out\nAn audio interface’s inputs are selected by choosing “Ext. In“ from the Input Type chooser of an audio\ntrack. The Input Channel chooser then offers the individual input channels. Entries in this chooser each\nhave meters next to their names to help you identify signal presence and overload (when the meter\nflashes red). Setting up the audio interface’s outputs works the same way via the output chooser pair.\nIf multiple tracks are selected, any changes you make to these choosers will be applied to all selected\ntracks.\nThe list of available inputs and outputs depends on the Audio Settings, which can be reached via the\nInput and Output Channel choosers’ “Configure…“ option. Note that the Audio Settings also provide\naccess to the Channel Configuration dialogs, which determine which inputs and outputs are used, and\nwhether they are available to Live as mono or stereo pairs. Essentially, the Channel Configuration\ndialog tells Live what it needs to know about how the computer is connected to the other audio\ncomponents in your studio.\nYou can rename any input and output channels that appear in the Channel Configuration dialogs. If\nchanged, the new name(s) will be displayed in the corresponding Input / Output Channel chooser\ndrop-down. You can rename channels more quickly by using the Tab key to move between them.\nNote that changed names are always associated with their respective audio device.",
+   "degraded": false,
+   "has_figures": false,
    "unbacked": false,
    "entry_location": null
   },
@@ -290,19 +303,6 @@
    "entry_location": null
   },
   {
-   "passage_id": "ableton/live-12#728c894b07196ebc",
-   "source_id": "ableton/live-12",
-   "section_number": "18.8",
-   "section_title": "Keep Monitoring Latency in Recording Track Toggles",
-   "page_start": 403,
-   "page_end": 404,
-   "text": "18.7 Track Delays\nA Track Delay control is available for every track in Live. The control allows delaying or pre-delaying\nthe output of tracks in milliseconds in order to compensate for human, acoustic, hardware and other\nreal-world delays.\nYou can access Track Delays using the Track Options entry in the Mixer Controls submenu within the\nView menu, or the menu options in the mixer view control at the bottom right of Live’s window.\nThe Track Delay Control and Selector.\nWe do not recommend changing track delays on stage, as it could result in undesirable clicks or pops\nin the audio signal. Micro-offsets in Session View clips can be achieved using the Nudge Backward/\nForward buttons in the Clip View, however track delays can be used in the Arrangement View for such\noffsets.\nNote that delay compensation for plug-ins and Live devices is a separate feature, and is automatic by\ndefault. Unusually high Track Delay settings or reported latencies from plug-ins may cause noticeable\nsluggishness in the software. If you are having latency-related difficulties while recording and playing\nback instruments, you may want to try turning off device delay compensation, however this is not\nnormally recommended. You may also find that adjusting the individual track delays is useful in these\ncases. Note that the Track Delay controls are unavailable when device delay compensation is\ndeactivated.\n18.8 Keep Monitoring Latency in Recording Track\nToggles\nWhen monitoring is set to “In” or “Auto,” the “Keep Monitoring Latency in Recording” option will be\nenabled by default.\nThe Keep Latency in Recording Track Toggles.\nThis adjusts the timing of the recording to match what is heard through Live’s monitoring. Generally\nspeaking it is recommended to leave this option enabled when recording software instruments or\neffects, and to switch it off when recording acoustic instruments or relying on external monitoring.\nYou can use the toggles or right-click on the In or Auto track monitor buttons to manually switch “Keep\nMonitoring Latency in Recorded Audio” on or off.",
-   "degraded": false,
-   "has_figures": true,
-   "unbacked": false,
-   "entry_location": null
-  },
-  {
    "passage_id": "ableton/live-12#470c0954374d7c0b",
    "source_id": "ableton/live-12",
    "section_number": "39.5",
@@ -342,19 +342,6 @@
    "entry_location": null
   },
   {
-   "passage_id": "ableton/live-12#77ed08f3dfd922df",
-   "source_id": "ableton/live-12",
-   "section_number": "33.2.2",
-   "section_title": "Mapping to MIDI Notes",
-   "page_start": 841,
-   "page_end": 841,
-   "text": "33.2.2 Mapping to MIDI Notes\nMIDI notes send simple Note On and Note Off messages to Live’s interface elements. These messages\ncan produce the following effects on controls in Live:\n• Session View Slots — Note On and Note Off messages affect clips in the slot according to their\nLaunch Mode settings.\n• Switches — A Note On message toggles the switch’s state.\n• Radio Buttons — Note On messages toggle through the available options.\n• Variable Parameters — When assigned to a single note, Note On messages toggle the\nparameter between its Min and Max values. When assigned to a range of notes, each note is\nassigned a discrete value, equally spaced over the parameter’s range of values.\nSession View slots can be assigned to a MIDI note range for chromatic playing: First play the root key\n(this is the key that will play the clip at its default transposition), and then, while holding down the root\nkey, hold one key below the root and one above it to define the limits of the range.",
-   "degraded": false,
-   "has_figures": true,
-   "unbacked": false,
-   "entry_location": null
-  },
-  {
    "passage_id": "ableton/live-12#19b528eb8e94e7de",
    "source_id": "ableton/live-12",
    "section_number": "17.3.1",
@@ -362,6 +349,45 @@
    "page_start": 371,
    "page_end": 371,
    "text": "17.3.1 MIDI Port Inputs and Outputs\nYou can configure which MIDI ports are made available to Live using the Inputs and Outputs options\nin the MIDI section of the Link, Tempo & MIDI Settings. All available input and output ports are listed\nhere. You can use any number of MIDI ports for track input and output; the mixer’s In/Out choosers\nallow them to be addressed individually.\nThe MIDI Port Inputs and Outputs List in the Settings.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#5becad510398a932",
+   "source_id": "ableton/live-12",
+   "section_number": "17.3.1.1",
+   "section_title": "Track",
+   "page_start": 371,
+   "page_end": 371,
+   "text": "17.3.1.1 Track\nEnabling Track allows Live to send or receive note and CC (Control Change) messages, for example,\nwhen using a MIDI keyboard to play or enter pitches.\nActivate Track for a MIDI port’s input when: - Playing instruments in Live with a MIDI keyboard. -\nRecording notes into MIDI clips. - Recording MIDI CC messages into MIDI clips, for example to\ncapture parameter changes from an external hardware synthesizer.\nActivate Track for a MIDI port’s output when: - Triggering an external hardware device (like a\nsynthesizer, drum machine, etc). - Sending MIDI notes to another application (using a virtual MIDI\nbus). - Sending MIDI CC automation to an external device or application.\nNote: You only need to activate Track on the output port for a MIDI controller if it has a built-in sound\ngenerator.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#b3c4ce7fcc0dfc12",
+   "source_id": "ableton/live-12",
+   "section_number": "17.3.1.2",
+   "section_title": "Sync",
+   "page_start": 371,
+   "page_end": 373,
+   "text": "17.3.1.2 Sync\nSync allows Live to send or receive MIDI Clock, or receive MIDI Timecode. Note: Unless it has a built-\nin sequencer or arpeggiator, you won’t ever need to activate Sync on the input or output ports of a\nMIDI controller.\nActivate Sync for a MIDI port’s input when: - Synchronizing Live to an external sequencer, drum\nmachine or groove box. - Synchronizing Live to another DAW using MIDI.\nActivate Sync for a MIDI port’s output when: - Synchronizing an external sequencer, drum machine or\ngroove box to Live using MIDI Clock. - Synchronizing another DAW to Live using MIDI Clock. -\nSynchronizing the LFO and arpeggiator of an external synthesizer or MIDI controller to Live.\nWhen Sync is enabled for a port’s output, you can access a set of additional options by pressing the\ntriangle next to the port’s name.\nSync Output Options.\nYou can adjust the MIDI Clock Sync Delay amount to add a delay to outgoing MIDI sync signals in\nmilliseconds. This can help correct any timing issues that occur between Live and the external\nhardware.\nMIDI Clock Type can be set to either Song to Pattern. In Song Mode, Live will send out MIDI Song\nPosition Pointer (SPP) and Continue messages each time the play position changes. In Pattern Mode,\nLive will only use Start messages, sent out at the start of the following bar. Use Pattern Mode if your\nMIDI device does not recognize SPP messages.\nThe Hardware Resync drop-down lets you choose how a resync message is sent when the Resync\nExternal Hardware option is enabled.\nResync External Hardware Option.\nWhen enabled, the Resync External Hardware button appears in Live’s Control bar, and can be used\nto send resync messages out to external gear. This is useful when synced hardware drifts out of time\nwith the Live Set during playback.\nThe Resync External Hardware Button in the Control Bar.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#1b18365af0be60bd",
+   "source_id": "ableton/live-12",
+   "section_number": "17.3.1.2",
+   "section_title": "Sync",
+   "page_start": 373,
+   "page_end": 373,
+   "text": "The Resync External Hardware Button in the Control Bar.\nThe default behavior is Stop and Start, which sends a resync message consisting of a MIDI Clock Stop\nevent followed by a MIDI Clock Start event; this works best with most MIDI devices. If set to Start\nOnly, just the MIDI Clock Start event resync message is sent; this might work better for some devices.\nIf set to Don’t Resync, no resync messages are sent.",
    "degraded": false,
    "has_figures": true,
    "unbacked": false,

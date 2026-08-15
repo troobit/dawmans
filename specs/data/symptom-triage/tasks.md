@@ -217,20 +217,20 @@ references:
 
 ## Phase 7: Starter set and acceptance
 
-- [ ] 27. Write tests for the starter set <!-- id:f3stq0r -->
+- [x] 27. Write tests for the starter set <!-- id:f3stq0r -->
   - Each of the five entries satisfies sections 1-4 with no exemption (7.1) and carries the mandated causes: no sound from a track (Track Activator, solo, Monitor Off, Audio To, device chain - 7.2); a track is distorting, with the elimination step naming Saturator, Drum Buss, Overdrive, Vinyl Distortion, Dynamic Tube and Amp as an ordinary cause inside the 2-6 count (7.3); latency when monitoring (buffer size, direct monitoring, monitor mode, Overall Latency - 7.4); a drum pad triggers the wrong sound (transmitted note vs receive note, General MIDI mode, channel mismatch - 7.5); the controller does nothing (Track/Sync/Remote flags, control surface selection, bank position - 7.6).
   - Every fix cites a vendor passage with no 2.3 carve-out in use (7.8) - the direct-monitoring cause points into the Scarlett guide via scarlett_sections.json - and the term check passes over the committed section fixtures, including 7.3's `0 dB` against the section that prints it.
   - Blocked-by: f3stq0g (Implement TriageLoader.load emission), f3stq0a (Implement terms.py)
   - Stream: 1
   - Requirements: [7.1](requirements.md#7.1), [7.2](requirements.md#7.2), [7.3](requirements.md#7.3), [7.4](requirements.md#7.4), [7.5](requirements.md#7.5), [7.6](requirements.md#7.6), [7.8](requirements.md#7.8)
 
-- [ ] 28. Author the five starter entries in triage/ <!-- id:f3stq0s -->
+- [x] 28. Author the five starter entries in triage/ <!-- id:f3stq0s -->
   - Product content that doubles as the grammar's worked examples; section numbers filled from the real index, since 2.2 rejects the whole entry at first ingest if a pointer does not resolve.
   - Blocked-by: f3stq0r (Write tests for the starter set)
   - Stream: 1
   - Requirements: [7.1](requirements.md#7.1), [7.2](requirements.md#7.2), [7.3](requirements.md#7.3), [7.4](requirements.md#7.4), [7.5](requirements.md#7.5), [7.6](requirements.md#7.6), [7.8](requirements.md#7.8)
 
-- [ ] 29. Add the acceptance and timing targets <!-- id:f3stq0t -->
+- [x] 29. Add the acceptance and timing targets <!-- id:f3stq0t -->
   - 7.7 asks each of the five starter symptoms with the starter set and vendor manuals in scope and asserts an outcome of answered, partially-answered or needs-narrowing, never refused-not-covered or out-of-domain. It needs the real manuals, a built index and the answer engine, so it is a make bench-style integration target that skips when index/ is absent or the answer engine is unavailable (api/answer-engine has no implementation or ledger yet) - the same honest limitation manual-corpus accepts for its 8.1.
   - 5.6: a synthetic 200-entry store ingests and validates in under 5 seconds with every pointer re-checked, measured warm; the cold deviation (the corpus's per-run model load) stands as designed until manual-corpus's lazy-load request lands, and is asserted as such rather than hidden in the budget.
   - Blocked-by: f3stq0o (Implement the validate integration in cli.py), f3stq0s (Author the five starter entries in triage/)

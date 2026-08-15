@@ -1,12 +1,13 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phases 1–6 are implemented — the model, the grammar, the canonical rendering,
+Phases 1–7 are implemented — the model, the grammar, the canonical rendering,
 pointer resolution, the ledger, device scope validation, the term check, identity
-and emission, discovery, the sidecar, the run integration, and now the validation
-messages, `dawmans validate` over the store and `dawmans coverage`. `dawmans
-ingest`, `validate` and `coverage` all run the real loader. Outstanding: the five
-starter entries and the acceptance targets (Phase 7).
+and emission, discovery, the sidecar, the run integration, the validation
+messages, `dawmans validate` over the store, `dawmans coverage`, and now the five
+starter entries in `triage/` with the acceptance and timing targets. `dawmans
+ingest`, `validate` and `coverage` all run the real loader. Outstanding: nothing
+in this spec except 7.7's end-to-end half, which waits on `api/answer-engine`.
 
 **`data/manual-corpus` is merged into this branch** (`bd4625e`), which is what
 unblocked Phase 4. Two earlier runs recorded the block and costed the merge
@@ -461,6 +462,55 @@ identifiers — `manual-corpus`'s incremental-equivalence property, observed rat
 than assumed. Re-running the extractor against a fresh view is therefore a cheap
 way to confirm the corpus has not moved under the fixtures.
 
+## The starter set (Phase 7)
+
+`triage/` at the repository root holds the five committed entries of 7.2–7.6.
+They are product content and they are also the grammar's only worked examples, so
+a change to either has to satisfy the other.
+
+- **Every pointer names a section that exists in the real index**, and the term
+  check passes over the committed fixtures. The two are kept in step by hand:
+  `tools/extract_section_fixtures.py`'s `LIVE_SECTIONS` and `ALESIS_SECTIONS`
+  list, with a reason each, exactly the sections the starter set points at. Add a
+  pointer to an entry and the fixture list needs the section, or
+  `test_starter_set.py` reports a `pointer-unresolved` rejection that looks like a
+  resolution bug and is not.
+- **7.5 forced a fourth manual into the fixtures.** General MIDI mode and the pad
+  note numbers are documented by the Nitro Max and by nothing else, so
+  `alesis_sections.json` was cut and `sections.CORPUS` is now four files. Pointing
+  that cause at Live's §24.6 instead would have resolved and would have passed the
+  term check — §24.6 prints "standard GM drum equivalents" — while citing a manual
+  about a different control. 2.6 cannot catch that; `test_starter_set.py` asserts
+  the cited `source_id` instead.
+- **Wording is constrained by the term check in ways worth knowing before
+  editing.** Containment is case-sensitive at word boundaries over the cause
+  statement plus its `check:`, so the entry has to use the manual's own
+  capitalisation. Live's routing chapter prints `Audio/MIDI To` and never
+  `Audio To`, which is why 7.2's routing cause is worded the way it is —
+  requirement 7.2's own phrasing would flag. Runs break on anything but spaces and
+  tabs, so `Track, Sync and Remote` is three terms and not one, and each is
+  satisfied by its own `fix:` line under the any-pointer rule. Tokens under three
+  characters are dropped, which is the only reason `GM` and `ON` may appear at
+  all.
+- **Each entry closes with an "Otherwise" section, so each raises
+  `closing-statement-inferred`.** Five flags on a clean store is expected, not
+  drift: Decision 6 identifies a closing statement by position, so it cannot tell
+  an author's note from a cause that lost both its lines, and it flags every one.
+  `test_starter_set.py` asserts that this is the *only* flag class, which is what
+  makes a term miss or a revision mismatch visible.
+- **5.6 is met warm.** 200 synthetic entries ingest and validate in well under a
+  second each on this machine, against the 5 s budget. The cold arm is not met and
+  is asserted structurally rather than timed:
+  `test_the_cold_deviation_is_the_run_s_model_load_and_not_this_source` pins that
+  `cli.run_ingest` loads the embedder before reaching any loader. That test is
+  meant to fail when `manual-corpus`'s lazy-on-first-embed request lands, which is
+  when 5.6's cold arm becomes claimable.
+- **7.7 cannot run.** It needs `dawmans.answer`, which does not exist, and a
+  configured provider. `test_acceptance.py` runs its corpus-side precondition
+  under `make bench` — the five entries are in the committed view with their
+  devices, causes and citations — and skips the ask itself, naming the module it
+  waits on.
+
 ## Test layout
 
 - `tests/triage/stores.py` builds an entry store on disk and the `TriageLoader`
@@ -476,6 +526,13 @@ way to confirm the corpus has not moved under the fixtures.
   from the same section fixtures. `tests/test_run.py` deliberately keeps a *stub*
   authored store — a run that only ever saw the real one would prove nothing
   about 12.2 — so the two files are complements, not duplicates.
+- `tests/triage/test_starter_set.py` is the only test that reads the **committed**
+  `triage/` store rather than one built in `tmp_path`, and it evaluates it with an
+  empty ledger — the first-ingest case, where an unresolved pointer rejects rather
+  than flags.
+- `tests/triage/test_acceptance.py` holds 7.7 and 5.6. Its `bench`-marked half
+  reads the repository's own `index/`, so it skips wherever that has not been
+  built; its timing half runs in CI on a synthetic store.
 
 ## Tooling
 
