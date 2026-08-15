@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 36 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4 (166 tasks, 12 done)
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 42 per-spec + 12 cross-cutting · **Task ledgers:** 1 of 4
 
 ---
 
@@ -26,7 +26,7 @@ answers from the manual corpus only; session awareness sits behind a defined but
 |---|---|
 | [`PROCESS.md`](PROCESS.md) | The process source of truth: how specs are written, gated, and turned into code. Kept as shipped by the template. |
 | [`CONTRACTS.md`](CONTRACTS.md) | **Governing** for anything crossing a spec boundary — the four records, the turn's SSE event set, the `body` block types, the open-at-source mechanism, the closed outcome taxonomy and its reason vocabulary, the composed latency budget. Where a spec and CONTRACTS disagree, **CONTRACTS wins and the spec is the defect**. A spec may not invent a field on a shared record nor silently drop one. |
-| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — twelve ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
+| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — eleven ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
 | `OVERVIEW.md` (this file) | Generated index. Regenerate; do not hand-merge. |
 
 ## Domains
@@ -49,18 +49,17 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 ## Specs
 
-All four are at **requirements and design complete**, each design reviewed and repaired, and all
-four now carry a `tasks.md` ledger — 166 tasks in total. Implementation has started on exactly one:
-`data/symptom-triage`, whose Phase 1 (the entry model and the entry grammar), Phase 2 (pointer
-resolution and the ledger) and Phase 3 (the term check and device scope) are done. The other three
-ledgers are complete and unstarted.
+All four are at **requirements and design complete**. Each design has been reviewed and repaired.
+One — `data/manual-corpus` — carries a `tasks.md` ledger and a `prerequisites.md`, and that ledger is
+now **fully implemented**: all 45 tasks across all 8 phases are done. The other three still have no
+ledger.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
-| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
-| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, 12 done) · **implementing** | 60 |
-| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
-| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, none started) | 154 |
+| [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45 of 45 — phases 1–8) | 84 |
+| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ⬜ | 60 |
+| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ | 111 |
+| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
@@ -70,74 +69,57 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/data/manual-corpus/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (9 ADRs), `tasks.md`,
-  `prerequisites.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (19 ADRs), `tasks.md`,
+  `prerequisites.md`. The only spec with a complete file set.
 - 12 requirement sections, 84 anchored criteria. Owns `SourceRecord` and `Passage` from
   [`CONTRACTS.md`](CONTRACTS.md) §1–§2, and publishes the filename grammar two other specs now
   reconstruct (2.7). Reference corpus: roughly 1107 pages across four manuals.
-- **Ledger:** 45 tasks over 8 phases, test-then-implement throughout, two work streams, none
-  started. `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
+- **Ledger:** 45 tasks over 8 phases, test-then-implement throughout, two work streams — **all
+  complete**. Phase 1 — the `dawmans` package scaffold, the CONTRACTS §1/§2 records and the loader
+  seam — phase 2 — the filename grammar, both source stores and shard removal — phase 3 — PDF
+  extraction, the span model and the committed extraction fixtures — phase 4 — furniture marking,
+  glyph repair and English selection — phase 5 — the section map, TOC anchoring, row and table
+  assembly, and unit assembly behind the `PdfLoader` seam — phase 6 — chunking and passage
+  identity — phase 7 — the embedding wrapper and its offline pin, the lexical index, the per-source
+  shard with its four-part cache key, and the merge behind the manifest rename — and phase 8 — the
+  rig inventory and its two gap reports, the per-run report and per-source audits, `dawmans ingest`
+  / `validate` / `inventory` with the run orchestration, and the timing tests behind `make bench`.
+  `prerequisites.md` records what no task can do: place the four gitignored PDFs, run
   `make fetch-model` once, and declare the Focusrite applicability mapping 11.7 makes mandatory.
+  All three are done, and the committed `rig.yaml` carries that mapping.
 - Explicit non-goals include OCR, image understanding, non-English content, automatic manual
   acquisition, and inferring hardware applicability from a document's contents.
 
 ### `specs/data/symptom-triage/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs), `tasks.md`.
-- **Missing:** `prerequisites.md` — its Phase 2 fixture task depends on a locally built index, which
-  is `data/manual-corpus`'s prerequisite rather than one of its own.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (6 ADRs).
+- **Missing:** `tasks.md`.
 - 8 requirement sections, 60 anchored criteria. Header declares status *draft*.
 - Exists because the manuals cannot answer diagnostic questions: "gain staging" appears **zero**
   times in the 1009-page Live 12 manual and "troubleshoot" appears twice (DECISIONS Decision 7).
   §7 specifies a five-symptom starter set as the acceptance test for the source.
-- **Ledger:** 29 tasks over 7 phases, two work streams. **Phase 1 is done** — `dawmans.triage`
-  carries the entry model, the entry grammar and the canonical rendering. Decision 7 was added
-  during that work: keyed-line continuation splits by value kind, because one uniform rule folded a
-  note written under a fix pointer into the pointer.
-- **Device scope validation is done** (tasks 11–12, the second work stream): `scope.py` applies the
-  six rows of the design's Device scope table, the exact-match rule, revision comparison and the 2.3
-  `undocumented:` claim. Decision 8 was added during that work: "indexed" means every identity the
-  corpus documents — source ids and the device ids they declare under `source_applicability` — since
-  matching source ids alone would report today's Focusrite declaration as undocumented while its
-  guide sits in the corpus.
-- **Phase 2 is done** (tasks 4–8), and clearing it took the two human prerequisites
-  `data/manual-corpus` names. `rig.yaml` was authored with the Focusrite mapping and
-  `make fetch-model` was run once, so an index could be built locally over the four manuals — 1431
-  passages — and the section fixtures cut from it and committed at `tests/fixtures/sections/`. CI
-  still never opens a PDF or loads the model. `pointers.py` now carries `SectionIndex`, `resolve`
-  and the committed NDJSON ledger that separates 2.2's rejection from 8.4's flag.
-- **Phase 3 is done** (tasks 9–10 completing it), and the fixture work is what unblocked it:
-  `terms.py` runs 2.6's check over the cause statement and its `check:` value against the passages
-  the cause's pointers resolve to, case-sensitively for control names and casefolded for numerics.
-  Decision 10 was added during that work: the design's sentence-start rule is applied per token
-  rather than per run, because applied literally it flags the design's own worked example
-  ("The Track Activator is off" yielding `The Track Activator`) and breaks the soundness property
-  for any statement opening with an article.
-- Phase 4 onwards is still blocked: it needs `corpus.passage_id` and the `SourceRecord` constructor,
-  which live on the unmerged `orbit-impl-1/manual-corpus` branch.
 
 ### `specs/api/answer-engine/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs), `tasks.md`,
-  `prerequisites.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs).
+- **Missing:** `tasks.md`.
 - 10 requirement sections, 111 anchored criteria. Header declares status *draft*.
-- **Ledger:** 45 tasks over 9 phases, none started.
 - Produces `Citation` and `AnswerEnvelope` ([`CONTRACTS.md`](CONTRACTS.md) §3–§4) and may emit only
   the outcomes in §6 of that file. Must define `StateSource` while shipping a null implementation
   (Decision 4).
 
 ### `specs/ui/ask-and-source-picker/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs), `tasks.md`.
-- **Ledger:** 47 tasks over 9 phases, none started.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs).
+- **Missing:** `tasks.md`.
 - 13 requirement sections, 154 anchored criteria — **129 behavioural [B]** and **25 target-and-band
   [T]**, the latter run as the iterative loop of [`PROCESS.md`](PROCESS.md) §5.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
   full, dim room) outranks feature richness in any trade-off.
 
-Every spec carries a `decision_log.md` — 36 per-spec ADRs against the 12 cross-cutting ones in
-[`DECISIONS.md`](DECISIONS.md) — and a `tasks.md`. Two carry a `prerequisites.md`, naming what no
-task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
+Every spec carries a `decision_log.md` — 42 per-spec ADRs against the 12 cross-cutting ones in
+[`DECISIONS.md`](DECISIONS.md). One spec carries a `tasks.md` and a `prerequisites.md`; the other
+three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
 
 ---
 
@@ -149,17 +131,25 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Twelve cross-cutting ADRs in `DECISIONS.md` and 36 per-spec ADRs, all *accepted*.
-- Four `tasks.md` ledgers — 166 tasks — with `prerequisites.md` for `data/manual-corpus` and
-  `api/answer-engine` naming what no task can do for itself.
-- **The first code in the repository.** `data/symptom-triage` Phase 1: `dawmans.triage.model`,
-  `parse` and the fix-pointer grammar of `pointers`, under a `src/` layout managed with uv, with
-  pytest + hypothesis and ruff wired into `make test` and `make lint`. Since joined by Phase 2 —
-  section resolution and the pointer ledger in the same `pointers` module — and by Phase 3, the
-  ledger's second work stream: `dawmans.triage.scope` and `dawmans.triage.terms`.
-- **The first artefacts cut from a real index.** `tests/fixtures/sections/` holds slices of a view
-  built locally over the four manuals, so pointer resolution is tested against the corpus as it
-  actually extracts rather than against invented sections.
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 42 per-spec ADRs, all *accepted*.
+- One `tasks.md` ledger, for `data/manual-corpus`, with the `prerequisites.md` naming what no task
+  can do for itself. **It is fully implemented — all 45 tasks, all 8 phases.** The package, the
+  shared records, both source stores, PDF extraction and the committed extraction fixtures, the
+  text-conditioning stages — furniture marking, glyph repair and English content selection — the
+  structural stages that turn a span model into `Region[]` (the section map and its three paths, TOC
+  anchoring, row and table assembly, unit assembly and the `vendor-manual` load path), the
+  chunker that turns `Region[]` into the `Passage` records the index is built from, with the
+  content-derived passage identity a retained citation resolves through, the index build
+  itself — the offline-pinned embedding wrapper, the lexical index whose tokeniser keeps
+  `Dry/Wet` and `4th-gen` retrievable, the per-source shard reused only when all four of
+  fingerprint, ingestion version and embedding model and dimension match, and the merge into a
+  fresh view committed by renaming `manifest.json` last — and finally the rig inventory with its
+  two gap reports, the per-run report and per-source ingestion audits, and `dawmans ingest` /
+  `validate` / `inventory` over the whole stage order.
+- **A working ingestion tool.** `dawmans ingest` runs against the real four-manual corpus: 4 sources,
+  1431 passages, a full cold rebuild in ~43 s against 8.1's 60 s budget, and the gap reports come out
+  as the design predicts — owned-but-undocumented empty, indexed-but-not-owned empty, and
+  documented-but-unconfirmed naming the APC and the Nitro Max (`data/manual-corpus` Decision 16).
 
 **What is next**
 
@@ -167,13 +157,11 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   and §6a, and rewriting §4, §6 and §7 — and reconciled all four specs against it in the same pass.
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
-- The **task phase is complete for all four specs**, so every one of them is implementable.
-- **`data/manual-corpus` is still the critical path**, though less of it than before. Triage Phase 2
-  needed only a *built* index, and building one locally was enough — the fixtures are committed and
-  nothing in the suite reaches for the corpus again. Phase 4 onwards is the part that genuinely
-  needs the code: `passage_id`, `records.SourceRecord` and `corpus/loader.py`'s seam types, all of
-  them committed on `orbit-impl-1/manual-corpus` and none of them on this branch. The package
-  scaffold that is `manual-corpus` task 1 still exists only in the cut-down form Phase 1 required.
+- The **task phase** for the remaining three specs (`/starwave-tasks`), each behind its own approval
+  gate. `data/manual-corpus` is built; the other three have no ledger and are not implementable.
+  `data/symptom-triage` is the one that unblocks the rest: `manual-corpus` calls its `TriageLoader`
+  behind the loader seam and today runs with one store, and the end-to-end tests stand a stub in its
+  place.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes
@@ -194,10 +182,9 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
 | `platform` has no spec | Decision 1 gives it provider key configuration, the app shell, and the build. Nothing owns them today. |
 | Wrong Akai manual ingested | `akai_apc-key-25_user-guide_v1.0_multi.pdf` documents the **original** APC Key 25; the rig has the **mk2**, which differs in pads and shift layer (Decision 9). Mitigated by declared `hardware_applicability` shown inline on citations; the real fix is obtaining the mk2 guide from akaipro.com. |
 | No live owned-but-undocumented case | Every rig device is documented since the Scarlett Solo 4th Gen guide was ingested, so that report is empty and four mechanisms reading from it are dormant (Decision 12). They stay specified and are exercised against a fixture rig; the risk is untested-in-anger code, not a missing gap. |
-| Scarlett applicability must be declared by hand | `focusrite_scarlett-solo-4g_…` yields source id `focusrite/scarlett-solo-4g` while `rig.yaml` declares `focusrite/scarlett-solo`. Omit the `source_applicability` mapping and the manual is present while its device reports as undocumented. `data/manual-corpus` 11.7 names the omission in the run report; nothing prevents it. |
-| Triage starter entries unwritten | `data/symptom-triage` §7 specifies five starter entries (no sound from a track, a track distorting, monitoring latency, drum pad triggers the wrong sound, controller does nothing). None are authored yet, so the diagnostic questions the source exists to answer still refuse. No longer blocked on the section fixtures — those are cut and committed, and `live_sections.json` names the 21 real Live sections the five entries point at, so the numbers 2.2 demands are now on hand. Task 27 gates the authoring, and it waits on Phase 4. |
-| The package scaffold is cut to Phase 1 | `data/manual-corpus` task 1 owns the whole module tree, the `fetch-model` and `bench` targets, and the lint rule confining PyMuPDF to `corpus/pdf/` for the AGPL reason (its Decision 6). What exists is `pyproject.toml`, `src/dawmans/triage/`, and `make test` / `make lint` / `make format`. That task is still owed the rest. |
-| `render()` does not round-trip | The canonical rendering is the passage text, which by design excludes the frontmatter and the fix pointers, so it is not a parseable entry file. `data/symptom-triage` Phase 4's canonical-idempotence property is written as `render(parse(render(parse(f)))) == render(parse(f))` and will have to reconcile that against the design's "there is no second canonical form". |
+| Scarlett applicability must be declared by hand | `focusrite_scarlett-solo-4g_…` yields source id `focusrite/scarlett-solo-4g` while `rig.yaml` declares `focusrite/scarlett-solo`. Omit the `source_applicability` mapping and the manual is present while its device reports as undocumented. `data/manual-corpus` 11.7 names the omission in the run report; nothing prevents it. **Declared** in the committed `rig.yaml`, and the live run now resolves it. |
+| Nitro Max reports as unconfirmed | `rig.yaml` declares no `source_applicability` for the Nitro Max, so under 11.2 its guide is `assumed` for a device the rig holds and 11.5 reports it alongside the APC — two sources where the design's worked example says one (`data/manual-corpus` Decision 16). The remedy is one line, after someone checks the guide against the unit; writing it now would fabricate a verification. |
+| Triage starter entries unwritten | `data/symptom-triage` §7 specifies five starter entries (no sound from a track, a track distorting, monitoring latency, drum pad triggers the wrong sound, controller does nothing). None are authored yet, so the diagnostic questions the source exists to answer still refuse. |
 
 **Contract defects.** Each was found from both ends of its seam — named in the design of the spec
 that produces it *and* the one that consumes it — and none could be settled by one spec alone. All

@@ -1,0 +1,1130 @@
+{
+ "captured_from": "akai_apc-key-25_user-guide_v1.0_multi.pdf",
+ "captured_pages": [3, 4],
+ "redacted": false,
+ "asserts": "no outline and no contents page yields the heading-style path, unnumbered regions, and a citation rendered with no section number (6.4)",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 24,
+ "toc": [],
+ "pages": [
+  {
+   "number": 3,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [[27.0, 18.8, 369.0, 33.2]],
+   "blocks": [
+    {
+     "bbox": [369.0, 23.58, 372.0, 35.58],
+     "lines": [
+      {
+       "bbox": [369.0, 23.58, 372.0, 35.58],
+       "spans": [
+        {"text": " ", "bbox": [369.0, 23.58, 372.0, 35.58], "font": "TimesNewRoman", "size": 12.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 580.53, 230.45, 597.99],
+     "lines": [
+      {
+       "bbox": [28.8, 580.53, 31.31, 588.51],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 580.53, 31.31, 588.51], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [195.48, 580.53, 203.03, 588.51],
+       "spans": [
+        {"text": "3 ", "bbox": [195.48, 580.53, 203.03, 588.51], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [227.94, 580.53, 230.45, 588.51],
+       "spans": [
+        {"text": " ", "bbox": [227.94, 580.53, 230.45, 588.51], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 590.01, 31.31, 597.99],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 590.01, 31.31, 597.99], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 34.6, 214.54, 116.74],
+     "lines": [
+      {
+       "bbox": [28.8, 34.6, 31.02, 42.58],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 34.6, 31.02, 42.58], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 44.34, 155.03, 56.34],
+       "spans": [
+        {"text": "User Guide (English) ", "bbox": [28.8, 44.34, 155.03, 56.34], "font": "HelveticaNeue-Heavy", "size": 12.0, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 58.18, 31.02, 66.16],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 58.18, 31.02, 66.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 67.52, 93.45, 77.54],
+       "spans": [
+        {"text": "Introduction ", "bbox": [28.8, 67.52, 93.45, 77.54], "font": "HelveticaNeue-Heavy", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 79.36, 31.02, 87.34],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 79.36, 31.02, 87.34], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 88.73, 89.61, 97.73],
+       "spans": [
+        {"text": "Box Contents ", "bbox": [28.8, 88.73, 89.61, 97.73], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.8, 99.4, 31.02, 107.38],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 99.4, 31.02, 107.38], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 108.76, 74.19, 116.74],
+       "spans": [
+        {"text": "APC Key 25 ", "bbox": [28.8, 108.76, 74.19, 116.74], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [100.83, 108.76, 103.05, 116.74],
+       "spans": [
+        {"text": " ", "bbox": [100.83, 108.76, 103.05, 116.74], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [136.83, 108.76, 139.05, 116.74],
+       "spans": [
+        {"text": " ", "bbox": [136.83, 108.76, 139.05, 116.74], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [172.83, 108.76, 214.54, 116.74],
+       "spans": [
+        {"text": "USB Cable ", "bbox": [172.83, 108.76, 214.54, 116.74], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 121.06, 215.34, 129.04],
+     "lines": [
+      {
+       "bbox": [28.8, 121.06, 126.93, 129.04],
+       "spans": [
+        {"text": "Ableton Live Lite ", "bbox": [28.8, 121.06, 90.6, 129.04], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "(download)", "bbox": [90.6, 121.81, 124.98, 128.83], "font": "HelveticaNeue-Italic", "size": 7.02, "flags": 6},
+        {"text": " ", "bbox": [124.98, 121.81, 126.93, 128.83], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [136.8, 121.81, 138.75, 128.83],
+       "spans": [
+        {"text": " ", "bbox": [136.8, 121.81, 138.75, 128.83], "font": "HelveticaNeue-Roman", "size": 7.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [172.8, 121.06, 215.34, 129.04],
+       "spans": [
+        {"text": "User Guide ", "bbox": [172.8, 121.06, 215.34, 129.04], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 133.42, 369.36, 189.58],
+     "lines": [
+      {
+       "bbox": [28.8, 133.42, 125.11, 141.4],
+       "spans": [
+        {"text": "Software Download Cards ", "bbox": [28.8, 133.42, 125.11, 141.4], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [136.82, 133.42, 139.03, 141.4],
+       "spans": [
+        {"text": " ", "bbox": [136.82, 133.42, 139.03, 141.4], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [172.81, 133.42, 267.96, 141.4],
+       "spans": [
+        {"text": "Safety & Warranty Manual ", "bbox": [172.81, 133.42, 267.96, 141.4], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 142.72, 31.02, 150.7],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 142.72, 31.02, 150.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 152.15, 65.62, 161.15],
+       "spans": [
+        {"text": "Support ", "bbox": [28.8, 152.15, 65.62, 161.15], "font": "HelveticaNeue-Bold", "size": 9.0, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.8, 162.76, 31.02, 170.74],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 162.76, 31.02, 170.74], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 172.12, 369.36, 180.1],
+       "spans": [
+        {"text": "For the latest information about this product (system requirements, compatibility information, ", "bbox": [28.8, 172.12, 369.36, 180.1], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 181.41, 244.68, 189.58],
+       "spans": [
+        {"text": "etc.) and product registration, visit ", "bbox": [28.8, 181.6, 153.22, 189.58], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "akaipro.com/apckey25", "bbox": [153.24, 181.41, 240.09, 189.39], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ". ", "bbox": [240.18, 181.6, 244.68, 189.58], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 193.95, 369.36, 251.32],
+     "lines": [
+      {
+       "bbox": [28.8, 193.95, 245.7, 202.12],
+       "spans": [
+        {"text": "For additional product support, visit ", "bbox": [28.8, 194.14, 158.78, 202.12], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "akaipro.com/support", "bbox": [158.76, 193.95, 238.93, 201.93], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ".  ", "bbox": [238.99, 194.14, 245.7, 202.12], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 203.56, 31.03, 211.54],
+       "spans": [
+        {"text": " ", "bbox": [28.81, 203.56, 31.03, 211.54], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 212.9, 61.23, 222.92],
+       "spans": [
+        {"text": "Setup ", "bbox": [28.8, 212.9, 61.23, 222.92], "font": "HelveticaNeue-Heavy", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 224.68, 31.02, 232.66],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 224.68, 31.02, 232.66], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 233.86, 37.68, 242.02],
+       "spans": [
+        {"text": "1.", "bbox": [28.8, 234.04, 35.46, 242.02], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.46, 233.86, 37.68, 241.84], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.8, 234.04, 369.36, 242.02],
+       "spans": [
+        {"text": "Use the included USB cable to connect APC Key 25's USB port to an available USB port ", "bbox": [46.8, 234.04, 369.36, 242.02], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.8, 243.34, 163.84, 251.32],
+       "spans": [
+        {"text": "on your computer (powered on). ", "bbox": [46.8, 243.34, 163.84, 251.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 255.51, 185.36, 263.68],
+     "lines": [
+      {
+       "bbox": [28.8, 255.51, 37.68, 263.68],
+       "spans": [
+        {"text": "2.", "bbox": [28.8, 255.7, 35.46, 263.68], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.46, 255.51, 37.68, 263.49], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.8, 255.7, 185.36, 263.68],
+       "spans": [
+        {"text": "On your computer, open Ableton Live. ", "bbox": [46.8, 255.7, 185.36, 263.68], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 267.99, 188.7, 276.16],
+     "lines": [
+      {
+       "bbox": [28.8, 267.99, 37.68, 276.16],
+       "spans": [
+        {"text": "3.", "bbox": [28.8, 268.18, 35.46, 276.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.46, 267.99, 37.68, 275.97], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.8, 267.99, 188.7, 276.16],
+       "spans": [
+        {"text": "In Ableton Live, open the ", "bbox": [46.8, 268.18, 138.01, 276.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Preferences", "bbox": [138.01, 267.99, 184.22, 275.97], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ": ", "bbox": [184.2, 268.18, 188.7, 276.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [55.8, 279.18, 189.96, 288.94],
+     "lines": [
+      {
+       "bbox": [55.8, 279.18, 189.96, 288.94],
+       "spans": [
+        {"text": "•", "bbox": [55.8, 279.18, 59.48, 287.16], "font": "Symbol", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [59.47, 280.77, 61.69, 288.75], "font": "Arial", "size": 7.98, "flags": 4},
+        {"text": "Windows: ", "bbox": [64.81, 280.96, 102.23, 288.94], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Options > Preferences", "bbox": [102.25, 280.77, 187.68, 288.75], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " ", "bbox": [187.75, 280.96, 189.96, 288.94], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [55.81, 292.01, 178.63, 301.78],
+     "lines": [
+      {
+       "bbox": [55.81, 292.01, 178.63, 301.78],
+       "spans": [
+        {"text": "•", "bbox": [55.81, 292.01, 59.48, 299.99], "font": "Symbol", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [59.47, 293.61, 61.69, 301.59], "font": "Arial", "size": 7.98, "flags": 4},
+        {"text": "Mac OS X: ", "bbox": [64.81, 293.8, 105.35, 301.78], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Live > Preferences", "bbox": [105.37, 293.61, 176.39, 301.59], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " ", "bbox": [176.41, 293.8, 178.63, 301.78], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 306.14, 140.09, 314.31],
+     "lines": [
+      {
+       "bbox": [28.81, 306.15, 37.69, 314.31],
+       "spans": [
+        {"text": "4.", "bbox": [28.81, 306.33, 35.47, 314.31], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.47, 306.15, 37.69, 314.13], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 306.14, 140.09, 314.31],
+       "spans": [
+        {"text": "Click the ", "bbox": [46.81, 306.33, 80.23, 314.31], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "MIDI/Sync", "bbox": [80.23, 306.14, 119.79, 314.12], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " Tab. ", "bbox": [119.77, 306.33, 140.09, 314.31], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 318.68, 325.93, 326.85],
+     "lines": [
+      {
+       "bbox": [28.81, 318.68, 37.69, 326.85],
+       "spans": [
+        {"text": "5.", "bbox": [28.81, 318.87, 35.47, 326.85], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.47, 318.68, 37.69, 326.66], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 318.68, 325.93, 326.85],
+       "spans": [
+        {"text": "Click an available ", "bbox": [46.81, 318.87, 111.17, 326.85], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Control Surface", "bbox": [111.18, 318.68, 171.3, 326.66], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " drop-down menu and select ", "bbox": [171.32, 318.87, 276.86, 326.85], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "APC Key 25", "bbox": [276.86, 318.68, 321.46, 326.66], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ". ", "bbox": [321.44, 318.87, 325.93, 326.85], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 331.22, 285.38, 339.39],
+     "lines": [
+      {
+       "bbox": [28.82, 331.22, 37.7, 339.39],
+       "spans": [
+        {"text": "6.", "bbox": [28.82, 331.41, 35.47, 339.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.48, 331.22, 37.7, 339.2], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.82, 331.22, 285.38, 339.39],
+       "spans": [
+        {"text": "Click an available ", "bbox": [46.82, 331.41, 111.18, 339.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Input", "bbox": [111.18, 331.22, 130.73, 339.2], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " drop-down menu and select ", "bbox": [130.76, 331.41, 236.24, 339.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "APC Key 25", "bbox": [236.3, 331.22, 280.89, 339.2], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ". ", "bbox": [280.88, 331.41, 285.38, 339.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 343.75, 292.05, 351.92],
+     "lines": [
+      {
+       "bbox": [28.82, 343.76, 37.7, 351.92],
+       "spans": [
+        {"text": "7.", "bbox": [28.82, 343.94, 35.48, 351.92], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.49, 343.76, 37.7, 351.74], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 343.75, 292.05, 351.92],
+       "spans": [
+        {"text": "Click an available ", "bbox": [46.83, 343.94, 111.19, 351.92], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Output", "bbox": [111.19, 343.75, 137.41, 351.73], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " drop-down menu and select ", "bbox": [137.42, 343.94, 242.92, 351.92], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "APC Key 25", "bbox": [242.97, 343.75, 287.6, 351.73], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ". ", "bbox": [287.61, 343.94, 292.05, 351.92], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 356.29, 163.58, 364.46],
+     "lines": [
+      {
+       "bbox": [28.82, 356.29, 37.7, 364.46],
+       "spans": [
+        {"text": "8.", "bbox": [28.82, 356.48, 35.48, 364.46], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.49, 356.29, 37.7, 364.27], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 356.29, 163.58, 364.46],
+       "spans": [
+        {"text": "Close the ", "bbox": [46.83, 356.48, 82.86, 364.46], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Preferences", "bbox": [82.89, 356.29, 129.16, 364.27], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " window. ", "bbox": [129.15, 356.48, 163.58, 364.46], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 368.84, 336.35, 416.68],
+     "lines": [
+      {
+       "bbox": [46.83, 368.84, 221.92, 376.82],
+       "spans": [
+        {"text": "You can now use APC Key 25 with Ableton Live. ", "bbox": [46.83, 368.84, 221.92, 376.82], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.82, 378.14, 31.04, 386.12],
+       "spans": [
+        {"text": " ", "bbox": [28.82, 378.14, 31.04, 386.12], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 387.56, 112.35, 397.58],
+       "spans": [
+        {"text": "Basic Operation ", "bbox": [28.8, 387.56, 112.35, 397.58], "font": "HelveticaNeue-Heavy", "size": 10.02, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 399.34, 31.02, 407.32],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 399.34, 31.02, 407.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 408.7, 336.35, 416.68],
+       "spans": [
+        {"text": "Refer to this section to learn how to do basic tasks in Ableton Live using APC Key 25. ", "bbox": [28.8, 408.7, 336.35, 416.68], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 420.99, 369.48, 438.7],
+     "lines": [
+      {
+       "bbox": [28.8, 420.99, 369.48, 429.16],
+       "spans": [
+        {"text": "Important: ", "bbox": [28.8, 420.99, 70.66, 428.97], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "Before doing any of the following, set up APC Key 25 as a controller in Ableton ", "bbox": [71.64, 421.18, 369.48, 429.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 430.53, 188.64, 438.7],
+       "spans": [
+        {"text": "Live (described in the ", "bbox": [28.8, 430.72, 107.28, 438.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Setup", "bbox": [107.28, 430.53, 129.79, 438.51], "font": "HelveticaNeue-BoldItalic", "size": 7.98, "flags": 22},
+        {"text": " section above). ", "bbox": [129.79, 430.72, 188.64, 438.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 443.08, 31.03, 451.06],
+     "lines": [
+      {
+       "bbox": [28.81, 443.08, 31.03, 451.06],
+       "spans": [
+        {"text": " ", "bbox": [28.81, 443.08, 31.03, 451.06], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 455.43, 369.43, 482.32],
+     "lines": [
+      {
+       "bbox": [28.81, 455.43, 369.41, 463.6],
+       "spans": [
+        {"text": "To launch a clip,", "bbox": [28.81, 455.43, 94.11, 463.41], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " press one of the ", "bbox": [94.15, 455.62, 160.47, 463.6], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Buttons", "bbox": [161.53, 455.43, 209.67, 463.41], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (in the 8x5 matrix) that is lit ", "bbox": [209.65, 455.62, 316.97, 463.6], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "amber", "bbox": [317.99, 455.62, 340.63, 463.6], "font": "HelveticaNeue-Italic", "size": 7.98, "flags": 6},
+        {"text": ", which ", "bbox": [340.63, 455.62, 369.41, 463.6], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 465.04, 369.43, 473.02],
+       "spans": [
+        {"text": "means there is a clip loaded to that slot but is not playing. The Clip Button will light ", "bbox": [28.81, 465.04, 345.83, 473.02], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "green", "bbox": [346.93, 465.04, 367.15, 473.02], "font": "HelveticaNeue-Italic", "size": 7.98, "flags": 6},
+        {"text": " ", "bbox": [367.21, 465.04, 369.43, 473.02], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 474.34, 94.9, 482.32],
+       "spans": [
+        {"text": "when it is playing. ", "bbox": [28.81, 474.34, 94.9, 482.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 486.7, 31.03, 494.68],
+     "lines": [
+      {
+       "bbox": [28.81, 486.7, 31.03, 494.68],
+       "spans": [
+        {"text": " ", "bbox": [28.81, 486.7, 31.03, 494.68], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 498.99, 87.01, 506.97],
+     "lines": [
+      {
+       "bbox": [28.81, 498.99, 87.01, 506.97],
+       "spans": [
+        {"text": "To stop a clip:  ", "bbox": [28.81, 498.99, 87.01, 506.97], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 511.53, 369.46, 529.06],
+     "lines": [
+      {
+       "bbox": [28.81, 511.53, 37.69, 519.7],
+       "spans": [
+        {"text": "1.", "bbox": [28.81, 511.72, 35.47, 519.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.47, 511.53, 37.69, 519.51], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 511.53, 369.46, 519.7],
+       "spans": [
+        {"text": "Press and hold ", "bbox": [46.81, 511.72, 103.2, 519.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [103.51, 511.53, 120.9, 519.51], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the first ", "bbox": [120.91, 511.72, 190.99, 519.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Button", "bbox": [191.3, 511.53, 273.71, 519.51], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (", "bbox": [273.74, 511.72, 278.38, 519.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop", "bbox": [278.41, 511.53, 313.59, 519.51], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "). This puts the ", "bbox": [313.63, 511.72, 369.46, 519.7], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 521.08, 350.37, 529.06],
+       "spans": [
+        {"text": "Clip Stop Buttons at the bottom of the 8x5 matrix of Clip Buttons in Clip Stop Mode. ", "bbox": [46.81, 521.08, 350.37, 529.06], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 533.42, 347.43, 541.59],
+     "lines": [
+      {
+       "bbox": [28.82, 533.43, 37.7, 541.59],
+       "spans": [
+        {"text": "2.", "bbox": [28.82, 533.61, 35.47, 541.59], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.48, 533.43, 37.7, 541.41], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.82, 533.42, 347.43, 541.59],
+       "spans": [
+        {"text": "Press the ", "bbox": [46.82, 533.61, 82.65, 541.59], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop Button", "bbox": [82.64, 533.42, 145.37, 541.4], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " in the same track (column) as the clip you want to stop. ", "bbox": [145.4, 533.61, 347.43, 541.59], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "number": 4,
+   "width": 396.0,
+   "height": 612.0,
+   "images": [[27.0, 19.0, 369.0, 33.0]],
+   "blocks": [
+    {
+     "bbox": [369.0, 23.46, 372.0, 35.46],
+     "lines": [
+      {
+       "bbox": [369.0, 23.46, 372.0, 35.46],
+       "spans": [
+        {"text": " ", "bbox": [369.0, 23.46, 372.0, 35.46], "font": "TimesNewRoman", "size": 12.0, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [195.48, 578.94, 203.03, 596.4],
+     "lines": [
+      {
+       "bbox": [195.48, 578.94, 203.03, 586.92],
+       "spans": [
+        {"text": "4 ", "bbox": [195.48, 578.94, 203.03, 586.92], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [198.0, 588.42, 200.52, 596.4],
+       "spans": [
+        {"text": " ", "bbox": [198.0, 588.42, 200.52, 596.4], "font": "HelveticaNeue-Heavy", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 34.56, 369.44, 73.35],
+     "lines": [
+      {
+       "bbox": [28.8, 34.56, 31.02, 42.54],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 34.56, 31.02, 42.54], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.8, 44.1, 369.44, 52.17],
+       "spans": [
+        {"text": "To launch a scene, ", "bbox": [28.8, 44.1, 102.52, 52.08], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "press one of the five ", "bbox": [102.54, 44.19, 177.34, 52.17], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Buttons", "bbox": [177.43, 44.1, 263.65, 52.08], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " to the right of the 8x5 matrix ", "bbox": [263.65, 44.19, 369.44, 52.17], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 53.55, 86.72, 61.53],
+       "spans": [
+        {"text": "of Clip Buttons. ", "bbox": [28.81, 53.55, 86.72, 61.53], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 65.37, 31.03, 73.35],
+       "spans": [
+        {"text": " ", "bbox": [28.81, 65.37, 31.03, 73.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 75.72, 369.45, 115.89],
+     "lines": [
+      {
+       "bbox": [28.81, 75.72, 369.45, 85.35],
+       "spans": [
+        {"text": "To move around the matrix of clips, ", "bbox": [28.81, 77.28, 168.13, 85.26], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "press and hold ", "bbox": [168.55, 77.37, 224.7, 85.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [225.07, 77.28, 242.52, 85.26], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press one of the ", "bbox": [242.53, 77.37, 322.43, 85.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "left", "bbox": [322.81, 75.72, 333.78, 83.7], "font": "HelveticaNeue-Italic", "size": 7.98, "flags": 6},
+        {"text": " four Clip ", "bbox": [333.79, 77.37, 369.45, 85.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 85.54, 369.43, 94.71],
+       "spans": [
+        {"text": "Stop Buttons (", "bbox": [28.81, 86.73, 80.37, 94.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "ð", "bbox": [80.41, 85.54, 88.22, 94.61], "font": "Wingdings3", "size": 7.98, "flags": 4},
+        {"text": ", ", "bbox": [88.27, 86.73, 92.71, 94.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "ñ", "bbox": [92.77, 85.54, 100.58, 94.61], "font": "Wingdings3", "size": 7.98, "flags": 4},
+        {"text": ", ", "bbox": [100.57, 86.73, 105.0, 94.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "ô", "bbox": [105.07, 85.54, 112.08, 94.61], "font": "Wingdings3", "size": 7.98, "flags": 4},
+        {"text": ", ", "bbox": [112.09, 86.73, 116.53, 94.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "õ", "bbox": [116.59, 85.54, 123.6, 94.61], "font": "Wingdings3", "size": 7.98, "flags": 4},
+        {"text": ") to shift the viewable 8x5 matrix. In the software, this is represented ", "bbox": [123.61, 86.73, 369.43, 94.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 96.0, 159.79, 104.08],
+       "spans": [
+        {"text": "by a red rectangle around the clips. ", "bbox": [28.81, 96.1, 157.51, 104.08], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [157.57, 96.0, 159.79, 103.98], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.81, 107.91, 31.03, 115.89],
+       "spans": [
+        {"text": " ", "bbox": [28.81, 107.91, 31.03, 115.89], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.81, 119.82, 369.47, 172.18],
+     "lines": [
+      {
+       "bbox": [28.81, 119.82, 90.11, 127.8],
+       "spans": [
+        {"text": "To solo a track: ", "bbox": [28.81, 119.82, 90.11, 127.8], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.81, 131.31, 37.69, 139.47],
+       "spans": [
+        {"text": "1.", "bbox": [28.81, 131.49, 35.47, 139.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.47, 131.31, 37.69, 139.29], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 131.4, 369.47, 139.47],
+       "spans": [
+        {"text": "Press and hold ", "bbox": [46.81, 131.49, 103.92, 139.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [104.6, 131.4, 121.98, 139.38], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the second ", "bbox": [122.0, 131.49, 206.49, 139.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Button", "bbox": [207.26, 131.4, 290.45, 139.38], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (", "bbox": [290.48, 131.49, 295.43, 139.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Solo", "bbox": [295.4, 131.4, 312.46, 139.38], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "). This puts the ", "bbox": [312.44, 131.49, 369.47, 139.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 140.86, 333.05, 148.84],
+       "spans": [
+        {"text": "Clip Stop Buttons at the bottom of the 8x5 matrix of Clip Buttons in Solo Mode. ", "bbox": [46.81, 140.86, 333.05, 148.84], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 152.07, 37.69, 160.24],
+       "spans": [
+        {"text": "2.", "bbox": [28.81, 152.26, 35.47, 160.24], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.47, 152.07, 37.69, 160.05], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.81, 152.17, 346.59, 160.24],
+       "spans": [
+        {"text": "Press the ", "bbox": [46.81, 152.26, 82.64, 160.24], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop Button", "bbox": [82.64, 152.17, 145.37, 160.15], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " in the same track (column) as the clip you want to solo. ", "bbox": [145.4, 152.26, 346.59, 160.24], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.82, 164.2, 31.04, 172.18],
+       "spans": [
+        {"text": " ", "bbox": [28.82, 164.2, 31.04, 172.18], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 176.11, 369.47, 237.82],
+     "lines": [
+      {
+       "bbox": [28.82, 176.11, 117.36, 184.09],
+       "spans": [
+        {"text": "To record-arm a track: ", "bbox": [28.82, 176.11, 117.36, 184.09], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.82, 187.59, 37.7, 195.76],
+       "spans": [
+        {"text": "1.", "bbox": [28.82, 187.78, 35.48, 195.76], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.48, 187.59, 37.7, 195.57], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.82, 187.68, 369.47, 195.76],
+       "spans": [
+        {"text": "Press and hold ", "bbox": [46.82, 187.78, 103.09, 195.76], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [103.34, 187.68, 120.73, 195.66], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the third ", "bbox": [120.75, 187.78, 193.39, 195.76], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Button", "bbox": [193.65, 187.68, 275.93, 195.66], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (", "bbox": [275.97, 187.78, 280.55, 195.76], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Rec Arm", "bbox": [280.59, 187.68, 313.79, 195.66], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "). This puts the ", "bbox": [313.82, 187.78, 369.47, 195.76], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.82, 197.14, 360.79, 205.12],
+       "spans": [
+        {"text": "Clip Stop Buttons at the bottom of the 8x5 matrix of Clip Buttons in Record-Arm Mode. ", "bbox": [46.82, 197.14, 360.79, 205.12], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 208.48, 37.71, 216.64],
+       "spans": [
+        {"text": "2.", "bbox": [28.83, 208.66, 35.48, 216.64], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.49, 208.48, 37.71, 216.46], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 208.57, 367.07, 216.64],
+       "spans": [
+        {"text": "Press the ", "bbox": [46.83, 208.66, 83.48, 216.64], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop Button", "bbox": [84.33, 208.57, 148.81, 216.55], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " in the same track (column) as the clip you want to record-", "bbox": [148.89, 208.66, 367.07, 216.64], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 218.02, 65.07, 226.0],
+       "spans": [
+        {"text": "arm. ", "bbox": [46.83, 218.02, 65.07, 226.0], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 229.84, 31.04, 237.82],
+       "spans": [
+        {"text": " ", "bbox": [28.83, 229.84, 31.04, 237.82], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.83, 241.75, 369.43, 294.1],
+     "lines": [
+      {
+       "bbox": [28.83, 241.75, 93.34, 249.73],
+       "spans": [
+        {"text": "To mute a track: ", "bbox": [28.83, 241.75, 93.34, 249.73], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.83, 253.18, 37.71, 261.35],
+       "spans": [
+        {"text": "1.", "bbox": [28.83, 253.37, 35.49, 261.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.49, 253.18, 37.71, 261.16], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 253.27, 369.43, 261.35],
+       "spans": [
+        {"text": "Press and hold ", "bbox": [46.83, 253.37, 104.35, 261.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [105.27, 253.27, 122.66, 261.25], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the fourth ", "bbox": [122.73, 253.37, 202.75, 261.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Button", "bbox": [203.67, 253.27, 287.31, 261.25], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (", "bbox": [287.37, 253.37, 292.5, 261.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Mute", "bbox": [292.47, 253.27, 311.87, 261.25], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "). This puts the ", "bbox": [311.91, 253.37, 369.43, 261.35], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 262.73, 335.11, 270.71],
+       "spans": [
+        {"text": "Clip Stop Buttons at the bottom of the 8x5 matrix of Clip Buttons in Mute Mode. ", "bbox": [46.83, 262.73, 335.11, 270.71], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 274.0, 37.71, 282.16],
+       "spans": [
+        {"text": "2.", "bbox": [28.83, 274.18, 35.48, 282.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.49, 274.0, 37.71, 281.98], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.83, 274.09, 349.73, 282.16],
+       "spans": [
+        {"text": "Press the ", "bbox": [46.83, 274.18, 82.66, 282.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop Button", "bbox": [82.65, 274.09, 145.38, 282.07], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " in the same track (column) as the clip you want to mute. ", "bbox": [145.41, 274.18, 349.73, 282.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 286.12, 31.05, 294.1],
+       "spans": [
+        {"text": " ", "bbox": [28.83, 286.12, 31.05, 294.1], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 298.03, 369.48, 374.26],
+     "lines": [
+      {
+       "bbox": [28.83, 298.03, 96.96, 306.01],
+       "spans": [
+        {"text": "To select a track: ", "bbox": [28.83, 298.03, 96.96, 306.01], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.83, 309.46, 37.71, 317.63],
+       "spans": [
+        {"text": "1.", "bbox": [28.83, 309.65, 35.49, 317.63], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.5, 309.46, 37.71, 317.44], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.84, 309.55, 369.48, 317.63],
+       "spans": [
+        {"text": "Press and hold ", "bbox": [46.84, 309.65, 104.77, 317.63], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [105.94, 309.55, 123.33, 317.53], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the fifth ", "bbox": [123.34, 309.65, 196.74, 317.63], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Scene Launch Button", "bbox": [197.86, 309.55, 281.94, 317.53], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " (", "bbox": [281.98, 309.65, 287.4, 317.63], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Select", "bbox": [287.38, 309.55, 311.19, 317.53], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "). This puts the ", "bbox": [311.2, 309.65, 369.48, 317.63], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.84, 319.01, 339.29, 326.99],
+       "spans": [
+        {"text": "Clip Stop Buttons at the bottom of the 8x5 matrix of Clip Buttons in Select Mode. ", "bbox": [46.84, 319.01, 339.29, 326.99], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.84, 330.28, 37.72, 338.45],
+       "spans": [
+        {"text": "2.", "bbox": [28.84, 330.47, 35.5, 338.45], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [35.5, 330.28, 37.72, 338.26], "font": "Arial", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [46.85, 330.37, 352.79, 338.45],
+       "spans": [
+        {"text": "Press the ", "bbox": [46.85, 330.47, 82.68, 338.45], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Clip Stop Button", "bbox": [82.67, 330.37, 145.4, 338.35], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " in the same track (column) as the clip you want to select. ", "bbox": [145.43, 330.47, 352.79, 338.45], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.85, 342.41, 31.07, 350.39],
+       "spans": [
+        {"text": " ", "bbox": [28.85, 342.41, 31.07, 350.39], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.85, 354.25, 209.64, 362.32],
+       "spans": [
+        {"text": "To stop all clips, ", "bbox": [28.85, 354.25, 93.18, 362.23], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "press the ", "bbox": [93.18, 354.34, 128.47, 362.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Stop All Clips", "bbox": [128.58, 354.25, 179.65, 362.23], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " button. ", "bbox": [179.64, 354.34, 209.64, 362.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 366.28, 31.02, 374.26],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 366.28, 31.02, 374.26], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 378.19, 369.46, 416.97],
+     "lines": [
+      {
+       "bbox": [28.8, 378.19, 369.42, 386.26],
+       "spans": [
+        {"text": "To adjust volumes,", "bbox": [28.8, 378.19, 101.25, 386.17], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " press and hold ", "bbox": [101.28, 378.28, 159.77, 386.26], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [160.08, 378.19, 177.47, 386.17], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the fifth Clip Stop Button (", "bbox": [177.49, 378.28, 312.67, 386.26], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Volume", "bbox": [312.67, 378.19, 341.26, 386.17], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ") to put ", "bbox": [341.23, 378.28, 369.42, 386.26], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.81, 387.72, 369.46, 395.8],
+       "spans": [
+        {"text": "APC Key 25's ", "bbox": [28.81, 387.82, 81.52, 395.8], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [82.21, 387.72, 109.03, 395.7], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "in Volume Mode. The eight ", "bbox": [109.7, 387.82, 210.18, 395.8], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs", "bbox": [210.86, 387.72, 235.36, 395.7], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " will control the volume levels of the ", "bbox": [235.34, 387.82, 369.46, 395.8], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.82, 397.08, 145.57, 405.16],
+       "spans": [
+        {"text": "first eight tracks in Ableton Live.", "bbox": [28.82, 397.18, 143.3, 405.16], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [143.35, 397.08, 145.57, 405.06], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.82, 408.99, 31.04, 416.97],
+       "spans": [
+        {"text": " ", "bbox": [28.82, 408.99, 31.04, 416.97], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.82, 420.9, 369.49, 447.87],
+     "lines": [
+      {
+       "bbox": [28.82, 420.9, 369.43, 428.98],
+       "spans": [
+        {"text": "To adjust panning,", "bbox": [28.82, 420.9, 101.46, 428.88], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " press and hold ", "bbox": [101.48, 421.0, 162.19, 428.98], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [163.21, 420.9, 180.66, 428.88], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the sixth Clip Stop Button (", "bbox": [180.68, 421.0, 325.14, 428.98], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Pan", "bbox": [325.22, 420.9, 339.85, 428.88], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ") to put ", "bbox": [339.86, 421.0, 369.43, 428.98], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 430.44, 369.49, 438.51],
+       "spans": [
+        {"text": "APC Key 25's ", "bbox": [28.83, 430.53, 81.31, 438.51], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [81.8, 430.44, 108.62, 438.42], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "in Pan Mode. The eight ", "bbox": [109.1, 430.53, 196.11, 438.51], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs", "bbox": [196.64, 430.44, 221.28, 438.42], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " will control the panning positions of the ", "bbox": [221.25, 430.53, 369.49, 438.51], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 439.8, 145.58, 447.87],
+       "spans": [
+        {"text": "first eight tracks in Ableton Live.", "bbox": [28.83, 439.89, 143.31, 447.87], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [143.36, 439.8, 145.58, 447.78], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.83, 451.8, 31.04, 459.78],
+     "lines": [
+      {
+       "bbox": [28.83, 451.8, 31.04, 459.78],
+       "spans": [
+        {"text": " ", "bbox": [28.83, 451.8, 31.04, 459.78], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 463.86, 369.45, 523.57],
+     "lines": [
+      {
+       "bbox": [28.83, 463.86, 369.45, 471.93],
+       "spans": [
+        {"text": "To adjust send levels,", "bbox": [28.83, 463.86, 111.74, 471.84], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " press and hold ", "bbox": [111.75, 463.95, 169.95, 471.93], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [170.13, 463.86, 187.52, 471.84], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the seventh Clip Stop Button (", "bbox": [187.53, 463.95, 336.26, 471.93], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Send", "bbox": [336.27, 463.86, 355.67, 471.84], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ") to ", "bbox": [355.65, 463.95, 369.45, 471.93], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 473.4, 369.37, 481.47],
+       "spans": [
+        {"text": "put APC Key 25's ", "bbox": [28.83, 473.49, 95.26, 481.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [95.56, 473.4, 122.37, 481.38], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "in Send Mode. The eight ", "bbox": [122.67, 473.49, 213.84, 481.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [214.17, 473.4, 241.0, 481.38], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "will control the levels of Send A for ", "bbox": [241.29, 473.49, 369.37, 481.47], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.83, 482.85, 159.02, 490.83],
+       "spans": [
+        {"text": "the first eight tracks in Ableton Live. ", "bbox": [28.83, 482.85, 159.02, 490.83], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 494.29, 369.41, 502.36],
+       "spans": [
+        {"text": "Tip: ", "bbox": [28.8, 494.29, 45.0, 502.27], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "Repeat this action to set the knobs to control the levels of subsequent sends (e.g., Send ", "bbox": [45.48, 494.38, 369.41, 502.36], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 503.65, 89.7, 511.72],
+       "spans": [
+        {"text": "B, Send C, etc.).", "bbox": [28.8, 503.74, 87.39, 511.72], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [87.48, 503.65, 89.7, 511.63], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      },
+      {
+       "bbox": [28.8, 515.59, 31.02, 523.57],
+       "spans": [
+        {"text": " ", "bbox": [28.8, 515.59, 31.02, 523.57], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      }
+     ]
+    },
+    {
+     "bbox": [28.8, 527.71, 369.43, 554.68],
+     "lines": [
+      {
+       "bbox": [28.8, 527.71, 369.42, 535.78],
+       "spans": [
+        {"text": "To adjust devices,", "bbox": [28.8, 527.71, 98.63, 535.69], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " press and hold ", "bbox": [98.64, 527.8, 157.49, 535.78], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Shift", "bbox": [157.86, 527.71, 175.25, 535.69], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": " and press the eighth (last) Clip Stop Button (", "bbox": [175.32, 527.8, 339.12, 535.78], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Device", "bbox": [339.12, 527.71, 365.06, 535.69], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": ") ", "bbox": [365.1, 527.8, 369.42, 535.78], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 537.24, 369.43, 545.32],
+       "spans": [
+        {"text": "to put APC Key 25's ", "bbox": [28.8, 537.34, 108.03, 545.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [109.08, 537.24, 135.89, 545.22], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "in Device Mode. The eight ", "bbox": [136.98, 537.34, 236.76, 545.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": "Knobs ", "bbox": [237.96, 537.24, 264.79, 545.22], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20},
+        {"text": "will control the eight Macro ", "bbox": [265.92, 537.34, 369.43, 545.32], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4}
+       ]
+      },
+      {
+       "bbox": [28.8, 546.6, 194.42, 554.68],
+       "spans": [
+        {"text": "Controls of the current device in Ableton Live.", "bbox": [28.8, 546.7, 192.18, 554.68], "font": "HelveticaNeue-Roman", "size": 7.98, "flags": 4},
+        {"text": " ", "bbox": [192.2, 546.6, 194.42, 554.58], "font": "HelveticaNeue-Bold", "size": 7.98, "flags": 20}
+       ]
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

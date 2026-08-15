@@ -1,0 +1,10 @@
+{
+ "asserts": "no embedded text layer at all is the `no-text-layer` rejection (3.3)",
+ "schema": "dawmans.pdf.extraction/1",
+ "page_count": 2,
+ "toc": [],
+ "pages": [
+  {"number": 1, "width": 595.0, "height": 842.0, "images": [[0.0, 0.0, 595.0, 842.0]], "blocks": []},
+  {"number": 2, "width": 595.0, "height": 842.0, "images": [[0.0, 0.0, 595.0, 842.0]], "blocks": []}
+ ]
+}

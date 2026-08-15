@@ -739,3 +739,657 @@ render something neither has a use for.
 - A hand-written declaration is still required, so the omission this guards against remains possible — the report names it after the fact rather than preventing it.
 - A third report is a third thing to compute and test, for a condition that is legitimate more often than it is a mistake.
 - The run report grows a line most runs will render empty, which is one more thing to read past.
+
+---
+
+## Decision 10: Path B and C fixtures withhold an outline the corpus does have
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Capturing the fixtures of task 11 was the first time the reference PDFs were read rather than
+described, and three of the design's claims about them did not survive it. **All four manuals carry
+an embedded outline**: Live 12 has 1054 entries (the design says 816, from an earlier version), the
+Akai APC Key 25 guide has 38 and the Alesis Nitro Max 28 — so path A fires for every source in the
+corpus and paths B and C have no live instance at all. Live's printed contents pages carry **no dot
+leaders**: the page numbers are a separate right-hand column of bare numerals, extracted ahead of
+the titles, so path B's dot-leader test does not detect them either. Only the Nitro Max contents
+page has leaders.
+
+Paths B and C are not therefore dead code to be deleted. They are what the next manual will need,
+and the design chose them as content-side structure rather than per-manual configuration for
+exactly that reason. But they cannot be tested against a corpus source as it stands, and a stage
+with no test is a stage that will be wrong when it first matters.
+
+### Decision
+
+The path B and C fixtures — `apc_no_toc` and `cover_only` — are captured **with the outline
+withheld** (`--toc none`), so a real page of a real manual stands in for a document that has no
+outline. The capture list records the withholding against each fixture, and `Capture.toc` documents
+why the option exists.
+
+### Rationale
+
+The alternative inputs to those two paths are worse in ways that matter. A synthesised PDF has
+synthetic typography: the heading-style gate measures the ratio of a candidate style's line length
+to the modal line length, how many headings there are and how they are spread, and every one of
+those numbers would be a number the test author chose rather than one a real document produced. The
+APC pages give the gate genuine, awkward input — a nine-point heading over eight-point body, six
+headings on one page and none on the next — and the only thing withheld is a structure the path is
+defined by not having.
+
+Withholding is honest because it is recorded. `toc: none` sits beside the fixture's page range in
+`tools/capture_fixture.py`, and the fixture file itself carries an empty `toc` and a note saying
+what it stands for. Nobody reading the failing test later concludes the APC guide has no outline.
+
+### Alternatives Considered
+
+- **Synthesise PDFs for paths B and C**: Generate documents with no outline, a dot-leader contents page and a heading hierarchy - Rejected because the quality gate's thresholds would then be tested against typography chosen to pass them. It is the same circularity as asserting a regular expression against a string written to match it, and path C's gate is precisely the thing the design calls dangerous.
+- **Obtain a manual that genuinely has neither**: Add a fifth source to the corpus to serve the two paths - Rejected because the corpus is the studio owner's own gear (requirement 11.1's rig is the whole point), and adding a document nobody owns to make a test pass inverts that. It would also arrive with its own drift the moment the vendor reissues it.
+- **Delete paths B and C and keep only the outline path**: Ingest what the corpus has and add the others when a source needs them - Rejected because it fails 6.5 for the first manual that arrives without an outline, and that manual is discovered in production. It would also discard the printed-contents detection that Live needs for a different reason: its contents pages must be excluded from chunking whether or not they are the sectioning source.
+- **Test the paths only through their unit predicates**: Assert the dot-leader grammar and the style gate directly, with no document behind them - Rejected as insufficient rather than wrong. Those tests are worth having and are in task 18, but neither exercises anchoring, region derivation or the interaction with furniture marks, which is where the paths actually break.
+
+### Consequences
+
+**Positive:**
+- Paths B and C get realistic input without inventing a document or acquiring one.
+- The corpus facts are now written down where the next reader of §Section map will meet them, instead of being rediscovered at task 19.
+- Live's contents pages are pinned as a fixture before the detector that has to catch them is written, so the "no dot leaders" case cannot be missed.
+
+**Negative:**
+- Two fixtures assert against a document that does not exist in exactly that form, and the withholding has to stay documented or it reads as a corpus fact.
+- Path B still has no fixture of its own with leaders — the Nitro Max contents page is a candidate for one, and task 18 will need it.
+- The design's §Section map reference-corpus column had to be corrected, and any downstream reasoning that rested on "the APC has no outline" is now suspect.
+
+### Impact
+
+`tools/capture_fixture.py` (the `toc` option and the capture list), `tests/fixtures/apc_no_toc.json`,
+`tests/fixtures/cover_only.json`, and design §Section map. Task 18/19 inherit the correction:
+the sectioning implementation must not assume path C ever runs against this corpus, and the
+printed-contents detector cannot rest on dot leaders alone.
+
+---
+
+## Decision 11: Redaction masks character classes rather than dropping text
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+`manuals/` is gitignored because the vendor PDFs are copyrighted, and the fixtures are the one place
+any of their text enters the repository. The design draws the line at the APC guide: full span text
+for its 24 pages "would commit substantially the whole guide", so `apc_pages` keeps "bounding box,
+font and a language label only".
+
+Taken literally that fixture cannot drive the stage it exists for. English selection scores blocks,
+does not score a block under eight words, and does not score a block whose tokens are predominantly
+non-alphabetic — three measurements over text that a bbox-and-font-only fixture no longer has. The
+fixture would assert the page ranges and nothing about how they were arrived at.
+
+### Decision
+
+Redaction replaces each character with its class — letters become `x` or `X`, digits `0`, and
+punctuation and whitespace are left as they are — and attaches a per-block language label supplied
+by hand at capture time. The test is `str.isalpha()`, not `[a-zA-Z]`, so accented characters are
+masked too.
+
+### Rationale
+
+Every measurement the later stages make is a measurement of shape: word counts, line lengths, the
+ratio of alphabetic to non-alphabetic tokens, the run of dots in a leader, the length of a heading
+against the modal line. All of them survive masking exactly, and none of them needs a word. What
+does not survive is the expression — which is what copyright protects and what the design's rule is
+about.
+
+Masking accented characters as well is not fastidiousness. On a multilingual guide `á`, `ñ` and `ü`
+are precisely the characters that identify the language of the line they sit in, so a
+`[a-zA-Z]`-only mask would leave the guide's Spanish, French, Italian and German pages
+distinguishable from their remains.
+
+The language label has to be ground truth supplied by hand, because a masked fixture cannot exercise
+a language identifier at all. That is a real limit and it is the right one: `lingua-py` is a third-
+party library and its accuracy is not this spec's to test, while the selection machinery around it —
+block granularity, the two inheritance guards, the audit's page ranges — is.
+
+### Alternatives Considered
+
+- **Keep only bbox, font and a label, as the design says**: Drop the text entirely - Rejected because the short-block guard and the language-neutral guard both measure the text, so the fixture could not exercise the two rules that most need exercising. The design's intent — no words of the guide in the repository — is met by masking, and masking meets the stages' needs as well.
+- **Capture the English pages in full and the rest redacted**: Commit pp3-6 and p23 verbatim, mask pp7-22 - Rejected because pp3-6 plus p23 is the entire English content of the guide. "Substantially the whole guide" is exactly what that is, in the one language a reader of this repository would want.
+- **Replace each word with a fixed placeholder**: `word word word` in place of the text - Rejected because it destroys line lengths and the alphabetic-token ratio, which the language-neutral guard and path C's heading test both measure. Character-class masking preserves both at the same cost.
+- **Hash each word**: Substitute a digest so identical words stay identical - Rejected because it preserves the word-frequency structure of the source, which is more of the original than the fixture needs, while also destroying the character shape the stages measure.
+
+### Consequences
+
+**Positive:**
+- The one fixture that must be redacted still drives the stage it was captured for.
+- No word of the APC guide is in the repository, and the accented-character hole is closed rather than left as a `[a-zA-Z]` oversight.
+- The same masking is available to any future fixture that grows too large to commit verbatim.
+
+**Negative:**
+- The language labels are hand-written ground truth, so a mislabelled block is a test asserting the wrong thing with nothing to catch it.
+- The redacted fixture cannot test the language identifier itself, only the selection around it, and that limit has to stay visible or a later reader will over-trust the fixture.
+- A masked fixture is unreadable to a human checking whether it captured the right pages; the `asserts` note and the page range are all there is to go on.
+
+---
+
+## Decision 12: The language-neutral guard is confidence alone
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's English selection scores blocks and gives two guards for when a score is not to be
+trusted. The second reads: "A block whose top confidence is below 0.5 *and* whose tokens are
+predominantly non-alphabetic inherits the same way." It was written for the Nitro Max MIDI note
+table and the APC specifications table — numbers, units and dimensions that no identifier calls
+English, and whose loss would take the pages that answer "which note does the kick pad send".
+
+Running the finished stage against the real APC guide (24 pages, `multi`) showed the conjunction
+leaking the other way. Physical pp11 and 15 — French and Italian — were selected as partly English.
+The block responsible on p11 is `• Mac OS X : Live > Preferences`: eight tokens, five of them
+alphabetic, scored English at 0.42. It passes the confidence half of the guard and fails the
+alphabetic half, so it is trusted, and the short French step below it — `4. Cliquez sur l'onglet
+MIDI/Sync.` — then inherits *from it* and reaches the index as English. That is requirement 4.1
+failing on the one multilingual source in the corpus.
+
+### Decision
+
+A block inherits when the identifier's top confidence is below 0.5, whatever its tokens look like.
+The "predominantly non-alphabetic" clause of the design's second guard is superseded.
+
+### Rationale
+
+Confidence below the threshold means the identifier has not decided anything, and a verdict it did
+not reach is not evidence to index on. Inheriting the neighbouring decision is the safer answer in
+both directions: on an English page the neighbours are English, and on a French page they are not.
+
+The new condition is a strict superset of the old one — a table of numerals is unconfident as well
+as non-alphabetic — so everything the guard was written to protect is still protected, and the tests
+that pin the MIDI note table and the specifications table pass unchanged. Measured on the APC guide,
+the audit goes from `english [[1,6],[11,11],[15,15],[23,24]]` to `english [[1,6],[23,24]],
+excluded [[7,22]]`, which is what §4 describes.
+
+### Alternatives Considered
+
+- **Leave the guard as the design writes it**: Accept the two partial pages, since the audit reports them - Rejected because the audit reports the page as partial, not the sentence as French. A reader asking a question in English can be answered with a French step quoted as though it were the manual's English, which is exactly what 4.1 exists to prevent, and "it is in the audit" is not a defence a user ever sees.
+- **Raise the confidence threshold instead**: Keep the conjunction, move 0.5 up until the false positive falls below it - Rejected because it treats a structural fault as a tuning problem. The UI-path line scores 0.42 and a genuine English paragraph in this corpus scores 0.73, so a threshold exists — but it would be fitted to one measurement on one guide, and the next fitting would be someone else's.
+- **Exclude a block whose page is predominantly foreign**: Decide the page first, then the blocks in it - Rejected because it is page granularity wearing block granularity's clothes, and 4.3 asks for finer than a page so that a page holding two translations contributes its English part. The APC's own p23 appendix is the case that needs it.
+
+### Consequences
+
+**Positive:**
+- No non-English text reaches the index from the one multilingual source in the corpus.
+- The rule is one sentence rather than a conjunction, and the guard's two motivating cases are unaffected.
+- The stage's selection now matches the audit §4's own example describes, so the requirement and the behaviour can be read against each other.
+
+**Negative:**
+- More blocks inherit rather than being scored, so a genuinely English block on an otherwise foreign page is now excluded unless the identifier is confident about it. On this corpus that is the intended outcome; on a future guide with long stretches of English inside a foreign chapter it costs coverage the old rule would have kept.
+- A document whose every block scores under 0.5 is included whole, with nothing scored anywhere. That is the design's stated fallback and not new, but the wider guard makes it reachable by more documents.
+
+### Impact
+
+`src/dawmans/corpus/pdf/language.py` (`_score_block`), the design's §English selection, and the
+`NEUTRAL_CONFIDENCE` constant's meaning. `tests/test_pdf_language.py` pins the measured case.
+
+---
+
+## Decision 13: Stage 7 and the load path are their own modules
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §Module placement names one module per stage through `pdf/layout.py` and then stops:
+`Region[]` assembly and the `SourceLoader` implementation that runs the stages in order have no
+module of their own in the tree. Implementing stage 7 made the gap concrete. Unit assembly is not
+row geometry — it is the furniture drop, the atomic and `repeat_on_split` flags, the figure flag and
+the page-break join — and the load path is not a stage at all but the order the stages run in, plus
+the three rejections that can only be decided once a source has been read.
+
+### Decision
+
+Add `src/dawmans/corpus/pdf/units.py` (stage 7: the annotated span model into `Region[]`) and
+`src/dawmans/corpus/pdf/loader.py` (`PdfLoader`), and record both in the design's module tree.
+`layout.py` keeps to geometry and returns tables and prose runs; nothing else moves.
+
+### Rationale
+
+The stage table already treats these as two things — stage 7 *writes* `Region[]` while the loader
+*is* the seam of 12.2 and 12.4 — and the ordering the design calls load-bearing has to be written
+down somewhere a reader can find it. Putting either into `layout.py` would give that module two
+jobs and make the AGPL-confined package's largest file the one with the least to do with PyMuPDF.
+Putting the loader into `units.py` would mean a test of the furniture drop imports the module that
+opens PDFs.
+
+### Alternatives Considered
+
+- **Both in `layout.py`**: One module for everything after sectioning - Rejected because row clustering and unit assembly fail differently and are tested differently; a table-detection regression should not be read against a page-break join in the same file.
+- **`PdfLoader` in `corpus/loader.py` beside the protocol**: Keep the seam and its implementation together - Rejected because `corpus/loader.py` is interfaces only and is imported by `data/symptom-triage`; putting a PyMuPDF-importing class in it breaches the Decision 6 confinement outright.
+- **No `units.py`, assemble inside `PdfLoader`**: Stage 7 as a private method of the loader - Rejected because stage 7's output is the shared shape and its tests want a `Document` in and `Region[]` out, with no store, no filename and no PDF.
+
+### Consequences
+
+**Positive:**
+- Each module states one thing: geometry, assembly, order.
+- Stage 7 is testable from a hand-built span model, which is how `tests/test_pdf_units.py` pins the furniture drop and the atomic flags without writing a PDF.
+- The stage order and its three rejections are documented in one docstring rather than spread across the stages they sequence.
+
+**Negative:**
+- Two modules the design did not name, so a reader comparing tree to package finds more than the tree lists until this entry is read.
+- `assemble()` takes an optional `spans` argument so the loader can reuse stage 5's output for its audit — a small seam between the two modules that would not exist if they were one.
+
+### Impact
+
+`src/dawmans/corpus/pdf/units.py`, `src/dawmans/corpus/pdf/loader.py`, design §Module placement.
+
+---
+
+## Decision 14: `entry_location` crosses the seam on `Region`
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+CONTRACTS §2 puts `entry_location` on `Passage` and requires it on every `authored-triage` passage —
+`records.py` refuses to construct one without it, since it is the whole of the open-at-source action
+for a source that has no page (CONTRACTS §3a). The chunker is the stage that constructs `Passage`
+records, and the loader seam it reads had nowhere for the field to travel: `Region` and `Unit` carry
+section identity, pages, order and flags, and nothing else.
+
+Implementing the chunker made the gap unavoidable. `data/symptom-triage` publishes the entry's
+`source_file` and line in its **sidecar**, which is keyed by `passage_id` — an identifier that does
+not exist until the chunker has run. A sidecar therefore cannot supply a field the chunker needs in
+order to emit the passage the sidecar would be keyed to.
+
+### Decision
+
+Add `entry_location: str | None = None` to `Region`. `TriageLoader` sets it, the chunker copies it
+onto every `Passage` of that region unchanged, and no stage of this spec derives, clears or hashes
+it. It stays `None` on a `vendor-manual`, which has a page instead.
+
+### Rationale
+
+A region is exactly one authored entry (`data/symptom-triage` §Passage emission: one `Region` per
+entry, with the symptom as its `section_title`), so the entry's location is a property of the region
+and of nothing smaller. Putting it on `Unit` would repeat one value across every cause of an entry
+and invite a chunk whose units disagree about where the entry lives.
+
+The field is inert for the `vendor-manual` half of the seam, which is what keeps 12.2 structural:
+the chunker copies whatever is there, and the only branch anywhere is the `None` a manual carries.
+It defaults, so no existing construction site changes.
+
+### Alternatives Considered
+
+- **Keep it in the sidecar and have the chunker read it back**: No seam change - Rejected as
+  circular: the sidecar is keyed by `passage_id`, which the chunker is the stage that mints.
+- **Put it on `Unit`**: Uniform with `unbacked`, which is per-unit for a real reason - Rejected
+  because the location is per entry; per-unit invites disagreement inside one chunk and buys nothing.
+- **Pass a map into the chunker beside the regions**: Keeps `Region` unchanged - Rejected because
+  there is one authored source and many entries, so the map would have to be keyed by the region
+  itself — which is the field, with an indirection in front of it.
+- **Derive it in the chunker from the region title**: No plumbing at all - Rejected outright: 12.6
+  gives the content and validation of an authored source to `data/symptom-triage`, and a derived
+  locator would be a claim about a file this spec never read.
+
+### Consequences
+
+**Positive:**
+- The one field CONTRACTS §2 requires on an authored passage has a route to the passage, and it is
+  the same route as every other passage field: the region.
+- The chunker stays kind-neutral — it copies a field rather than testing a kind.
+- `Passage.__post_init__` now validates the seam end to end: an authored region reaching the chunker
+  without a location fails at construction rather than producing a citation with no open action.
+
+**Negative:**
+- A field on the shared `Region` that is meaningless for every source in `manuals/`.
+- `data/symptom-triage`'s own design table for `Region` construction does not yet list it, so that
+  spec's emission table is one field behind this one until it is amended.
+
+### Impact
+
+`src/dawmans/corpus/loader.py`, `src/dawmans/corpus/chunk.py`, design §The loader protocol and
+§`Region`/`Unit` → `Passage`, and an outstanding amendment to `data/symptom-triage` §Passage
+emission.
+
+---
+
+## Decision 15: A repeat replaces overlap, rather than joining it
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The chunker carries ~50 words of overlap into each continuation chunk within a region, and repeats
+every `repeat_on_split` unit — a table's joined heading (7.5) — onto each part of a split.
+`data/symptom-triage` §Passage emission requires the opposite for its own regions: "chunk overlap is
+suppressed for authored regions", because an entry's symptom statement is a `repeat_on_split` unit
+and a split entry would otherwise carry the symptom twice in text that is hashed into `passage_id`
+and shown to the user when the citation is expanded.
+
+Requirement 12.2 makes everything from `Region` onwards shared code, so the chunker cannot answer
+this with an `if kind == "authored-triage"`.
+
+### Decision
+
+Overlap is taken only where the continuation chunk copies **no** `repeat_on_split` unit. Where a
+repeat is copied, it is the whole of the carried text.
+
+### Rationale
+
+The rule is kind-neutral and states the actual reason: a repeat and overlap exist to do the same
+job — give the continuation enough context to read on its own — and doing it twice duplicates text
+into the digest. Written this way it covers the authored case the triage design asks for, and it
+also covers the split table, where overlap was already forbidden because table rows are atomic.
+
+It also keeps the cap honest. A chunk carrying a heading *and* 50 words of overlap has 50 fewer
+words of room for the rows it exists to hold, on every part of every split table.
+
+### Alternatives Considered
+
+- **Suppress overlap for pageless regions**: One line, and it catches today's only case - Rejected
+  because it keys on the wrong property: a pageless source is 12.8's concern, nothing about having
+  no pages implies anything about continuity, and a future paged source with repeated units would
+  get both.
+- **Suppress overlap when the source kind is `authored-triage`**: Exactly what the triage design
+  says - Rejected as the `if kind ==` branch 12.2 exists to prevent, in the one module that is most
+  load-bearing for the seam.
+- **Carry both**: No rule at all - Rejected because it duplicates the symptom statement inside
+  `Passage.text`, which is hashed (6.1) and is what the user is shown when a citation is expanded.
+
+### Consequences
+
+**Positive:**
+- One rule, stated in terms of the seam's own types, satisfies two specs.
+- Split table chunks keep their full room for rows.
+
+**Negative:**
+- A region mixing prose and a table loses overlap at the split immediately after the table's heading
+  is copied, where prose alone would have had it. The heading is the more useful of the two at that
+  boundary, so this is a trade rather than a regression.
+
+### Impact
+
+`src/dawmans/corpus/chunk.py`, design §Chunking.
+
+---
+
+## Decision 16: The Nitro Max is reported documented-but-unconfirmed
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Implementing the rig join (tasks 39–40) ran 11.5 against the committed `rig.yaml` and produced two
+sources, not one. The design's §Rig inventory states the live outcome as "the first report is empty,
+the second names `akai/apc-key-25`, and the third is empty", and 11.5 says "Today that is the Akai
+APC Key 25 guide". Both are computed from the same worked `rig.yaml`, which declares four devices and
+exactly two `source_applicability` entries — Live's and the Focusrite mapping.
+
+`alesis/nitro-max` is not among those two. Under 11.2 an undeclared source is `assumed` for the
+product named in its filename, so the Nitro Max guide resolves to `assumed` for device
+`alesis/nitro-max`, which **is** in the rig inventory. 11.5's first arm — "an indexed source whose
+applicability is `assumed` for a device in the rig inventory" — fires on it, before the revision
+comparison is reached at all. The arms are a disjunction, so the fact that neither side declares a
+revision does not save it.
+
+### Decision
+
+`rig.py` reports `alesis/nitro-max` alongside `akai/apc-key-25` under documented-but-unconfirmed,
+and `rig.yaml` is committed with the design's two `source_applicability` entries and no third. The
+design's "the second names `akai/apc-key-25`" and 11.5's "Today that is the Akai APC Key 25 guide"
+are **superseded** as statements of the live outcome; the criteria they sit in are unchanged.
+
+### Rationale
+
+The alternative — adding `alesis/nitro-max: {device: alesis/nitro-max, status: confirmed}` to
+`rig.yaml` — would make the reports match the prose, and it is the wrong way round. `confirmed` is a
+claim that a human checked this document against this unit. Nobody has. 11.2 is explicit that nothing
+is recorded as `confirmed` by default and that an undeclared source is unverified rather than
+verified, and writing the declaration during implementation would be exactly the inference
+CONTRACTS §5 forbids, dressed as a fix to a test.
+
+Reporting the Nitro Max is also *correct* on its own terms. The ingested guide is v1.1 and the unit
+declares no revision marker; whether the two agree is unknown, which is what `assumed` means and what
+the report exists to surface. The APC is the *interesting* instance because its mismatch is known —
+that is why the requirements name it — but "interesting" and "the only one" are different claims, and
+only the second is wrong.
+
+The remedy stays open and costs one line: the owner declares the Nitro Max `confirmed` once they have
+checked the guide against the unit, and the report drops back to naming the APC alone.
+
+### Alternatives Considered
+
+- **Declare `alesis/nitro-max` confirmed in `rig.yaml`**: One entry, and both documents' prose becomes true - Rejected because it fabricates a verification nobody performed, which is the single thing 11.2 and CONTRACTS §5 both forbid. The report would then be silent about a source whose applicability is genuinely unknown, which is the failure §11 exists to prevent, arrived at from the other direction.
+- **Restrict 11.5's first arm to sources whose revision also differs**: Report only a mismatch, so an `assumed` source agreeing on revision passes - Rejected because it deletes the arm's whole purpose. `assumed` means unchecked, not matching; a source that has never been compared has no revision agreement to rest on, and every undeclared source in the corpus would then report as confirmed-by-silence.
+- **Exclude a source whose device declares no revision**: Treat the Nitro Max's absent revision marker as nothing to confirm - Rejected because the absence is a property of the *unit*, not of the document. A guide can still describe a different production run of a device that prints no revision, and the report would go quiet on exactly the hardware where the mismatch is hardest to spot by eye.
+
+### Consequences
+
+**Positive:**
+- The implementation follows the criteria rather than the worked example, and the divergence is
+  recorded where the next reader will look for it.
+- No `confirmed` status is ever written by anything other than a person.
+- The correct remedy — a one-line declaration after an actual check — stays available and is named in
+  `rig.yaml`'s own comments.
+
+**Negative:**
+- The live report names two sources where two spec documents say one, until the Nitro Max is checked
+  and declared.
+- `ui/ask-and-source-picker` marks a second source as assumed in the picker, which is one more mark
+  to read past on a four-source corpus.
+
+### Impact
+
+`src/dawmans/corpus/rig.py`, `rig.yaml`, `tests/test_rig.py`; design §Rig inventory and
+requirement 11.5, both of which carry a superseded note pointing here.
+
+---
+
+## Decision 17: The run orchestration needs a wider loader protocol than the seam publishes
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §The loader protocol gives `SourceLoader` two methods: `discover() -> Iterable[Discovered]`
+and `load(d) -> LoadResult`. Wiring the run (task 44) found that `discover()` cannot carry two things
+the run is required to report.
+
+The first is **rejections**. 1.5 requires a per-run line for every source, including one rejected at
+discovery for a malformed filename (2.5) or a source-ID collision (2.6). Those sources never become a
+`Discovered` — that is what being rejected at discovery means — so a loader that yields only
+`Discovered` has already dropped them by the time it returns.
+
+The second is **availability**. 1.4 removes a source's chunks when its store no longer holds it, and
+`discover.py`'s `StoreScan` already draws the distinction the removal rests on: an absent or
+unreadable store is an *unknown* discovery set and removes nothing, while an existing empty one
+removes its shards. `data/symptom-triage` §The store on disk states the same rule for `triage/`. An
+empty `Iterable[Discovered]` cannot tell the two apart, and reading it as "empty" deletes every
+passage of an unmounted volume and reports the run as succeeded.
+
+### Decision
+
+`dawmans/cli.py` declares its own `Store` protocol — `scan() -> StoreScan` plus `load()` — and the run
+orchestration is written against that. `corpus/loader.py`'s `SourceLoader` is left exactly as the
+design states it, with a note pointing here. `PdfLoader` already offers both; `TriageLoader` must
+offer `scan()` too.
+
+### Rationale
+
+The protocol a consumer needs belongs with the consumer, and this one has exactly one consumer. Put
+in `corpus/loader.py`, `scan()` would also force a circular import — `StoreScan` lives in
+`discover.py`, which imports `loader.py` — and the fix for that (a `TYPE_CHECKING` guard, or moving
+`StoreScan` down into the seam) would be paying a structural cost to relocate a requirement that has
+no second reader.
+
+Leaving `SourceLoader` alone also keeps the published seam honest. It is what `data/symptom-triage`
+§Module placement reproduces, and widening it silently would change that spec's obligations in a
+document it does not own. Stated in `cli.py`, the extra obligation is visible at the place that
+enforces it and is named in both modules' docstrings.
+
+### Alternatives Considered
+
+- **Add `scan()` to `SourceLoader` in `corpus/loader.py`**: One protocol, no duplication - Rejected because it inverts the layering. `StoreScan` is defined in `discover.py`, which already imports `loader.py`, so the seam would import the store layer above it; the circularity is a symptom of the seam being the wrong home, not an inconvenience to route around.
+- **Move `StoreScan` and `DiscoveryRejection` down into `loader.py`**: Removes the cycle and gives one protocol - Rejected as the largest change for the smallest gain. It relocates two types that five modules import so that one method can sit somewhere it has no second caller, and `discover.py` — "stage 1 of the run", by its own docstring — is where a discovery set legibly belongs.
+- **Keep `discover()` and pass the scan alongside it**: `ingest(vendor_loader, vendor_scan, …)` - Rejected because it lets the two disagree. Nothing would stop a caller passing one store's scan with another store's loader, and the failure would be a silently wrong removal set rather than an error.
+
+### Consequences
+
+**Positive:**
+- The seam `data/symptom-triage` implements against is unchanged, and the extra obligation is written
+  down in both places rather than implied.
+- An unavailable store is distinguishable from an empty one everywhere the run can act on it, which
+  is what 1.4 needs and what `StoreScan` was built to say.
+- Discovery rejections reach the run report by the same path as every other outcome.
+
+**Negative:**
+- Two protocols describe one relationship, and a reader has to find the second to know what a loader
+  really has to provide.
+- `TriageLoader` carries an obligation stated in this spec's `cli.py` rather than in the design
+  section its own spec cites.
+
+### Impact
+
+`src/dawmans/cli.py`, `src/dawmans/corpus/loader.py`, design §The loader protocol.
+
+---
+
+## Decision 18: The rig is joined at the merge, not written into the shard
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+`rig.py` gives `Rig.applied(record)`, which replaces the loader's 11.2 default applicability with
+whatever `rig.yaml` declares for that source. The first wiring called it in `_ingest_source`, so the
+joined value was written into the shard alongside the passages.
+
+Running that against the real corpus showed it was wrong within one run. `rig.yaml` declares
+`focusrite/scarlett-solo-4g -> focusrite/scarlett-solo`, and the run still reported the Scarlett under
+indexed-but-not-owned and its device under owned-but-undocumented — the exact diagnostic pairing 11.7
+exists to signal a *missing* declaration. The declaration was not missing. Editing `rig.yaml` changes
+no byte of any PDF, so every shard's cache key still matched, every shard was reused, no loader ran,
+and `Rig.applied` was never reached. The joined value in each shard was the one written the last time
+that manual's bytes happened to change.
+
+### Decision
+
+`Rig.applied` runs at the **merge**, over the shards the run is about to commit, and not when a shard
+is built. The shard records the loader's own 11.2 default; `views/<hex>/sources.json` and `gaps.json`
+carry the joined value.
+
+### Rationale
+
+The split follows what each artefact is a record of. A shard is a cache of what the *document* said,
+keyed by the document's bytes — so a value that does not derive from those bytes has no business
+being cached under them. `rig.yaml` is what the *owner* says, it is versioned separately, and it is
+the input the whole of §11 is a join against. Deriving it at the point the two meet is the only place
+where both are current.
+
+It also makes 11.6's consumers correct by construction rather than by luck. `api/answer-engine` and
+`ui/ask-and-source-picker` read applicability out of the view, and a declaration added today reaches
+them on the next run rather than on the next run that happens to touch a manual.
+
+The cost is one `dataclasses.replace` per source per run, over a list of four.
+
+### Alternatives Considered
+
+- **Fold `rig.yaml`'s digest into the shard cache key**: A rig edit invalidates every shard, so the build-time join stays correct - Rejected because it re-extracts and re-embeds the whole corpus to change a declaration nobody claims is derived from the corpus — ~34 s and a fresh `corpus_revision` for an edit that altered no passage, which would also trip `api/answer-engine` 5.10 into discarding valid cached retrieval state.
+- **Apply at build time and again at merge**: Belt and braces - Rejected because two writers of one field is how they come to disagree. The shard's copy would be stale by construction and a reader picking it up would get an answer that was true at some earlier run, which is worse than not having it.
+- **Publish `rig.yaml` beside the view and let consumers join it**: The corpus stays out of it - Rejected because CONTRACTS §5 puts the two gap reports on this spec, and a join done in two consumers is a join done two ways. It would also hand `ui/ask-and-source-picker` a file whose grammar this spec owns.
+
+### Consequences
+
+**Positive:**
+- A `rig.yaml` edit reaches the index on the next run with no rebuild, which is the case §11 is for.
+- The shard means one thing — what the document said — and the view means the other.
+- The live corpus now reports what the design predicts: owned-but-undocumented empty and
+  indexed-but-not-owned empty, with the Focusrite mapping resolving.
+
+**Negative:**
+- `corpus_revision` is hashed over `(source_id, fingerprint, chunk_count)` and so does **not** change
+  when only `rig.yaml` changes. A consumer keyed on it alone will not see new applicability until
+  something else moves; `manifest.view_dir` does change every run, and that is the signal to use.
+- The applicability in `shards/<slug>.meta.json` is not the published one, so a reader debugging from
+  a shard has to know to look at the view.
+
+### Impact
+
+`src/dawmans/cli.py`, `tests/test_run.py`, design §Rig inventory and §Index layout.
+
+---
+
+## Decision 19: The cold model load is measured, not assumed, and it is lazy
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design's §Build budget states "a one-off 7.2 s model load per process", and the whole of the 8.4
+argument rests on it: a new ≤50-page source is ~1.5 s of embedding, so a 7.2 s load takes the total to
+8.7 s of the allowed 10 s, which is why the CLI loads the model once per run before iterating sources
+and why the design calls 8.4 the tightest budget in the spec.
+
+Writing the timing tests (task 45) measured it. From a cold process to a first vector is **~0.25 s**
+on the reference machine, not 7.2 s — the populated cache is `models--qdrant--bge-small-en-v1.5-onnx-q`,
+the *quantised* ONNX build. The first draft of the test also passed vacuously for a second reason:
+`load_embedder()` constructs `TextEmbedding` and returns, and `fastembed` builds no ONNX session until
+something is embedded, so timing the call timed an import.
+
+### Decision
+
+The cold-load test spawns a **fresh process** and measures through to a **first vector**, asserting
+against the design's 7.2 s figure rather than against the measured 0.25 s. The design's §Build budget
+carries a superseded note recording the measurement. The CLI keeps loading the model once per run.
+
+### Rationale
+
+Asserting the design's number rather than today's is the point. A timing test exists to catch a
+regression toward what the design feared, and one pinned to a fresh measurement fails on the first
+slower CI runner and teaches everyone to add a zero. 7.2 s is the number 8.4's reasoning was built on,
+so it is the number worth defending; the 29× headroom underneath it is reported in the test's comment
+where the next person to tighten it will find it.
+
+Measuring to a first vector rather than to a constructed object is not a refinement but the whole
+test. A lazy constructor makes "the model is loaded" unobservable at the call site, and the budget
+that matters to 8.4 is time-to-first-vector regardless of which line inside the library pays it.
+
+Loading once per run stays correct whatever the constant turns out to be. It is free, it is what makes
+the cost a per-*run* one rather than a per-*source* one, and if the cache is ever repopulated with the
+unquantised build the design's figure returns without a code change.
+
+### Alternatives Considered
+
+- **Assert the measured 0.25 s with a small margin**: The test then catches any regression at all - Rejected because it makes the suite a machine-speed detector. A cold ONNX load on a shared CI runner varies by more than an order of magnitude, and a test that fails for that reason is one that gets marked flaky and then skipped.
+- **Update the design's 7.2 s to 0.25 s and drop the separate assertion**: The documents would agree - Rejected because the figure is cache-dependent, not settled: it is a property of which ONNX build `make fetch-model` happens to populate, and folding a number that can change by 29× back into 8.4's 10 s is exactly the hiding the task set out to prevent.
+- **Force the session eagerly inside `load_embedder()`**: Construction would then mean what it says - Rejected as this spec reaching into the library's strategy for a test's convenience. Laziness costs the run nothing — the first source embeds within milliseconds of the load either way — and the seam has no other reason to care.
+
+### Consequences
+
+**Positive:**
+- The cold-load budget is asserted against a real load in a real cold process, and cannot pass by
+  timing an import.
+- 8.4 is measured with the model resident, so the per-source cost is free to regress into a test
+  rather than into 7 s of unclaimed headroom.
+- The gap between the design's figure and the measurement is written down instead of discovered again.
+
+**Negative:**
+- The test spawns a subprocess, which is slower and noisier than an in-process call and will be the
+  first thing blamed when the suite is slow.
+- The assertion has ~29× headroom on this machine, so it will not catch a load that becomes ten times
+  slower and still finishes in 2.5 s.
+
+### Impact
+
+`tests/test_timing.py`, `pyproject.toml` (`-m 'not bench'`), design §Build budget.

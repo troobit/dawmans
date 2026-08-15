@@ -30,7 +30,16 @@ __pycache__
 .pytest_cache/
 .hypothesis/
 .ruff_cache/
+dist/
 *.egg-info/
+
+# Derived ingestion artefacts — rebuilt from the two source stores with no other input
+# (requirement 8.6), so nothing here is worth tracking. Anchored to the repository root:
+# unanchored, it would also swallow the `dawmans/index/` package.
+/index/
+
+# Embedding model cache — 67MB, populated once per machine by `make fetch-model`
+/models/
 
 # Swift / Xcode build artefacts
 .build/

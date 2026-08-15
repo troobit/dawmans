@@ -423,7 +423,10 @@ citation never sends me looking for a control my unit does not have.
    indexed source whose applicability is `assumed` for a device in the rig inventory, or whose
    declared revision differs from the revision owned. Today that is the Akai APC Key 25 guide,
    Manual Version 1.0, which describes the original unit while the rig holds an mk2 with
-   different pads and a different shift layer.
+   different pads and a different shift layer, and the Alesis Nitro Max guide, which is undeclared
+   and so `assumed` for a device the rig holds. (**Superseded — see Decision 16.** The last sentence
+   previously named the APC guide alone; the criterion above is unchanged and the Nitro Max was
+   always inside it.)
 6. <a name="11.6"></a>The system SHALL publish each source's `hardware_applicability` and both gap
    reports to `api/answer-engine` and `ui/ask-and-source-picker` alongside the corpus inventory,
    so that a citation drawn from an unconfirmed source can be marked inline (CONTRACTS §3).

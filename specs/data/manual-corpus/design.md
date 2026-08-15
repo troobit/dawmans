@@ -109,22 +109,32 @@ Measured on the reference machine against the real corpus; 8.1 allows 60 s.
 
 | Stage | Cost | Basis |
 |---|---|---|
-| Extract, 1068 pages | ~1 s | 0.63 s measured for Live 12 via a layout extraction; PyMuPDF's dict mode is the same order |
+| Extract, 1107 pages | ~4 s | **measured 2026-08-15** against the real corpus with `corpus/pdf/extract.py`: 3.99 s, of which Live 12 is 3.45 s. The earlier ~1 s estimate extrapolated from a 0.63 s *layout* extraction; dict mode is roughly five times that, not the same order |
 | Furniture, glyphs, sections, language | ≤6 s | estimate; language detection over the APC guide's blocks dominates |
 | Unit assembly + chunking | ≤2 s | estimate |
 | Embedding ~1000 chunks | ~21 s | 42.4 chunks/s measured, `bge-small-en-v1.5` at 350 words |
 | BM25 index + merge + commit | <1 s | 0.14 s measured for 4000 chunks |
-| **Total** | **~31 s** | plus a one-off 7.2 s model load per process |
+| **Total** | **~34 s** | plus a one-off model load per process — stated as 7.2 s, **measured 2026-08-15 at ~0.25 s** ([Decision 19](decision_log.md)) |
 
 Embedding is the only stage with a slope: 8.1's 60 s is exhausted by embedding alone at ~2,500
-chunks, about 2.5× the current corpus. 8.2 (<5 s extraction) has roughly five times its measured
-cost as headroom.
+chunks, about 2.5× the current corpus. **8.2 is tighter than it looked**: 3.99 s measured against a
+5 s budget is 25% headroom, not the 5× the estimate implied, and it is a page-count slope — another
+1000-page manual breaks it. If it needs reclaiming, the cost is concentrated in Live 12 and the
+lever is `get_text` mode, not the corpus.
 
 **8.4 is the tightest budget in the spec**, not 8.1: a new ≤50-page source is ~60 chunks ≈ 1.5 s of
 embedding, but the 7.2 s cold model load takes it to 8.7 s of the allowed 10 s before anything else
 runs. The CLI therefore loads the model **once per run**, before iterating sources, and the 8.4
 timing test measures the per-source cost with the model resident while asserting the cold load
 separately, rather than hiding a 7.2 s constant inside a 10 s budget.
+
+> **Superseded in part — see [Decision 19](decision_log.md).** The 7.2 s figure is not what the
+> populated cache costs: measured 2026-08-15, a cold process reaches a first vector in ~0.25 s,
+> because `make fetch-model` populates the **quantised** ONNX build. 8.1 is therefore the tighter
+> budget of the two today. Everything the paragraph prescribes stands — the model is still loaded once
+> per run, and the cold load is still asserted separately and against 7.2 s, since that is the figure
+> the argument was built on and the one worth defending if the cache is ever repopulated with the
+> unquantised build.
 
 ### Module placement
 
@@ -143,6 +153,8 @@ src/dawmans/
     pdf/sections.py     outline / printed-TOC / heading-style → SectionMap, anchoring
     pdf/language.py     content-side English selection
     pdf/layout.py       row assembly, table detection, column ordering
+    pdf/units.py        stage 7: Region[]/Unit[], the furniture drop, the atomic flags
+    pdf/loader.py       PdfLoader — the vendor-manual half of the seam, and the stage order
     chunk.py            Region[] → Passage[]
     passage_id.py
     rig.py              rig.yaml, applicability, the two gap reports
@@ -168,6 +180,12 @@ reachable over a network.
 ## Components and Interfaces
 
 ### The loader protocol
+
+The run orchestration needs a **wider** protocol than this one and declares it itself, in
+`dawmans/cli.py` ([Decision 17](decision_log.md)): `scan() -> StoreScan` in place of `discover()`,
+because `discover()` drops the sources a store rejected by name — which 1.5 requires reported — and
+cannot distinguish an unavailable store from an empty one, which 1.4's removal rests on. `PdfLoader`
+and `TriageLoader` both provide it.
 
 ```python
 class SourceLoader(Protocol):
@@ -197,6 +215,7 @@ class Region:                     # exactly one section or one titled region (6.
     page_end: int | None
     inferred: bool                # sectioning came from path C heading styles
     units: list[Unit]
+    entry_location: str | None    # CONTRACTS §2, authored only; see below
 
 @dataclass(frozen=True)
 class Unit:
@@ -215,6 +234,14 @@ what 1.5 of `data/symptom-triage` depends on.
 numbered procedure that fits the cap, and a procedure can start on p11 and end on p12. One page per
 unit would force either a 6.10 violation or a citation naming p11 for text printed on p12.
 
+`Region.entry_location` is CONTRACTS §2's field of the same name, carried across the seam. It is
+**region-scoped because a region is exactly one authored entry** (`data/symptom-triage` §Passage
+emission), and it is the only route the field has: `LoadResult.sidecar` is keyed by `passage_id`,
+which does not exist until the chunker has run, so a sidecar cannot supply a field the chunker needs
+in order to emit a passage at all. `TriageLoader` sets it, the chunker copies it onto every passage
+of that region and never derives, clears or hashes it (12.6, CONTRACTS §2). It is `None` on a
+`vendor-manual`, which has a page instead. [Decision 14](decision_log.md) records the alternatives.
+
 ### `Region`/`Unit` → `Passage` — the emission contract
 
 This is the whole output of the spec. Every `Passage` field comes from exactly one rule here.
@@ -230,7 +257,7 @@ This is the whole output of the spec. Every `Passage` field comes from exactly o
 | `degraded` | OR over **all** the chunk's units | a flagless repeated heading contributes nothing, so a chunk of degraded rows stays degraded |
 | `has_figures` | OR over all the chunk's units | chunk-scoped, see §Figures |
 | `unbacked` | OR over all the chunk's units | set only by `TriageLoader`; carried unchanged (12.6) |
-| `entry_location` | the entry's own `source_file` and `line` | `authored-triage` only; supplied by `TriageLoader`, carried unchanged, and never an input to `passage_id` (12.6, CONTRACTS §2) |
+| `entry_location` | `Region.entry_location` — the entry's own `source_file` and `line` | `authored-triage` only; supplied by `TriageLoader`, carried unchanged, and never an input to `passage_id` (12.6, CONTRACTS §2) |
 
 ### Source identity and discovery
 
@@ -345,12 +372,24 @@ configuration.
 
 | Path | Trigger | Reference corpus |
 |---|---|---|
-| **A. Embedded outline** | `doc.get_toc()` returns ≥2 entries | Live 12: 816 entries, 41 chapters |
+| **A. Embedded outline** | `doc.get_toc()` returns ≥2 entries | Live 12: 1054 entries, 41 chapters. Also the APC Key 25 (38) and the Nitro Max (28) |
 | **B. Printed contents page** | a page whose lines are ≥60% dot-leader matches | Nitro Max p2: `(1.3.1) Connection Diagram ...... 5` |
-| **C. Heading styles** | see the quality gate below | APC Key 25, which has neither outline nor contents page |
+| **C. Heading styles** | see the quality gate below | none — see the corpus check below |
 
 Path B's line grammar: `^\(?(?P<num>\d+(?:\.\d+)*)\)?\s*(?P<title>.+?)[\s.]{3,}(?P<page>\d+)$`,
 with the number group optional.
+
+**Corpus check (2026-08-15).** Capturing the fixtures of task 11 read the PDFs rather than
+describing them, and corrected the column above. **Every manual in the corpus carries an embedded
+outline**, so path A fires for all four and paths B and C have no live instance: the earlier claim
+that the APC Key 25 has "neither outline nor contents page" is wrong, and the 816-entry figure for
+Live was an earlier version of the document. **Live's printed contents pages carry no dot leaders**
+either — the page numbers are a separate right-hand column of bare numerals, extracted ahead of the
+titles — so path B's grammar does not match them; the Nitro Max contents page is the one that has
+leaders. Neither path is dropped: they are what the next manual needs, and their fixtures are
+captured with the outline withheld ([Decision 10](decision_log.md)). Two consequences for the
+implementation. Path C must not be assumed to run against this corpus, and the exclusion of printed
+contents pages below cannot rest on the dot-leader test alone.
 
 **Path C's quality gate.** "≥2 spans in a style larger than the modal body style" is met by almost
 any PDF — a cover title alone clears it — and the danger is path C firing *wrongly*: a title plus a
@@ -362,10 +401,13 @@ one titled region under 6.4/6.5 — weak citations, which the requirements antic
 confident wrong ones. Path C regions carry `inferred`, and the report records the heading count and
 the qualifying style.
 
-**Printed contents pages are excluded from chunking.** Path B's dot-leader test is applied to every
+**Printed contents pages are excluded from chunking.** The contents-page test is applied to every
 page of every document, not only when path B is the chosen sectioning path, and a page that passes
-it contributes no text. Live's printed contents is physical pp1–21: 871 of 899 non-blank lines are
-dot-leader entries, 4,343 words, ~12 chunks that between them contain all 816 section titles. Those
+it contributes no text. Dot leaders are one form it takes and not the only one: Live's contents
+pages set the page numbers in a separate right-hand column, so the test that catches them is a page
+whose lines are predominantly either a bare numeral in a narrow right-hand band or a title paired
+with one (corpus check above). Live's printed contents is physical pp2–21, some 12 chunks that
+between them contain every section title in the document. Those
 chunks BM25-match strongly on precisely the verbatim identifier queries this corpus exists to serve,
 citing as "Live 12 — Front matter p13". The pages remain in `page_count` and in the 4.4 audit; only
 their text is dropped.
@@ -433,10 +475,17 @@ satisfies 4.3's "page granularity or finer". Two guards, both necessary:
   first block is a heading, the common case — it inherits the nearest scored block **below** it
   instead; if the page has no scored block at all, it inherits the page's own predecessor's
   decision, and the first page of a document with no scored block anywhere is included.
-- **Language-neutral blocks.** A block whose top confidence is below 0.5 *and* whose tokens are
-  predominantly non-alphabetic inherits the same way. Without this, the Nitro Max MIDI note table
-  and the APC specifications table — numbers, units, dimensions — would be classed as non-English
-  and discarded.
+- **Unconfident blocks.** A block whose top confidence is below 0.5 inherits the same way. Without
+  this, the Nitro Max MIDI note table and the APC specifications table — numbers, units, dimensions
+  — would be classed as non-English and discarded.
+
+  ~~A block whose top confidence is below 0.5 *and* whose tokens are predominantly non-alphabetic
+  inherits the same way.~~ **Superseded by [Decision 12](decision_log.md)** (2026-08-15): measured
+  against the real APC guide, the conjunction leaks. `• Mac OS X : Live > Preferences` on the French
+  page scores English at 0.42 with predominantly alphabetic tokens, so it passed the guard, was
+  trusted, and the short French step below it inherited from it and reached the index — 4.1 failing
+  on the corpus's only multilingual source. Confidence alone covers strictly more than the pair did,
+  so both motivating cases above are unaffected.
 
 The APC front page prints its own language index (`English ( 3 – 6 )`, `Appendix English ( 23 )`).
 It is deliberately **not** parsed: it is exactly the per-manual structure 4.2 forbids depending on,
@@ -450,6 +499,12 @@ Audit (4.4), written to `index/audits/<slug>.json` and reported alongside the in
 
 `partial_pages` lists every page included only in part, so a sub-page selection is visible rather
 than hidden inside a whole-page range. No English content at all ⇒ rejection (4.5).
+
+The sample above is illustrative and its page 1 is wrong in one way worth naming: it appears in both
+`excluded_pages` and `partial_pages`, and a page cannot be both. The governing statement is the
+audit-completeness property in §Testing Strategy — included ∪ excluded is every page, the two are
+disjoint, and partial ⊆ **included** — because a page is partial for having had part of it kept.
+That is what `language.py` implements.
 
 ### Glyph repair (5.1–5.5)
 
@@ -530,6 +585,15 @@ Greedy packing within one region, cap 350 words:
 - A procedure exceeding the cap splits between steps.
 - Overlap ~50 words, snapped to a sentence boundary, **within a region only** and never across an
   atomic unit. Overlapping a region boundary would make the citation ambiguous, which 6.7 forbids.
+- **A repeat replaces overlap; the two are never carried together.** Where a chunk copies a
+  `repeat_on_split` unit, the repeat already gives the continuity overlap exists to provide, and
+  carrying both would put that text into the hashed passage twice. This is the kind-neutral form of
+  `data/symptom-triage` §Passage emission's "chunk overlap is suppressed for authored regions": its
+  symptom statement is a `repeat_on_split` unit, so the rule reaches it without the chunker knowing
+  what kind of source it is (12.2). [Decision 15](decision_log.md).
+- Where a region holds a **second** table, the first table's heading is not copied onto it: the
+  repeats carried into a new chunk are dropped when the next unit is itself `repeat_on_split`.
+  Naming columns a row is not in is worse than naming none.
 
 **Page range (6.8).** `page_start`/`page_end` are the min and max over the chunk's
 **page-contributing** units only — the units whose text originates in this chunk. A copied
@@ -649,10 +713,25 @@ load-bearing — it is what keeps the report honest the moment a device is added
 of its manual.
 
 **Today, with all four manuals present: the first report is empty, the second names
-`akai/apc-key-25`, and the third is empty.** The first being empty is the corpus being complete
-(11.4), not the check failing to run.
+`akai/apc-key-25` and `alesis/nitro-max`, and the third is empty.** The first being empty is the
+corpus being complete (11.4), not the check failing to run.
+
+> **Superseded — see Decision 16.** This paragraph previously read "the second names
+> `akai/apc-key-25`" alone. The worked `rig.yaml` above declares no `source_applicability` for the
+> Nitro Max, so under 11.2 its guide resolves to `assumed` for a device that *is* in the rig
+> inventory, and 11.5's first arm fires on it. The criteria are unchanged; only this statement of
+> the live outcome was wrong. It returns to naming the APC alone once the Nitro Max is declared
+> `confirmed` by a person who has checked the guide against the unit.
 
 Both reports are published as `views/<hex>/gaps.json` (11.6), part of the read contract below.
+
+**The join runs at the merge, not when a shard is built** ([Decision 18](decision_log.md)). A shard is
+a cache of what the *document* said, keyed by the document's bytes; `rig.yaml` is what the *owner*
+says, and editing it changes no byte of any PDF. Applied at build time, a new `source_applicability`
+declaration would be invisible until something unrelated changed the manual — every shard's cache key
+still matches, no loader runs, and the reports keep describing the last rig the corpus happened to be
+rebuilt under. So `shards/<slug>.meta.json` records the loader's own 11.2 default, and
+`views/<hex>/sources.json` and `gaps.json` carry the joined value.
 
 ---
 
@@ -759,6 +838,12 @@ version differs MUST refuse to load rather than interpret the files, and the fix
 (~31 s). `corpus_revision` is `sha256` over the sorted `(source_id, fingerprint, chunk_count)`
 triples — a single cheap read that lets `api/answer-engine` satisfy its 5.10 (detect a corpus change
 and discard cached retrieval state) without diffing the corpus.
+
+**`corpus_revision` does not move when only `rig.yaml` moves**, and that is correct rather than
+overlooked: 8.11 requires it to change when and only when the indexed *content* does, and a rig edit
+changes no passage. It does change what `sources.json` and `gaps.json` say
+([Decision 18](decision_log.md)), so a consumer refreshing applicability keys on `manifest.view_dir`,
+which is fresh every run, and not on the revision.
 
 ### Incremental behaviour (8.3, 8.7)
 
@@ -948,18 +1033,28 @@ snapshots** — span geometry, font names and, where the assertion needs it, tex
 copyrighted documents out of the repository and pins the extractor's output as an explicit input to
 every downstream test.
 
-| Fixture | Asserts |
-|---|---|
-| `nitro_max_p25.spans.json` | all 19 trigger-to-note pairs recoverable with their printed pairings; heading joined from three physical lines; ragged rows placed by x-position (7.1–7.3, 7.6) |
-| `apc_p3_arrows.spans.json` | the `Wingdings3` run at U+00F0/F1/F4/F5 repairs to arrows; a genuine Spanish `ñ` on the same fixture is left alone; a mutated span with no mapping sets `degraded` and yields U+FFFD in `text`, not the raw characters (5.1–5.3) |
-| `apc_pages.spans.json` | English pp. 3–6 and p. 23 selected, pp. 7–22 excluded, with no page range in the code (4.2–4.6). **Text is redacted**: each block carries its bounding box, font and a language label only. Span data for all 24 pages would commit substantially the whole guide, which the gitignore position forbids |
-| `live_toc_slice.json` | a slice of the 816 entries across a chapter boundary anchors to in-body headings, produces `§24.9`-shaped citations, and attributes text to the right section where two sections share a page (6.3, 6.6) |
-| `live_contents_p13.spans.json` | a dot-leader page is detected and contributes no chunks while remaining in the audit (6.5) |
-| `live_procedure_pagebreak.spans.json` | a numbered procedure starting on p11 and ending on p12 stays one chunk with `page_start` 11, `page_end` 12 (6.10, 6.8) |
-| `apc_no_toc.spans.json` | no outline and no contents page ⇒ heading-style path, unnumbered regions, citation rendered without a section number (6.4) |
-| `cover_only.spans.json` | a title plus strapline fails path C's quality gate and yields one titled region, not two spanning ones (6.5) |
-| `furniture_pages.spans.json` | a repeated right-aligned page number is suppressed; a numeric line inside a detected table on one page is not (3.6) |
-| rejection fixtures | image-only PDF, malformed filename, two files colliding on `source_id`, a source over the 2% unmappable threshold |
+Captured by `tools/capture_fixture.py` and recaptured with `make fixtures`; that file's `FIXTURES`
+list is the record of which pages of which guide each one is, and each snapshot carries the same
+note in its own header. The names and page ranges below are what was captured — where they differ
+from what this table first said, the reason is in the fixture's own note.
+
+| Fixture | Source | Asserts |
+|---|---|---|
+| `nitro_max_p25.json` | Nitro Max p25 | all 19 trigger-to-note pairs recoverable with their printed pairings; heading joined from three physical lines; ragged rows placed by x-position (7.1–7.3, 7.6) |
+| `apc_p14_arrows.json` | APC p14 | the `Wingdings3` run at U+00F0/F1/F4/F5 repairs to arrows; the genuine French `ô` set in the body face **on the same page** is left alone; a mutated span with no mapping sets `degraded` and yields U+FFFD in `text`, not the raw characters (5.1–5.3). p3 carries no symbol font and no page holds both the arrows and a real `ñ`; p14 is the stronger case, holding U+00F4 in two fonts at once |
+| `apc_pages.json` | APC pp1–24 | English pp. 3–6 and p. 23 selected, pp. 7–22 excluded, with no page range in the code (4.2–4.6). **Text is redacted**: each block carries its bounding box, font and a language label, and the text is masked to its character classes so the measurements the stage makes survive and no word does ([Decision 11](decision_log.md)) |
+| `live_toc_slice.json` | Live pp470–473, 584–592 | a slice of the outline across a chapter boundary anchors to in-body headings, produces `§24.9`-shaped citations, and attributes text to the right section where two sections share a page (6.3, 6.6); the parent chain keeps §28.21.1 `Sidechain Parameters` — one of eight — under `Glue Compressor` |
+| `live_contents_p13.json` | Live p13 | a printed contents page is detected and contributes no chunks while remaining in the audit (6.5). It has **no dot leaders**: the page numbers are a right-hand column of bare numerals |
+| `live_procedure_pagebreak.json` | Live pp158–159 | a numbered procedure whose steps 1–4 are on p158 and step 5 on p159 stays one chunk with `page_start` 158, `page_end` 159 (6.10, 6.8). The enumerators are set in a left gutter and extract *after* the step text, so only row assembly on geometry puts them back |
+| `apc_no_toc.json` | APC pp3–4, outline withheld | no outline and no contents page ⇒ heading-style path, unnumbered regions, citation rendered without a section number (6.4) |
+| `cover_only.json` | Live p1, outline withheld | a title plus strapline fails path C's quality gate and yields one titled region, not two spanning ones (6.5) |
+| `furniture_pages.json` | Nitro Max pp23–26 | a repeated right-aligned page number is suppressed; a numeric line inside a detected table on one page is not (3.6) |
+| `rejections/image_only.json` | synthetic | no text layer at all ⇒ `no-text-layer` (3.3) |
+| `rejections/unreadable_text.json` | synthetic | unmappable characters over 2% of the extracted text layer ⇒ `unreadable-text` (5.5) |
+| `rejections/filenames.json` | synthetic | malformed names, and two names colliding on `source_id` (2.5, 2.6) |
+
+The three rejection fixtures are synthetic because none of them can be captured: a manual that trips
+them is one no vendor ships.
 
 ### Timing tests
 
