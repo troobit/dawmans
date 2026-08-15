@@ -1,9 +1,11 @@
-"""Device scope — design 'Device scope' and 'Error Handling'.
+"""Device scope and the sidecar — design 'Device scope', 'The sidecar', 'Error Handling'.
 
 An entry's `devices:` frontmatter is validated against two vocabularies, the rig
 inventory and the corpus, and then **published** (4.3). Nothing here filters:
 `api/answer-engine` 5.13 evaluates the per-passage predicate, and this spec's
-obligation ends at handing it the declaration.
+obligation ends at handing it the declaration. `sidecar` is that publication —
+everything `Passage` cannot carry, keyed by `passage_id`, assembled from the
+loader's per-entry results and copied into the view by the corpus.
 
 Identities are matched **exactly** (4.2). A near miss is a typo to be named, not
 a device to be guessed at, and the whole point of sharing `<vendor>/<product>`
@@ -17,21 +19,28 @@ that spec owns.
 
 from __future__ import annotations
 
-from collections.abc import Collection, Sequence
+from collections.abc import Collection, Mapping, Sequence
 from dataclasses import dataclass
-from typing import Protocol
+from typing import TYPE_CHECKING, Any, Protocol
 
-from dawmans.triage.model import DeviceRef, Entry, EntryRejection, Flag
+from dawmans.triage.model import DeviceRef, Entry, EntryRejection, Flag, entry_key
+
+if TYPE_CHECKING:  # the outcome types are the loader's, and it imports this module
+    from dawmans.triage.loader import CauseOutcome, EntryOutcome, StoreOutcome
 
 
 class RigDevice(Protocol):
-    """The two fields of a `rig.yaml` device that scope validation reads.
+    """The fields of a `rig.yaml` device this spec reads.
 
-    `display_name` is the rig reports' and the term check's, not this module's.
+    `id` and `revision` are scope validation's. `display_name` is read by the rig
+    reports and by the term check, which discards a term naming the device the owner
+    holds; it is declared here because this is where the spec states what it reads of a
+    rig device, not because this module reads it.
     """
 
     id: str
     revision: str | None
+    display_name: str | None
 
 
 @dataclass(frozen=True)
@@ -173,3 +182,150 @@ def _check_revision(device: DeviceRef, rig_revision: str | None, flag) -> None:
 
 def _normalise_revision(value: str) -> str:
     return "".join(character for character in value.casefold() if character.isalnum())
+
+
+# --- The sidecar ----------------------------------------------------------
+
+
+def sidecar(
+    outcome: StoreOutcome,
+    passage_ids: Mapping[str, Sequence[str]],
+    *,
+    ledger_missing: bool = False,
+) -> dict[str, Any]:
+    """Everything `Passage` cannot carry, keyed by `passage_id` — design 'The sidecar'.
+
+    Written by the corpus to `views/<hex>/reports/authored_triage.json`, inside the view
+    and not beside it, so it commits and swaps atomically with the passages it keys.
+    `<slug>` is the corpus's own rule, `source_id` with `/` replaced by `_`: hyphenating
+    it is a silent failure, because a reader finds nothing, no error is raised, and under
+    `api/answer-engine` 5.13 no passage declares devices — so every entry stays in scope
+    for every turn.
+
+    `passage_ids` maps an entry's `source_file` to the passages it emitted. **Every row
+    an entry produced carries the entry's whole declaration** (4.3), including its causes
+    in declared order: which passage of a split entry holds which cause is an artefact of
+    the 350-word cap and changes under a re-chunk, so a consumer reading the causes of a
+    citation must not get a list truncated by where the cap fell.
+    """
+    return {
+        "passages": [
+            {"passage_id": passage_id, **_entry_row(entry_outcome)}
+            for entry_outcome in outcome.ingesting
+            for passage_id in passage_ids.get(entry_outcome.entry.source_file.as_posix(), ())
+        ],
+        "report": report(outcome, ledger_missing=ledger_missing),
+    }
+
+
+def report(outcome: StoreOutcome, *, ledger_missing: bool = False) -> dict[str, Any]:
+    """The run's counts and one row per rejection and per flag (2.8, 5.5).
+
+    The same rows `dawmans coverage` renders. The pointer counts describe the entries
+    this run **ingested**: a pointer that cost its entry its place is reported by that
+    entry's rejection row, which names the entry, the cause and the pointer (2.2), and
+    counting it again as unresolved would report one fault twice.
+    """
+    checked = [
+        pointer
+        for entry_outcome in outcome.ingesting
+        for cause in entry_outcome.causes
+        for pointer in cause.pointers
+    ]
+    without_pointer = sum(
+        1
+        for entry_outcome in outcome.ingesting
+        for cause in entry_outcome.causes
+        if cause.cause.undocumented_device is not None
+    )
+    return {
+        "entries": len(outcome.ingesting),
+        "rejected": len(outcome.rejections),
+        "flagged": sum(1 for entry_outcome in outcome.ingesting if entry_outcome.flags),
+        "pointers": {
+            "checked": len(checked),
+            "resolved": sum(1 for pointer in checked if pointer.ok),
+            # Every unresolved pointer that survives is a drifted one: an unresolved
+            # pointer with no ledger row rejected its entry (2.2, 8.4).
+            "unresolved": sum(1 for pointer in checked if not pointer.ok),
+            "without_pointer": without_pointer,
+        },
+        "rejections": [
+            {
+                "reason": rejection.reason,
+                "source_file": rejection.source_file.as_posix(),
+                "symptom": rejection.symptom,
+                "cause": rejection.cause,
+                "detail": rejection.detail,
+            }
+            for rejection in outcome.rejections
+        ],
+        "flags": [
+            {
+                "name": flag.name,
+                "source_file": flag.source_file.as_posix(),
+                "symptom": flag.symptom,
+                "cause": flag.cause,
+                "detail": flag.detail,
+            }
+            for flag in outcome.flags
+        ],
+        # Deleting the ledger re-arms 2.2 for the whole store, and that must not be
+        # silent: the author would otherwise meet a wall of rejections with nothing
+        # explaining them.
+        "ledger_missing": ledger_missing,
+    }
+
+
+def _entry_row(outcome: EntryOutcome) -> dict[str, Any]:
+    """One entry, as every passage it emitted publishes it.
+
+    `entry_key` is an annotation and the key of nothing — a stable handle on an entry
+    across a file rename. `source_file` and `line` are the two halves of CONTRACTS §2
+    `entry_location`, a locator rather than an identity, which is why neither enters
+    `passage_id` or `entry_key`.
+    """
+    entry = outcome.entry
+    return {
+        "entry_key": entry_key(entry),
+        "symptom": entry.symptom,
+        "devices": [{"id": device.id, "revision": device.revision} for device in entry.devices],
+        "source_file": entry.source_file.as_posix(),
+        "line": entry.line,
+        "causes": [_cause_row(cause) for cause in outcome.causes],
+    }
+
+
+def _cause_row(outcome: CauseOutcome) -> dict[str, Any]:
+    """One cause, in declared order — the source of CONTRACTS §4c's `Cause` records.
+
+    The position in this list is that record's `rank`, which is why 1.5's "never
+    re-order" is load-bearing on `api/answer-engine` 7.6 and `ui/ask-and-source-picker`
+    6.6 as well as on retrieval.
+    """
+    cause = outcome.cause
+    return {
+        "statement": cause.statement,
+        "check": cause.check,
+        "fix": [
+            {
+                "source_id": pointer.pointer.source_id,
+                # The number where the author gave one, the title where they did not:
+                # one field, because a pointer addresses one section either way.
+                "section": pointer.pointer.section_number or pointer.pointer.section_title,
+                "passage_ids": list(pointer.passage_ids),
+            }
+            for pointer in outcome.pointers
+        ],
+        "undocumented_device": cause.undocumented_device,
+        "flags": [flag.name for flag in outcome.flags],
+    }
+
+
+__all__ = [
+    "RigDevice",
+    "ScopeResult",
+    "report",
+    "sidecar",
+    "validate_scope",
+]

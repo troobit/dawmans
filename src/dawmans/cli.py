@@ -45,8 +45,10 @@ from dawmans.index.build import (
     build_shard,
     collect_views,
     commit_view,
+    passage_to_dict,
     read_shard,
     read_shards,
+    record_to_dict,
     shard_paths,
 )
 from dawmans.index.embed import Embedder, load_embedder
@@ -61,11 +63,17 @@ from dawmans.report import (
     read_audit,
     write_audit,
 )
+from dawmans.triage.loader import CorpusView, TriageLoader, scan_store
+from dawmans.triage.pointers import LEDGER_NAME, Ledger
 
 #: `index/` beside `manuals/` at the repository root. Gitignored and derived: 8.6 rebuilds
 #: all of it from the two stores with no other input.
 INDEX_DIR = "index"
 MANUALS_DIR = "manuals"
+#: The authored entry store, sibling to `manuals/` and committed (`data/symptom-triage`
+#: 1.6). Its layout and contents are that spec's; the name is here because the run has to
+#: find it.
+TRIAGE_DIR = "triage"
 
 
 class Store(Protocol):
@@ -319,18 +327,65 @@ def _anomalies(scans: Sequence[StoreScan], index_root: Path) -> tuple[StoreAnoma
 # --- the commands -------------------------------------------------------------------------
 
 
-def run_ingest(root: Path, *, index_root: Path | None = None) -> RunResult:
-    """`dawmans ingest` over the real stores.
+@dataclass(frozen=True)
+class TriageStore:
+    """`triage/` behind the run's `Store` protocol — `data/symptom-triage`'s loader,
+    plus the corpus it resolves fix pointers against.
 
-    The authored store is `data/symptom-triage`'s to supply; until that spec's loader
-    exists there is one store, and the run is the same code either way (12.2).
+    The view is assembled **when `load()` is called**, not when the store is
+    constructed, and that is the whole of the pass ordering: by then every vendor shard
+    of this run has committed, so a pointer resolves against the passages this run
+    produced rather than the previous run's. It is read from the shards because the view
+    this run will publish does not exist until the merge, which happens after every
+    loader has run — `data/symptom-triage` decision_log Decision 13. A shard's
+    `passages.jsonl` holds the passages the merge concatenates, so no manual is
+    re-extracted, re-chunked or re-indexed to produce it (its 5.7).
     """
+
+    root: Path
+    index_root: Path
+    rig: Rig
+
+    @property
+    def store(self) -> Path:
+        return self.root / TRIAGE_DIR
+
+    def scan(self) -> StoreScan:
+        """Discovery reads the store's own directory: no corpus, no rig, no ledger."""
+        return scan_store(self.store)
+
+    def load(self, d: Discovered) -> LoadResult:
+        return TriageLoader(
+            store=self.store,
+            view=self._view(),
+            rig=self.rig.devices,
+            # An unparseable ledger raises here and is caught as a **failure** (1.7):
+            # no entry is at fault, and continuing would silently re-arm 2.2 for the
+            # whole store and reject entries 8.4 requires be served with a mark.
+            ledger=Ledger.read(self.store / LEDGER_NAME),
+            root=self.root,
+        ).load(d)
+
+    def _view(self) -> CorpusView:
+        shards = [
+            shard for shard in read_shards(self.index_root) if shard.record.kind == "vendor-manual"
+        ]
+        return CorpusView.of(
+            [passage_to_dict(passage) for shard in shards for passage in shard.passages()],
+            [record_to_dict(shard.record) for shard in shards],
+        )
+
+
+def run_ingest(root: Path, *, index_root: Path | None = None) -> RunResult:
+    """`dawmans ingest` over the real stores, in the one order the design allows."""
     index_root = index_root or root / INDEX_DIR
+    rig = load_rig(root / RIG_FILE)
     return ingest(
         index_root,
         vendor=PdfLoader(root=root / MANUALS_DIR),
+        authored=TriageStore(root=root, index_root=index_root, rig=rig),
         embedder=load_embedder(),
-        rig=load_rig(root / RIG_FILE),
+        rig=rig,
     )
 
 
@@ -418,8 +473,10 @@ def _print(lines: Iterable[str]) -> None:
 __all__ = [
     "INDEX_DIR",
     "MANUALS_DIR",
+    "TRIAGE_DIR",
     "RunResult",
     "Store",
+    "TriageStore",
     "ingest",
     "main",
     "run_ingest",

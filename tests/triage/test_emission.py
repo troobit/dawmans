@@ -15,103 +15,38 @@ from __future__ import annotations
 import shutil
 from pathlib import Path
 
-from fixture_rig import INDEXED, RIG
 from hypothesis import given, settings
 from hypothesis import strategies as st
 from rendering import Section, entry_file, prose
-from sections import CORPUS, DRIFT_AFTER, LIVE, passages
+from stores import (
+    APC_ID,
+    DEFAULT,
+    DEFAULT_BODY,
+    DIGITAKT_ID,
+    DISCOVERED,
+    FIXTURES,
+    LIVE_ID,
+    NOW,
+    POINTER,
+    drifted_view,
+    loader,
+    one_entry,
+    store,
+)
 
 from dawmans.corpus.chunk import chunk_source
-from dawmans.corpus.loader import Discovered
 from dawmans.corpus.passage_id import passage_id
 from dawmans.records import AUTHORED_SOURCE_ID
 from dawmans.triage.loader import (
     CauseOutcome,
-    CorpusView,
     EntryOutcome,
-    TriageLoader,
     emit,
     entry_location,
     normalised_symptom,
     source_record,
 )
 from dawmans.triage.parse import parse_entry, render
-from dawmans.triage.pointers import Ledger, SectionIndex
-
-FIXTURES = Path(__file__).resolve().parents[1] / "fixtures" / "triage"
-
-LIVE_ID = "ableton/live-12"
-APC_ID = "akai/apc-key-25"
-DIGITAKT_ID = "elektron/digitakt"
-"""In the fixture rig and documented by nothing — 2.3's only permitted shape."""
-
-POINTER = f"{LIVE_ID} §18.1"
-DRIFTING = f"{LIVE_ID} §18.6"
-
-NOW = "2026-08-15T09:00:00+00:00"
-
-DISCOVERED = Discovered(source_id=AUTHORED_SOURCE_ID, fingerprint="0" * 64, origin=Path("triage"))
-
-
-# --- Building a store ------------------------------------------------------
-
-
-def view(*names: str) -> CorpusView:
-    return CorpusView(
-        sections=SectionIndex.from_passages(passages(*names or CORPUS)), indexed=INDEXED
-    )
-
-
-def drifted_view() -> CorpusView:
-    """Live after the revision that renumbered §18.6 to §18.7 and edited its text.
-
-    The surrounding sections have to come from the *same* corpus as the drifting one, or
-    the entry's second pointer — §18.1, which did not move — fails to resolve and the
-    fixture tests a missing manual rather than a drifted section.
-    """
-    rows = [row for row in passages(LIVE) if row["section_number"] != "18.6"]
-    return CorpusView(
-        sections=SectionIndex.from_passages([*rows, *passages(DRIFT_AFTER)]), indexed=INDEXED
-    )
-
-
-def store(tmp_path: Path, files: dict[str, str]) -> Path:
-    root = tmp_path / "triage"
-    for name, text in files.items():
-        path = root / name
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(text, encoding="utf-8")
-    return root
-
-
-def loader(store_path: Path, *, corpus: CorpusView | None = None, ledger: Ledger | None = None):
-    return TriageLoader(
-        store=store_path,
-        view=corpus or view(),
-        rig=RIG,
-        ledger=ledger or Ledger.empty(),
-        now=lambda: NOW,
-    )
-
-
-def one_entry(tmp_path: Path, text: str, **kwargs):
-    """The `LoadResult` of a store holding exactly one entry file."""
-    return loader(store(tmp_path, {"entry.md": text}), **kwargs).load(DISCOVERED)
-
-
-DEFAULT_BODY = [
-    Section("The Track Activator is off", check="the track's number is unlit", fixes=[POINTER]),
-    Section("Another track is soloed", check="a Solo button is lit", fixes=[POINTER]),
-]
-
-DEFAULT = entry_file(
-    devices=[LIVE_ID],
-    symptom="No sound from a track",
-    sections=DEFAULT_BODY,
-    phrasings=["a track is silent"],
-    preamble=["Work down the list in order."],
-)
-
+from dawmans.triage.pointers import Ledger
 
 # --- The region ------------------------------------------------------------
 

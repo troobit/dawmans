@@ -144,7 +144,7 @@ references:
 
 ## Phase 5: Discovery, sidecar and run integration
 
-- [ ] 17. Write tests for discovery and the unconditional load <!-- id:f3stq0h -->
+- [x] 17. Write tests for discovery and the unconditional load <!-- id:f3stq0h -->
   - Discovery is a recursive scan of triage/**/*.md - nested/live/no-sound.md is found; a .txt beside it gets a report line (the opposite of manuals/, where the skip is silent); dotfiles are exempt so .pointer-ledger.jsonl never warns about itself; filenames carry no meaning. discover() yields 0 or 1 Discovered; fingerprint is sha256 over sorted (relative path, file digest) pairs.
   - load() runs on every ingest regardless of fingerprint - the authored store is exempt from shard skipping, because pointer validity is a function of the manuals too (2.1), and the manifest-into-fingerprint alternative detects drift one run late by construction.
   - An entry added, edited or removed is reflected on the next run with no code, configuration or rebuild (5.1); CorpusView is read-only over the view's passages.jsonl and sources.json and never opens a shard, vector file or PDF, so re-ingesting the authored source re-extracts nothing (5.7). Per-passage vector reuse for unchanged entries is manual-corpus's behaviour - its task e7lsx2q tests it - assumed here as an interface, not re-tested.
@@ -153,13 +153,13 @@ references:
   - Stream: 1
   - Requirements: [1.6](requirements.md#1.6), [2.1](requirements.md#2.1), [5.1](requirements.md#5.1), [5.7](requirements.md#5.7)
 
-- [ ] 18. Implement TriageLoader.discover and the ingest wiring <!-- id:f3stq0i -->
+- [x] 18. Implement TriageLoader.discover and the ingest wiring <!-- id:f3stq0i -->
   - Wire TriageLoader into the corpus run as the second SourceLoader: the authored load runs after every vendor shard has committed, so pointers resolve against the passages this run produced, and the fingerprint-skip exemption lives in the run orchestration.
   - Blocked-by: f3stq0h (Write tests for discovery and the unconditional load)
   - Stream: 1
   - Requirements: [1.6](requirements.md#1.6), [2.1](requirements.md#2.1), [5.1](requirements.md#5.1), [5.7](requirements.md#5.7)
 
-- [ ] 19. Write tests for the sidecar <!-- id:f3stq0j -->
+- [x] 19. Write tests for the sidecar <!-- id:f3stq0j -->
   - LoadResult.sidecar lands at views/<hex>/reports/authored_triage.json - the corpus's slug rule, underscore not hyphen, or a reader finds nothing, no error is raised, and every entry stays in scope for every turn.
   - Per passage_id: devices (the input to api/answer-engine 5.13's per-passage predicate, 4.3 - this spec filters nothing itself), source_file and line (the entry_location halves), and causes in declared order with statement, check, fix passage_ids, undocumented_device and flags - the source of CONTRACTS 4c Cause records, so 1.5 is load-bearing here too.
   - entry_key is sha256 over the normalised symptom and sorted device ids, an annotation for the report, key of nothing.
@@ -168,7 +168,7 @@ references:
   - Stream: 1
   - Requirements: [2.8](requirements.md#2.8), [4.3](requirements.md#4.3), [5.5](requirements.md#5.5)
 
-- [ ] 20. Implement the sidecar assembly <!-- id:f3stq0k -->
+- [x] 20. Implement the sidecar assembly <!-- id:f3stq0k -->
   - Built in scope.py from the loader's per-entry results; the corpus copies it into the view, so it swaps atomically with the passages it keys.
   - Blocked-by: f3stq0j (Write tests for the sidecar)
   - Stream: 1

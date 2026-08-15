@@ -12,6 +12,53 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 5 — discovery, the sidecar and the run integration.** `dawmans
+  ingest` now runs both stores with the real `TriageLoader`. Discovery is a recursive scan of
+  `triage/**/*.md` (1.6): a subdirectory entry is found, a non-`.md` file beside one gets a report
+  line — the opposite of `manuals/`, where the skip is silent — and dotfiles are exempt so the
+  machine's own `.pointer-ledger.jsonl` never warns about itself. The store is one source however
+  many files it holds, and its fingerprint is sha256 over the sorted (store-relative path, file
+  digest) pairs. `load()` runs on **every** ingest regardless of that fingerprint, because 2.1 asks
+  for every fix pointer to be re-checked on every run and a digest of the store's own bytes cannot
+  answer a question about the manuals. An absent or unreadable store is an unknown discovery set
+  that removes nothing; an existing empty one removes its shard; a store in which no entry survives
+  is `authored-invalid`, which deletes the shard rather than letting the previous run's passages
+  keep being served.
+
+- **The per-`passage_id` sidecar (`triage/scope.py`).** `LoadResult.sidecar` lands at
+  `views/<hex>/reports/authored_triage.json` — the corpus's slug rule, underscore and not hyphen,
+  inside the view so it swaps atomically with the passages it keys. Each row carries the entry's
+  declared devices (4.3, the input to `api/answer-engine` 5.13's per-passage predicate), the
+  `source_file` and `line` halves of CONTRACTS §2 `entry_location`, an `entry_key` annotation, and
+  the causes in declared order with their checks, resolved fix passage ids and flags — the source of
+  CONTRACTS §4c's `Cause` records. Every passage of a split entry carries the whole cause list,
+  because which passage holds which cause is an artefact of the 350-word cap. The report block
+  carries 2.8's pointer counts and one row per rejection and per flag with its reason (5.5), and is
+  written to `index/audits/authored_triage.json` as well so a rejected store's reasons survive.
+
+- **The term check and `title-number-disagreement` joined the run.** `CorpusView` now carries
+  passage text, so `check_terms` runs during evaluation and a factual claim no cited section prints
+  is flagged (2.6) — never setting `unbacked`, which keeps 2.4 and 8.5 its only two producers
+  (Decision 5). A view read without passage text checks nothing rather than flagging everything.
+
+- **The pointer ledger is written by the run.** `load()` records every pointer that resolved and
+  writes only on transition, so a second run over an unchanged store leaves
+  `triage/.pointer-ledger.jsonl` byte-identical and the working tree clean. Recording happens in
+  `load()` alone, which is what will let `dawmans validate` run the same checks without promoting a
+  broken pointer to "previously fine" (5.4). An unparseable ledger reaches the run as a failure:
+  non-zero exit, previous shard intact.
+
+- **`data/symptom-triage` Decision 13 — the run's `CorpusView` is read from the committed shards,
+  not the committed view.** The design required both "the authored load runs after every vendor
+  shard has committed" and "`CorpusView` never opens a shard", and `manual-corpus` merges shards
+  into a view only at the end of a run — so at authored-load time the view named by
+  `manifest.view_dir` is the *previous* run's. Reading it would reject a new entry pointing into a
+  manual the same run ingested, and would detect drift one run late. The shards hold the passages
+  the merge concatenates, so 5.7 is untouched: no PDF, no vector file, no extraction, chunking or
+  embedding. `CorpusView.of` takes the published JSON shapes, so `dawmans validate` will read the
+  same rows out of `views/<hex>/` with no second reader. The design's `CorpusView` row is marked
+  superseded in place.
+
 - **`data/symptom-triage` Phase 4 — identity, emission and the loader.** `triage/loader.py` puts the
   entry store behind `manual-corpus`'s `SourceLoader` seam. `source_record` is design §Identity's
   table applied literally — the constant `authored/triage`, `My Triage Notes`, `assumed`
@@ -98,6 +145,25 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   previous state produces the previous ids and so writes nothing at all.
 
 ### Changed
+
+- **`normalised_symptom` and a new `entry_key` moved to `triage/model.py`.** Both are functions of
+  the model's own fields, and `loader` needs the first for 1.9's duplicate test while `scope` needs
+  the second for the sidecar — with `loader` importing `scope`, `model` is the only home that is not
+  a cycle. `loader` still re-exports `normalised_symptom`. `scope.RigDevice` gained `display_name`,
+  which the term check reads, so the protocol states what this spec reads of a rig device rather
+  than what one module does.
+
+- **A rejected entry's flags no longer appear in the run's flag list.** Parse flags are collected
+  before anything can reject an entry, so an entry excluded for being malformed was contributing
+  remarks beside the reason it went. They are dropped, which also keeps the report's `flagged` count
+  and its `flags` rows describing the same entries.
+
+- **The triage tests share one store builder.** `tests/triage/stores.py` holds the on-disk store,
+  the `CorpusView` over the committed section fixtures and the loader that reads them, extracted
+  from `test_emission.py` when the discovery and sidecar tests needed the same fixtures.
+  `tests/triage/test_ingest_wiring.py` runs the real loader through `cli.ingest` with a stub vendor
+  store rebuilt from those same fixtures; `tests/test_run.py` deliberately keeps a *stub* authored
+  store, because a run that only ever saw the real one would prove nothing about 12.2.
 
 - **Costed the `data/manual-corpus` merge that unblocks `data/symptom-triage` Phase 4.**
   `docs/agent-notes/triage-entry-grammar.md` said Phase 4 becomes reachable when that branch merges,

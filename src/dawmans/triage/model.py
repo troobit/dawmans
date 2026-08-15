@@ -1,17 +1,22 @@
 """The triage entry model — design.md 'Components and Interfaces'.
 
-Types only. Everything downstream of an `Entry` builds against `SourceLoader`,
-`Discovered`, `LoadResult`, `Region`, `Unit` and `UnitFlags` from
-`dawmans/corpus/loader.py`: `data/manual-corpus` owns those and nothing here
-redefines them.
+Types, and the two derivations over them that every other module needs.
+Everything downstream of an `Entry` builds against `SourceLoader`, `Discovered`,
+`LoadResult`, `Region`, `Unit` and `UnitFlags` from `dawmans/corpus/loader.py`:
+`data/manual-corpus` owns those and nothing here redefines them.
 
 The rejection and flag vocabularies live here rather than in `parse` so that
 `parse`, `pointers`, `scope` and `coverage` can all name them without importing
-one another.
+one another. `normalised_symptom` and `entry_key` are here for the same reason:
+they are functions of the model's own fields, and `loader` (1.9's duplicate test)
+and `scope` (the sidecar's annotation) both need them without importing each
+other.
 """
 
 from __future__ import annotations
 
+import hashlib
+import re
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Literal
@@ -149,3 +154,39 @@ class Flag:
     detail: str
     symptom: str | None = None
     cause: str | None = None
+
+
+# --- Derived identities ---------------------------------------------------
+
+_WHITESPACE = re.compile(r"\s+")
+
+
+def normalised_symptom(symptom: str) -> str:
+    """The form 1.9 compares two entries on: casefolded, whitespace runs collapsed.
+
+    Deliberately **not** `pointers.normalise_title`, which also strips a leading
+    section number: a symptom may legitimately open with one — "0 dB is never
+    reached" — and stripping it would collide two symptoms that differ.
+    """
+    return _WHITESPACE.sub(" ", symptom).strip().casefold()
+
+
+def entry_key(entry: Entry) -> str:
+    """sha256 over the normalised symptom and the sorted device ids.
+
+    An **annotation**, and the key of nothing: it gives the coverage report and
+    the ledger's `entry_keys` a stable handle on an entry across a file rename.
+    It is not `passage_id`, which is content-derived, and it is not 1.9's
+    duplicate test, which is broader — same normalised symptom and *intersecting*
+    device sets, not equal ones.
+
+    The device ids are sorted and deduplicated so that reordering `devices:`
+    moves no handle; the revision suffix is excluded for the same reason 1.9's
+    test excludes it, the scope being the set of devices the entry applies to.
+    """
+    digest = hashlib.sha256()
+    digest.update(normalised_symptom(entry.symptom).encode("utf-8"))
+    for device_id in sorted({device.id for device in entry.devices}):
+        digest.update(b"\n")
+        digest.update(device_id.encode("utf-8"))
+    return digest.hexdigest()

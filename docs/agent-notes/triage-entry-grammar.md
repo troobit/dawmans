@@ -1,10 +1,12 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phases 1–4 are implemented — the model, the grammar, the canonical rendering,
-pointer resolution, the ledger, device scope validation, the term check, and now
-identity, emission and `TriageLoader.load`. Discovery, the sidecar and the run
-integration (Phase 5 onwards) are outstanding.
+Phases 1–5 are implemented — the model, the grammar, the canonical rendering,
+pointer resolution, the ledger, device scope validation, the term check, identity
+and emission, and now discovery, the sidecar and the run integration. `dawmans
+ingest` runs the real loader end to end. Outstanding: the validation message
+rendering, `dawmans validate` over the store, `dawmans coverage`, the five
+starter entries and the acceptance targets (Phase 6 onwards).
 
 **`data/manual-corpus` is merged into this branch** (`bd4625e`), which is what
 unblocked Phase 4. Two earlier runs recorded the block and costed the merge
@@ -35,17 +37,20 @@ imports before trusting `rune streams --available`.
 
 | Module | Holds |
 |---|---|
-| `model.py` | the five frozen dataclasses of design 'Components and Interfaces', plus `RejectionReason`, `FlagName`, `EntryRejection` and `Flag` |
+| `model.py` | the five frozen dataclasses of design 'Components and Interfaces', plus `RejectionReason`, `FlagName`, `EntryRejection`, `Flag`, `normalised_symptom` and `entry_key` |
 | `parse.py` | `parse_entry(source_file, data) -> ParseResult`, `render_blocks(entry) -> Rendering`, and `render(entry) -> str` |
-| `loader.py` | `TriageLoader`, `CorpusView`, `source_record`, `entry_location`, `normalised_symptom`, `emit`, and the `StoreOutcome`/`EntryOutcome`/`CauseOutcome` types |
+| `loader.py` | `TriageLoader`, `CorpusView`, `source_record`, `entry_location`, `emit`, the `StoreOutcome`/`EntryOutcome`/`CauseOutcome` types, and discovery — `entry_files`, `skipped_files`, `store_fingerprint`, `scan_store` |
 | `pointers.py` | `parse_pointer`, `normalise_title`, `SectionIndex`, `resolve`, `title_disagrees`, and the ledger — `pointer_key`, `Ledger`, `check_pointer` |
-| `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult` — design 'Device scope' |
+| `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult`, and the sidecar — `sidecar(outcome, passage_ids)` and `report(outcome)` |
 | `terms.py` | `terms`, `device_vocabulary`, `contains`, `Resolution`, `check_terms`, `TermMiss`, `term_flag` — design 'The term check (2.6)' |
 
 The design's 'Module placement' names only behaviour modules. `model.py` is an
 addition, and it earns its place: the rejection and flag vocabularies are needed
 by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
 `parse.py` would make `pointers.py` import the module that imports it.
+`normalised_symptom` and `entry_key` moved there for the same reason —
+`loader.py` needs the first for 1.9 and `scope.py` the second for the sidecar,
+and `loader` imports `scope`. `loader.py` still re-exports `normalised_symptom`.
 
 ## Things that are not obvious
 
@@ -143,11 +148,78 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   read them, and `validate` emits no passages at all. `evaluate()` is the whole
   verdict; `load()` is `evaluate()` plus `emit()`.
 
-- **The term check is not wired in yet.** `check_terms` needs passage *text*, and
-  `CorpusView` carries only the `SectionIndex` and the indexed identity set —
-  the two things Phase 4 reads. The reader that builds a view from
-  `views/<hex>/passages.jsonl` is Phase 5's (task 17), and the term flags join
-  the run there.
+## Discovery, the sidecar and the run (Phase 5)
+
+- **The view the ingest run reads comes from the committed *shards*, not from
+  `views/<hex>/`** — decision_log Decision 13, and the one place this
+  implementation departs from the design's own words. At authored-load time this
+  run's view does not exist: the merge happens after every loader. Reading the
+  previous view would reject a new entry pointing into a manual the same run
+  ingested. A shard's `passages.jsonl` holds the passages the merge concatenates,
+  so nothing is re-extracted and 5.7 is untouched. `CorpusView.of(passages,
+  sources)` takes the **published JSON shapes**, so `dawmans validate` will read
+  the same rows out of `views/<hex>/` with no second reader.
+
+- **`CorpusView.indexed` is derived, not passed.** `of()` builds it from the
+  source records: each `vendor-manual` `source_id` plus the device id its
+  `hardware_applicability` declares (Decision 8). An `authored-triage` record is
+  excluded — an entry may not cite the notes (2.7).
+
+- **A view carrying no `texts` term-checks nothing.** `check_terms` over an empty
+  passage would report every term missing, so a pointer whose passages the view
+  has no text for contributes no `Resolution` at all. Silence is not evidence.
+
+- **Discovery is three module-level functions, not methods.** `scan_store`,
+  `entry_files` and `store_fingerprint` read the store's directory and nothing
+  else — no corpus, no rig, no ledger — which is what lets `cli.TriageStore.scan`
+  answer without assembling what only `load()` needs.
+
+- **A non-`.md` file is reported as `filename-invalid`.** That is `manual-corpus`
+  1.6's reason for a file whose name does not admit it as a source; the rejection
+  set is closed, so inventing a second spelling would put a reason outside 1.6 on
+  a path 1.7 reserves for failures. The line reads
+  `no-sound.txt  rejected: filename-invalid — …`, which is the report line the
+  design asks for.
+
+- **The dotfile rule is applied below the store**, not over the absolute path:
+  `triage/` may itself sit under `.orbit/` in a worktree, and that says nothing
+  about the files inside it.
+
+- **`authored-invalid` is only "no entry survived".** An existing empty `triage/`
+  is an *empty discovery set* — the shard is removed by `remove_absent_sources` —
+  and an absent or unreadable one is an *unavailable store*, whose shard stands.
+  Three different outcomes that all look like "there is nothing there".
+
+- **The loader chunks its own regions to build the sidecar.** `LoadResult.sidecar`
+  is keyed by `passage_id` and the seam has no post-chunk hook, so `load()` calls
+  `chunk_source` over the regions it just emitted; `cli` calls it again. Same pure
+  function, same inputs, same ids. Chunks are grouped back to entries by
+  `entry_location`, which is unique per entry — `section_title` is not, because
+  1.9 permits a shared symptom in disjoint scopes.
+
+- **Every passage of a split entry carries the entry's whole cause list.** Which
+  passage holds which cause is an artefact of the 350-word cap, so truncating the
+  list per passage would make a citation's `Cause` records (CONTRACTS §4c) depend
+  on where the cap fell. `unbacked` on the `Passage` stays per unit.
+
+- **Per-cause flags live on `CauseOutcome`.** Filtering the entry's flags by cause
+  statement would misattribute them: `test_emission` has an entry with two causes
+  worded identically, and 1.5 forbids deduplicating them.
+
+- **The ledger is written by `load()` and by nothing else.** `load()` is called
+  under `dawmans ingest` alone, which is what keeps `dawmans validate` — which
+  goes through `evaluate()` — from promoting a broken pointer to "previously
+  fine" (5.4). `record` writes only on transition, so a second run over an
+  unchanged store leaves the file byte-identical; there is a test for it.
+
+- **An unparseable ledger reaches the run as a `Failure`.** `Ledger.read` raises
+  inside `TriageStore.load`, `_ingest_source` catches it, the previous shard
+  stands and the run exits non-zero (1.7). The ledger is deliberately *not* read
+  in `scan()`, where an exception would escape `ingest()` as a traceback.
+
+- **`title-number-disagreement` is raised in `_evaluate`.** `title_disagrees` has
+  existed since Phase 2 with no caller; the flag joins the run beside the drift
+  and term flags.
 
 ## Pointer resolution and the ledger (`pointers.py`)
 
@@ -301,25 +373,19 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
 arrangement `manual-corpus` uses for its extraction snapshots.
 `tests/fixtures/README.md` says what each one asserts.
 
-Refreshing them needs an index, which today means the `manual-corpus` worktree,
-because that spec's `cli.py` — its task 44, the run orchestration — is still a
-bare docstring. There is no `dawmans ingest` to call. The stages are all finished
-and compose directly:
+Refreshing them needs an index, and since `manual-corpus` merged there is a
+command for it — `uv run dawmans --root . ingest`, with the vendor PDFs in
+`manuals/` and `make fetch-model` run once. A real build over the four manuals
+took about a minute and produced 1431 passages under `index/views/<hex>/`. Both
+`index/` and `models/` are gitignored, so nothing of it lands in a commit. The
+earlier note here described hand-composing the stages in the `manual-corpus`
+worktree because `cli.py` was a bare docstring; that is no longer true, and a
+throwaway driver would now be a second orchestration beside the real one.
 
-```
-PdfLoader(root=manuals/).scan()      -> discovery, per source
-loader.load(discovered)              -> LoadResult(record, regions)
-chunk_source(record, regions)        -> chunks
-build_shard(index/, record=..., chunks=..., store=..., fingerprint=..., embedder=...)
-commit_view(index/, shards=read_shards(index/), embedding=embedder.descriptor)
-```
-
-Roughly forty lines, run once with `uv run python` from that worktree; a real
-build over the four manuals took about a minute and produced 1431 passages under
-`index/views/<hex>/`. Both `index/` and `models/` are gitignored, so nothing of
-this lands in a commit. Write the driver as a throwaway and delete it — it is
-task 44's job, and leaving a second orchestration behind is how two of them drift
-apart.
+Note that `dawmans ingest` now loads the **authored store too**, so a run in a
+worktree with entries in `triage/` writes `triage/.pointer-ledger.jsonl`. That is
+intended — it is the machine's own committed artefact — but it is a working-tree
+change to notice before committing.
 
 Then, from this worktree:
 
@@ -337,6 +403,18 @@ re-cut from a later one the corpus agent built independently; every byte matched
 identifiers — `manual-corpus`'s incremental-equivalence property, observed rather
 than assumed. Re-running the extractor against a fresh view is therefore a cheap
 way to confirm the corpus has not moved under the fixtures.
+
+## Test layout
+
+- `tests/triage/stores.py` builds an entry store on disk and the `TriageLoader`
+  that reads it, over the committed section fixtures. Every triage test file uses
+  it; it was extracted from `test_emission.py` when the discovery and sidecar
+  tests needed the same store.
+- `tests/triage/test_ingest_wiring.py` is the only test that runs the **real**
+  loader through `cli.ingest`, with a stub vendor store that rebuilds `manuals/`
+  from the same section fixtures. `tests/test_run.py` deliberately keeps a *stub*
+  authored store — a run that only ever saw the real one would prove nothing
+  about 12.2 — so the two files are complements, not duplicates.
 
 ## Tooling
 

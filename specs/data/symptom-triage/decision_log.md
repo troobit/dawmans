@@ -798,3 +798,88 @@ symptom quietly doubling in hashed text.
 entry. No change to `dawmans/corpus/chunk.py`.
 
 ---
+
+## Decision 13: The run's `CorpusView` is read from the committed shards, not the committed view
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Two statements in this design cannot both hold as written. §Architecture makes "the authored load
+runs **after every vendor shard has committed**" load-bearing, because
+[2.1](requirements.md#2.1) requires every fix pointer to be re-checked on every run and the
+consequence of losing that ordering is named as "pointers resolve against a stale corpus". §Components
+and Interfaces then specifies `CorpusView` as "read-only over `views/<hex>/passages.jsonl` and
+`sources.json`, located through `manifest.view_dir`. It never opens a shard, a vector file or a PDF".
+
+`manual-corpus` builds a shard per source and merges every shard into a view **once, at the end of
+the run**. At the moment the authored load runs, this run's view therefore does not exist: the only
+view `manifest.view_dir` names is the previous run's. A manual ingested by this run is in a shard and
+in no view at all, so reading the view would reject a new entry pointing into a newly ingested manual
+under [2.2](requirements.md#2.2), and would miss a manual this run changed underneath a working
+entry — exactly the stale corpus the ordering row exists to prevent.
+
+### Decision
+
+Under `dawmans ingest`, build the `CorpusView` from the `vendor-manual` shards committed so far in
+this run — `shards/<slug>.passages.jsonl` and the `SourceRecord` on `shards/<slug>.meta.json` — and
+not from `views/<hex>/`. `CorpusView.of` takes the passage rows and source records in the JSON shape
+the view publishes, so the same reader serves both sources of those rows; `dawmans validate`, which
+runs outside a run and therefore has a committed view, will read them from `views/<hex>/`.
+
+### Rationale
+
+A shard's `passages.jsonl` holds the passages the merge concatenates into the view: the two are the
+same data, and the only difference is timing. Reading them early is what makes the ordering the
+design already fixed mean anything.
+
+The clause the change deviates from is a **means**, and its end is preserved.
+[5.7](requirements.md#5.7) requires re-ingesting the authored source without re-extracting,
+re-chunking or re-indexing any vendor manual, and reading a committed shard's JSONL does none of
+those: no PDF is opened, no vector file is read, no extraction, chunking or embedding runs. The
+"never opens a shard" phrasing was a way of saying that; it is not itself a requirement.
+
+`manual-corpus`'s own run test already assumes this: its stub authored store resolves against
+`read_shards(index_root)`, which is the seam's author describing the arrangement the seam produces.
+
+### Alternatives Considered
+
+- **Read the committed view at `manifest.view_dir`**, exactly as the design's table says - Rejected
+  because at authored-load time that is the *previous* run's view. A first run over an empty index
+  would reject every entry under 2.2 for pointing at manuals it had ingested moments earlier, and
+  drift would be detected one run late — the same defect §Discovery rejects the
+  manifest-into-fingerprint alternative for.
+- **Commit the view before the authored load and a second view after it** - Rejected because the
+  authored source's passages belong in the same view as the manuals' (12.2), so the first view would
+  be a corpus the run never intends to serve, and `corpus_revision`, `collect_views` and the
+  superseded-view collection would all have to reason about a half-built view.
+- **Move the authored load before the vendor loads and accept a one-run lag** - Rejected because it
+  gives up 2.1 outright: the design already costed this and named the consequence.
+
+### Consequences
+
+**Positive:**
+- 2.1 holds on the first run and on every run after it: a pointer resolves against the passages this
+  run produced.
+- One reader for both paths — `CorpusView.of` speaks the published record shapes, so the ingest path
+  and the `validate` path cannot diverge in how they interpret a view.
+- Nothing about 5.7 changes: no manual is re-extracted, re-chunked or re-indexed, and the run test
+  asserts the vendor loader is not called on an unchanged corpus.
+
+**Negative:**
+- The design's `CorpusView` row is now inaccurate as written and is marked superseded there; a reader
+  of that table alone would expect a view directory.
+- The ingest path reads a file layout — `shards/` — that `manual-corpus` owns and could change. The
+  read goes through that spec's own `read_shards`, `passage_to_dict` and `record_to_dict`, so the
+  coupling is to its API rather than to its filenames.
+- Two shards holding the same `source_id` cannot occur, but a shard left by a *rejected* source could
+  in principle be read; `_drop_shard` deletes it, so the run never sees one.
+
+### Impact
+
+`dawmans/triage/loader.py` (`CorpusView.of`, `CorpusView.empty`), `dawmans/cli.py` (`TriageStore`),
+`tests/triage/test_ingest_wiring.py`. The `CorpusView` row of design §Components and Interfaces is
+superseded by this entry.
+
+---
