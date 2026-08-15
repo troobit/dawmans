@@ -79,7 +79,7 @@ references:
 
 ## Phase 3: Term check and device scope
 
-- [ ] 9. Write tests for term extraction and containment <!-- id:f3stq09 -->
+- [x] 9. Write tests for term extraction and containment <!-- id:f3stq09 -->
   - The checked span is the cause statement plus its check: value only - why:, loose prose and the closing statement are excluded, the deliberate narrowing that keeps 2.5's causal assertions out of a factual check.
   - Extraction: capitalised runs (`Track Activator`, `DIRECT MONITOR`), with a single-token sentence-start run dropped unless capitalised elsewhere in the entry; numeric literals with optional unit (`0 dB`, `44.1 kHz`). Terms equal to a declared device's id, product token or rig.yaml display_name are discarded, as are tokens under three characters.
   - Containment is case-sensitive at word boundaries for the capitalised class - casefolding would make `Off`, `Monitor` and `MIDI` match trivially - and casefolded at word boundaries for numerics, so `0` never satisfies `10`.
@@ -89,7 +89,7 @@ references:
   - Stream: 2
   - Requirements: [2.5](requirements.md#2.5), [2.6](requirements.md#2.6)
 
-- [ ] 10. Implement terms.py <!-- id:f3stq0a -->
+- [x] 10. Implement terms.py <!-- id:f3stq0a -->
   - Blocked-by: f3stq09 (Write tests for term extraction and containment)
   - Stream: 2
   - Requirements: [2.5](requirements.md#2.5), [2.6](requirements.md#2.6)

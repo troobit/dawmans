@@ -576,3 +576,85 @@ asks for — it never asked for a ledger write.
 rule of Decision 4, or to the reject-versus-flag decision itself.
 
 ---
+
+## Decision 10: A sentence-initial capital is discounted per token, not per run
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Design §The term check extracts **capitalised runs** — consecutive Capitalised or ALL-CAPS tokens —
+and gives `Track Activator` and `DIRECT MONITOR` as its two worked examples. It then adds one
+correction: "a single-token run at a sentence start is dropped unless the token also appears
+capitalised elsewhere in the entry", which exists because an initial capital at a sentence start is
+explained by the sentence, not by the author naming a control.
+
+Read literally, the correction applies only to runs of length one. An author writing the design's
+own example — "The Track Activator is off" — opens the cause statement with `The`, which is
+capitalised and adjacent to `Track`, so the literal rule yields the three-token run
+`The Track Activator`. That term is in no manual, so the design's own example flags. Worse, it
+flags in the one direction the design says it never should: §Testing Strategy states term-check
+soundness, that a cause whose terms are lifted verbatim from a pointer's resolution set never
+raises `term-not-in-passage`, and `The ` prefixed to a lifted phrase breaks it for the most
+ordinary sentence an author can write.
+
+### Decision
+
+The discount is applied to the **token**, before runs are formed. A sentence-initial token that is
+Capitalised but not ALL-CAPS, and that appears capitalised nowhere else in the entry, is not run
+material at all: the run starts after it. The design's stated rule is the special case where that
+token was the whole run.
+
+### Rationale
+
+Both readings agree on every case the design names, and only this one produces the design's own
+example. "The Track Activator is off" yields `Track Activator`; "Live is not receiving audio"
+yields nothing; "DIRECT MONITOR is engaged" yields `DIRECT MONITOR`, because ALL-CAPS is evidence a
+sentence start does not explain.
+
+It is also the reading that makes the correction's own justification general. The reason a
+sentence-initial capital is discounted is that the sentence explains it — a fact about that token,
+which does not become false because another capitalised word follows it. Attaching the rule to run
+length instead makes the check's behaviour depend on whether the author's next word happens to be a
+control name, which is not a distinction anything in the design turns on.
+
+### Alternatives Considered
+
+- **Implement the rule literally, on single-token runs only**: the design's words as written -
+  Rejected because it flags the design's own worked example and breaks the stated soundness
+  property for any cause statement opening with `The`, `A` or `This` followed by a control name.
+- **Strip a fixed list of leading articles and determiners**: drop `The`, `A`, `An`, `This`, `That`
+  from the front of a run - Rejected because it is a second, unstated vocabulary to maintain, and
+  it is wrong on `The Mixer View Control`, a term Live prints with its article. The corroboration
+  test already handles that case: an entry that names `The Live Mixer` mid-sentence anywhere keeps
+  the leading `The`.
+- **Drop the sentence-start rule entirely and rely on containment**: simpler, and a spurious term is
+  only a flag - Rejected because `The`-prefixed terms would miss constantly, and a check that cries
+  wolf on ordinary prose gets ignored. §The term check exits `dawmans validate` non-zero on a miss,
+  so the false-positive rate is the whole of whether the check is usable.
+
+### Consequences
+
+**Positive:**
+- The design's worked example extracts as the design writes it, and the soundness property holds
+  for the sentence shapes authors actually write.
+- One rule with one justification covers both the single-token and the multi-token case.
+- No article list, no part-of-speech knowledge, and nothing English-specific beyond the initial
+  capital the design already relies on.
+
+**Negative:**
+- A term whose first word genuinely opens the sentence and appears nowhere else in the entry loses
+  that word: "Track Activator is off" extracts `Activator`. The shortened term is still contained
+  wherever the full one is, so the check's answer is unchanged; only the flag message would name
+  less than the author wrote.
+- Corroboration makes extraction depend on the whole entry, so editing an unrelated cause can
+  change which terms another cause yields. That is already true of the design's stated rule, which
+  says "elsewhere in the entry"; this decision widens how often it matters.
+
+### Impact
+
+`triage/terms.py` — `_is_run_material` and `_corroborated`. No change to containment, to the
+numeric class, to the flag vocabulary, or to Decision 5's rule that a miss never sets `unbacked`.
+
+---

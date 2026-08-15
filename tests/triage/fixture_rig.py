@@ -16,18 +16,25 @@ from dataclasses import dataclass
 
 @dataclass(frozen=True)
 class FixtureRigDevice:
-    """One `rig.yaml` device — the two fields `scope.RigDevice` reads."""
+    """One `rig.yaml` device.
+
+    `id` and `revision` are the two fields `scope.RigDevice` reads.
+    `display_name` is read by nothing in `scope`: it belongs to the rig reports
+    and to the term check, which discards a term naming the device the owner
+    holds.
+    """
 
     id: str
     revision: str | None = None
+    display_name: str | None = None
 
 
 RIG = (
-    FixtureRigDevice("ableton/live-12", "12 Standard"),
-    FixtureRigDevice("akai/apc-key-25", "mk2"),
-    FixtureRigDevice("alesis/nitro-max"),
-    FixtureRigDevice("focusrite/scarlett-solo", "4th-gen"),
-    FixtureRigDevice("elektron/digitakt", "mk1"),
+    FixtureRigDevice("ableton/live-12", "12 Standard", "Ableton Live 12"),
+    FixtureRigDevice("akai/apc-key-25", "mk2", "APC Key 25"),
+    FixtureRigDevice("alesis/nitro-max", None, "Nitro Max"),
+    FixtureRigDevice("focusrite/scarlett-solo", "4th-gen", "Scarlett Solo"),
+    FixtureRigDevice("elektron/digitakt", "mk1", "Digitakt"),
 )
 """The four real devices plus one owned-but-undocumented device (4.4's row)."""
 

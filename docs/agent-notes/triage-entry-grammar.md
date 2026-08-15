@@ -1,9 +1,9 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phases 1 and 2 are implemented — the model, the grammar, the canonical rendering,
-pointer resolution and the ledger — plus device scope validation (tasks 11–12,
-stream 2). The term check, emission and the loader are still outstanding.
+Phases 1, 2 and 3 are implemented — the model, the grammar, the canonical
+rendering, pointer resolution, the ledger, device scope validation and the term
+check. Emission, identity and the loader are still outstanding.
 
 **Phase 2 is no longer blocked, and the block it was under is worth knowing how
 to clear.** It needed a locally built index, which needed both human
@@ -45,6 +45,7 @@ are human-only.
 | `parse.py` | `parse_entry(source_file, data) -> ParseResult`, and `render(entry) -> str` |
 | `pointers.py` | `parse_pointer`, `normalise_title`, `SectionIndex`, `resolve`, `title_disagrees`, and the ledger — `pointer_key`, `Ledger`, `check_pointer` |
 | `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult` — design 'Device scope' |
+| `terms.py` | `terms`, `device_vocabulary`, `contains`, `Resolution`, `check_terms`, `TermMiss`, `term_flag` — design 'The term check (2.6)' |
 
 The design's 'Module placement' names only behaviour modules. `model.py` is an
 addition, and it earns its place: the rejection and flag vocabularies are needed
@@ -184,6 +185,63 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   documented today, so `tests/triage/fixture_rig.py` carries an invented
   `elektron/digitakt` and a `roland/tr-8s`. Tests against the real inventory
   would also break every time a manual is added.
+
+## The term check (`terms.py`)
+
+- **`terms` takes the `Entry`, not just the `Cause`.** The design sketches
+  `terms(cause) -> list[str]`, but two of the rules it states are properties of
+  the whole entry: a sentence-start token is kept when it is capitalised
+  *elsewhere in the entry*, and a term is discarded when it names one of the
+  entry's *declared* devices. The signature is the sketch's, widened by exactly
+  what those two rules read.
+
+- **The sentence-start discount is per token, not per run** (Decision 10). The
+  design states it for a single-token run; applied that way, an author writing
+  the design's own example — "The Track Activator is off" — gets the term
+  `The Track Activator`, which is in no manual, and the stated soundness property
+  breaks for any statement opening with an article. Discounting the *token*
+  before runs are formed yields `Track Activator` and leaves every case the
+  design names unchanged. ALL-CAPS is exempt: nothing about a sentence start
+  explains `DIRECT`.
+
+- **Corroboration is read over `render(entry)`.** That is the entry as the user
+  sees it — symptom, phrasings, preamble, every cause, the closing statement —
+  and it deliberately excludes the frontmatter and the pointers. A source id is
+  not evidence about English prose, and reading the pointers would let
+  retargeting a `fix:` line change which terms a cause yields.
+
+- **The two extractors are disjoint on their first character**, which is how
+  `contains` knows which containment rule to apply without the term carrying its
+  class. A capitalised run always opens with a letter; a numeric literal opens
+  with a digit or a sign. Keeping `terms` returning `list[str]` was the design's
+  choice, and this is what pays for it.
+
+- **`\b` is wrong at both ends of a term.** A term may open with `-12` or close
+  with `%`, and `\b` would then demand a word character beside it. `_pattern`
+  uses `(?<![0-9A-Za-z])` / `(?![0-9A-Za-z])`, which asks the question actually
+  meant — not part of a longer word or number — and is what keeps `0` from
+  satisfying `10`. The internal gap is `\s+` (`\s*` for numerics) so a control
+  name broken across two lines of the manual still counts.
+
+- **Curly and straight apostrophes are folded together** before matching. Manuals
+  typeset `Saturator’s` and authors type `Saturator's`; that is two keyboards
+  spelling one word, not a relaxation of the case rule.
+
+- **A cause with no resolutions is not checked at all.** 2.3's carve-out and a
+  drifted pointer both reach `check_terms` with an empty `resolutions`, and both
+  already carry `unbacked` — which says more than a list of terms found in
+  nothing would.
+
+- **Case sensitivity has a real cost and it is deliberate.** The Scarlett's front
+  panel prints `DIRECT MONITOR` and its guide prints `Direct Monitor`, so an
+  author copying the hardware gets a flag. Casefolding would make `Off`,
+  `Monitor`, `MIDI` and `Live` match almost any prose and the check close to
+  vacuous; there is a test asserting the cost rather than hiding it.
+
+- **The soundness property uses its own extractor.** `test_terms.py` lifts
+  capitalised phrases out of the fixture passages with a local regex, not with
+  `terms.py`. Stating the property against the module's own extractor would
+  assert only that it agrees with itself.
 
 ## Building the index, and the fixtures cut from it
 

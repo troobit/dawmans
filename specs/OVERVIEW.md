@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 35 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4 (166 tasks, 10 done)
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 36 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4 (166 tasks, 12 done)
 
 ---
 
@@ -26,7 +26,7 @@ answers from the manual corpus only; session awareness sits behind a defined but
 |---|---|
 | [`PROCESS.md`](PROCESS.md) | The process source of truth: how specs are written, gated, and turned into code. Kept as shipped by the template. |
 | [`CONTRACTS.md`](CONTRACTS.md) | **Governing** for anything crossing a spec boundary — the four records, the turn's SSE event set, the `body` block types, the open-at-source mechanism, the closed outcome taxonomy and its reason vocabulary, the composed latency budget. Where a spec and CONTRACTS disagree, **CONTRACTS wins and the spec is the defect**. A spec may not invent a field on a shared record nor silently drop one. |
-| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — eleven ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
+| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — twelve ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
 | `OVERVIEW.md` (this file) | Generated index. Regenerate; do not hand-merge. |
 
 ## Domains
@@ -51,14 +51,14 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 All four are at **requirements and design complete**, each design reviewed and repaired, and all
 four now carry a `tasks.md` ledger — 166 tasks in total. Implementation has started on exactly one:
-`data/symptom-triage`, whose Phase 1 (the entry model and the entry grammar) and Phase 2 (pointer
-resolution and the ledger) are done, along with device scope validation from its second work
-stream. The other three ledgers are complete and unstarted.
+`data/symptom-triage`, whose Phase 1 (the entry model and the entry grammar), Phase 2 (pointer
+resolution and the ledger) and Phase 3 (the term check and device scope) are done. The other three
+ledgers are complete and unstarted.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
-| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, 10 done) · **implementing** | 60 |
+| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, 12 done) · **implementing** | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
 | [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, none started) | 154 |
 
@@ -83,7 +83,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/data/symptom-triage/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (9 ADRs), `tasks.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs), `tasks.md`.
 - **Missing:** `prerequisites.md` — its Phase 2 fixture task depends on a locally built index, which
   is `data/manual-corpus`'s prerequisite rather than one of its own.
 - 8 requirement sections, 60 anchored criteria. Header declares status *draft*.
@@ -106,9 +106,15 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
   passages — and the section fixtures cut from it and committed at `tests/fixtures/sections/`. CI
   still never opens a PDF or loads the model. `pointers.py` now carries `SectionIndex`, `resolve`
   and the committed NDJSON ledger that separates 2.2's rejection from 8.4's flag.
-- Tasks 9–10 (the term check) are unblocked by that fixture work. Phase 4 onwards is not: it needs
-  `corpus.passage_id` and the `SourceRecord` constructor, which live on the unmerged
-  `orbit-impl-1/manual-corpus` branch.
+- **Phase 3 is done** (tasks 9–10 completing it), and the fixture work is what unblocked it:
+  `terms.py` runs 2.6's check over the cause statement and its `check:` value against the passages
+  the cause's pointers resolve to, case-sensitively for control names and casefolded for numerics.
+  Decision 10 was added during that work: the design's sentence-start rule is applied per token
+  rather than per run, because applied literally it flags the design's own worked example
+  ("The Track Activator is off" yielding `The Track Activator`) and breaks the soundness property
+  for any statement opening with an article.
+- Phase 4 onwards is still blocked: it needs `corpus.passage_id` and the `SourceRecord` constructor,
+  which live on the unmerged `orbit-impl-1/manual-corpus` branch.
 
 ### `specs/api/answer-engine/`
 
@@ -129,7 +135,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
   full, dim room) outranks feature richness in any trade-off.
 
-Every spec carries a `decision_log.md` — 35 per-spec ADRs against the 12 cross-cutting ones in
+Every spec carries a `decision_log.md` — 36 per-spec ADRs against the 12 cross-cutting ones in
 [`DECISIONS.md`](DECISIONS.md) — and a `tasks.md`. Two carry a `prerequisites.md`, naming what no
 task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
 
@@ -143,14 +149,14 @@ task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Twelve cross-cutting ADRs in `DECISIONS.md` and 35 per-spec ADRs, all *accepted*.
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 36 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers — 166 tasks — with `prerequisites.md` for `data/manual-corpus` and
   `api/answer-engine` naming what no task can do for itself.
 - **The first code in the repository.** `data/symptom-triage` Phase 1: `dawmans.triage.model`,
   `parse` and the fix-pointer grammar of `pointers`, under a `src/` layout managed with uv, with
-  pytest + hypothesis and ruff wired into `make test` and `make lint`. Since joined by
-  `dawmans.triage.scope`, the ledger's second work stream, and by Phase 2 — section resolution and
-  the pointer ledger in the same `pointers` module.
+  pytest + hypothesis and ruff wired into `make test` and `make lint`. Since joined by Phase 2 —
+  section resolution and the pointer ledger in the same `pointers` module — and by Phase 3, the
+  ledger's second work stream: `dawmans.triage.scope` and `dawmans.triage.terms`.
 - **The first artefacts cut from a real index.** `tests/fixtures/sections/` holds slices of a view
   built locally over the four manuals, so pointer resolution is tested against the corpus as it
   actually extracts rather than against invented sections.

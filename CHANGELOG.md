@@ -12,6 +12,27 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 3 — the term check.** `triage/terms.py` implements design §The term
+  check (2.6): extraction over the cause statement plus its `check:` value and nothing else — the
+  deliberate narrowing that keeps 2.5's causal assertions out of a factual check — of capitalised
+  runs and numeric literals, and containment against the passages the cause's pointers resolve to.
+  Containment is case-sensitive at word boundaries for the capitalised class, because casefolding
+  would make `Off`, `Monitor` and `MIDI` match almost any prose, and casefolded for numerics,
+  because unit case varies between manuals; `0` never satisfies `10`. Any one pointer's resolution
+  set satisfies a term, and a split section is seen as its concatenation. A miss is a
+  `term-not-in-passage` flag naming the term and the section and never sets `unbacked` (Decision 5)
+  — 2.4 and 8.5 stay the only two producers of that mark. Phase 3 is now complete: scope validation
+  landed with tasks 11–12.
+
+- **`data/symptom-triage` Decision 10 — a sentence-initial capital is discounted per token, not per
+  run.** The design states the rule for a single-token run at a sentence start. Applied literally,
+  an author writing the design's own worked example — "The Track Activator is off" — yields the term
+  `The Track Activator`, which is in no manual, so the example flags and §Testing Strategy's
+  term-check soundness property breaks for any statement opening with an article. Discounting the
+  token before runs are formed yields `Track Activator`, leaves every case the design names
+  unchanged (`Live` alone still drops; `DIRECT MONITOR` still stands, ALL-CAPS being evidence a
+  sentence start does not explain), and keeps one justification covering both cases.
+
 - **`data/symptom-triage` Phase 2 — pointer resolution and the ledger.** `SectionIndex` builds the
   two maps of design §Fix pointers in one pass over a view's `passages.jsonl`, and `resolve` returns
   a section's passage ids in section order or an `Unresolved` naming why, with nearest-section
