@@ -179,6 +179,38 @@ wiring and timing).
   literals, menu paths (`>`/`→`, ground's own regex; not a triage class); (b) `OrderedStep` only —
   bullets deliberately excluded. The numeric regex treats any trailing word as a unit ("2 causes"
   matches); fine for presence-testing, would need a unit lexicon for containment.
+- **`fact_shaped` returns False when the text has no letter at all** (Decision 13). A model that
+  numbers sections `## 2.` yields a heading whose whole content is `2.`, which matched the numeric
+  class and flagged every real answer as ungrounded. Numerals beside words are untouched.
+- **`has_figures` is a `bool`, not a tuple of pages** (Decision 12). It was modelled here as
+  `tuple[int, ...]` and nothing ever fed it that shape: the corpus publishes a bool and the surface
+  types it `boolean`. `tuple(True)` crashed every turn citing a figured vendor passage. If you are
+  tempted to widen a §2 field, check `corpus/chunk.py` and `web/src/lib/engine/records.ts` first —
+  those two are the real producer and the real consumer.
+
+## Running it for real (learned the hard way, 2026-08-15)
+
+The first end-to-end run of this package happened after all four specs were merged, and it found
+three defects that 409 passing unit tests did not. The pattern is worth keeping: **every fixture on
+this side had been written to match this side's own assumptions.**
+
+- Fastest keyless setup is a loopback OpenAI-compatible server (LM Studio, llama.cpp, Ollama) plus
+  `dawmans serve --local-url http://127.0.0.1:1234`; see the answer-engine `prerequisites.md` for
+  the exact commands, including the two traps (name the model; a reasoning model can blow the 10 s
+  first-token watchdog before emitting anything).
+- **The prompt is read literally by smaller models.** Two placeholder leaks, both found only by
+  looking at real output: "Respond in the format dawmans/answer-framing/1" put that string on line
+  1 (0 of 3 turns parsed — and adding "never print the format name" made it worse, turning it into
+  a harmony `<|constrain|>` token), and the step marker written `N. ` was copied verbatim, so
+  `_STEP`'s `^(\d+)\.` never matched. Stating the structure first and spelling placeholders as
+  concrete examples scored 3 of 3. Anything in that prompt which *can* be copied verbatim
+  eventually is.
+- **A provider's `httpx.AsyncClient` binds to the first event loop that uses it.** `asyncio.run`
+  per question closes that loop under the client and the second question dies with "Event loop is
+  closed". `tools/bench.py` had this latent for any local run; turns for one provider now share one
+  loop. Hosted runs never showed it — the Anthropic SDK builds its client per call.
+- `tools/bench.py` also used to print "all budgets met" when every question had errored. An empty
+  sample now fails loudly. Worth remembering when reading any green from that tool.
 
 ## Outcome procedure (`outcome.py`)
 

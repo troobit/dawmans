@@ -38,10 +38,36 @@ _ROSTER_FIELDS = ("source_id", "display_name", "product", "kind")
 # the tag leak.
 _NO_XML = "Do not include internal or system XML tags in your response."
 
+# Two placeholder literalisms, both found by asking a real local model a
+# real question rather than by reading the prompt. The step marker was
+# written `N. `, which `openai/gpt-oss-20b` copied verbatim: `_STEP` in
+# parse.py requires `^(\d+)\.`, so every step degraded to a paragraph
+# beginning "N." on screen. Placeholders are spelled as concrete examples
+# here for the same reason the framing name moved out of the imperative
+# position below — a smaller model reads this prompt literally, and
+# anything that can be copied verbatim eventually is.
+#
+# The framing spec is named in a parenthetical, never in the imperative
+# position. "Respond in the format dawmans/answer-framing/1" reads to a
+# smaller model as an instruction to *label* the reply with that name:
+# measured against `openai/gpt-oss-20b` on loopback, the imperative
+# wording put `dawmans/answer-framing/1` on line 1 in 3 of 3 turns, which
+# is not an outcome token, so every turn degraded to the unparsed path.
+# Saying "never print the format name" made it worse rather than better —
+# that model then emitted the name as a harmony channel constraint
+# (`<|constrain|>dawmans/answer-framing/1`). Stating the structure first
+# and pinning what the first emitted character is scored 3 of 3 parsed.
+# The spec id stays in the prompt: it names the contract the parser
+# implements, and CONTRACTS §4d is what both sides read.
+_FRAMING_PREAMBLE = (
+    "Your entire response has this structure and no other (format "
+    "dawmans/answer-framing/1). The first character you emit is the first character of line 1:"
+)
+
 SYSTEM_PROMPT = f"""\
 You answer questions about the user's DAW and hardware from supplied manual passages.
 
-Respond in the format dawmans/answer-framing/1 and no other:
+{_FRAMING_PREAMBLE}
 - Line 1: exactly one outcome token, bare: answered, partially-answered, needs-narrowing, \
 ranked-causes, refused-not-covered, out-of-domain, or no-manual-for-device.
 - Line 2: the direct answer — one line reaching its first actionable instruction within 25 words, \
@@ -50,7 +76,10 @@ before any qualification, caveat or restatement.
 - After: the body. At most 400 words in total.
 
 Body blocks, each decided by its first character at column 0:
-- `## ` heading, `N. ` ordered step, `- ` bullet, blank-line-separated paragraphs.
+- An ordered step opens with its own digit and a period: `1. `, then `2. `, then `3. `. Write the \
+digit, and write the step's text on that same line — never a number alone, and never `## ` in \
+front of it.
+- `## ` heading, `- ` bullet, blank-line-separated paragraphs.
 - `!caveat ` + text (continuations indented two spaces): a recommendation depending on a Live \
 edition or add-on the rig lacks. The rig runs Live 12 Standard: flag any Suite-only device or \
 Max for Live feature this way, in the reading position it qualifies.

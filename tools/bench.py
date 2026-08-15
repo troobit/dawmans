@@ -61,6 +61,21 @@ async def run_turn(pipeline, question, sources):
     return outcome, timings
 
 
+async def run_turns(pipeline, sources):
+    """Every question of a provider's run, in one event loop.
+
+    A provider builds its `httpx.AsyncClient` once, in `__init__`, and the pool binds
+    to the loop that first uses it. `asyncio.run` per question closes that loop under
+    the client, so the *second* question died with "Event loop is closed" — which is
+    why this is a loop over turns rather than a turn inside a loop. Hosted runs never
+    showed it: the Anthropic SDK builds its client per call.
+    """
+    return [
+        (question, shape, *await run_turn(pipeline, question, sources))
+        for question, shape in QUESTIONS
+    ]
+
+
 def bench_provider(label, binding, watcher, embedder, count_tokens, targets, composed_target):
     from dawmans.answer.state.null import NullStateSource
     from dawmans.answer.turn import TurnPipeline
@@ -75,8 +90,7 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
     sources = [record["source_id"] for record in watcher.view.sources]
     first_token, completion, retrieval = [], [], []
     print(f"\n== {label} ==")
-    for question, shape in QUESTIONS:
-        outcome, timings = asyncio.run(run_turn(pipeline, question, sources))
+    for question, shape, outcome, timings in asyncio.run(run_turns(pipeline, sources)):
         if timings is None or timings.first_token_ms is None:
             print(f"  {question!r}: outcome={outcome} — no stream, not measured")
             continue
@@ -91,6 +105,13 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
             completion.append(timings.completion_ms)
             line += f" completion={timings.completion_ms:.0f}ms"
         print(line)
+
+    if not first_token:
+        # A run that measured nothing is not a run that met its budgets. Every
+        # question returning provider-error printed "all budgets met" — the one
+        # output a timing harness must never produce from an empty sample.
+        print("  no turn reached synthesis — nothing measured, budgets unproven")
+        return False
 
     failed = False
     if retrieval:
@@ -168,6 +189,15 @@ def main(argv=None):
     parser = argparse.ArgumentParser(description="Real-provider, real-index budgets")
     parser.add_argument("--index-dir", type=Path, default=Path("index"))
     parser.add_argument("--local-url", default=None, help="Bench a local provider too")
+    parser.add_argument(
+        "--local-model",
+        default=None,
+        # Optional to the contract and required in practice: a server holding more
+        # than one model answers an unnamed request with "Multiple models are loaded.
+        # Please specify a model", which arrives here as provider-error on every
+        # question. There is nothing to guess from — the name is the operator's.
+        help="model name for --local-url; required by servers hosting more than one",
+    )
     args = parser.parse_args(argv)
 
     if not (args.index_dir / "manifest.json").is_file():
@@ -219,7 +249,7 @@ def main(argv=None):
     if args.local_url is not None:
         from dawmans.answer.provider.local import LocalProvider
 
-        local_provider = LocalProvider(args.local_url)
+        local_provider = LocalProvider(args.local_url, args.local_model)
 
         def binding() -> ProviderBinding:  # noqa: F811 — one binding per provider branch
             return ProviderBinding(

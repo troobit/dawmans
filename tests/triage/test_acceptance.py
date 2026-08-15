@@ -4,12 +4,18 @@
 asked with the starter set and the vendor manuals in scope, must come back `answered`,
 `partially-answered` or `needs-narrowing` and never `refused-not-covered` or
 `out-of-domain`. Refusing those five is the failure this source exists to remove. It needs
-the real manuals, a built index **and** the answer engine, and `api/answer-engine` has no
-implementation yet — so it is a `make bench` target that skips, the same honest limitation
-`manual-corpus` accepts for its 8.1. What *can* run today is its corpus-side precondition:
-the five entries are in the committed view, retrievable, and carrying their causes. A
-refusal cannot be ruled out from here, but a refusal caused by the entry never reaching the
-index can be, and that is this spec's half of 7.7.
+the real manuals, a built index **and** the answer engine, so it is a `make bench` target
+that skips when any of the three is absent — the same honest limitation `manual-corpus`
+accepts for its 8.1. Its corpus-side precondition runs beside it: the five entries are in
+the committed view, retrievable, and carrying their causes, which is what rules out a
+refusal caused by an entry never reaching the index.
+
+It first passed on 2026-08-15, against the four real manuals and a 20B model served over
+loopback — five of five answered, none refused. It was written while `api/answer-engine`
+had no implementation and stood as a skip through that spec's whole build; running it for
+the first time is what found the two engine defects that turn fixed (`has_figures` typed
+as pages against a corpus that publishes a bool, which crashed every turn citing a figured
+passage, and the ungrounded rule firing on a bare list numeral).
 
 **5.6 is a budget**: 200 entries ingested and validated in under 5 seconds with every fix
 pointer re-checked (2.1). It is met **warm** and not met **cold**, exactly as designed —
@@ -26,8 +32,10 @@ to ignore it.
 
 from __future__ import annotations
 
+import asyncio
 import importlib.util
 import json
+import os
 import time
 from pathlib import Path
 
@@ -108,21 +116,122 @@ def test_each_starter_symptom_is_in_the_committed_view(source_file: str) -> None
         assert all(cause["fix"] for cause in entry["causes"]), "7.8: every fix is cited"
 
 
+#: 7.7 asks the *symptom*, phrased as an owner asks it rather than as the entry titles
+#: it. Matching the heading would test retrieval of a string this store already contains;
+#: what 7.7 claims is that the five questions a studio actually asks stop being refused.
+STARTER_QUESTIONS = {
+    "triage/no-sound-from-track.md": "why is there no sound from one of my tracks",
+    "triage/track-is-distorting.md": "one of my tracks sounds distorted and crackly, why",
+    "triage/latency-when-monitoring.md": "there is a delay when I play through my audio interface",
+    "triage/drum-pad-triggers-wrong-sound.md": "my drum pad triggers the wrong sound",
+    "triage/controller-does-nothing.md": "my controller does nothing when I press the keys",
+}
+
+
+def _binding():
+    """A provider binding, or a skip. Either kind answers 7.7: the requirement is about
+    what the corpus covers, and which model produced the turn says nothing about it.
+
+    The local kind is taken from `DAWMANS_LOCAL_URL` so the run needs no key at all —
+    an OpenAI-compatible server on loopback (LM Studio, llama.cpp, Ollama) is enough,
+    and that is the configuration this test was first made to pass under.
+    """
+    from dawmans.answer.provider import credentials
+    from dawmans.answer.provider.base import ProviderKind
+    from dawmans.answer.turn import ProviderBinding
+
+    local_url = os.environ.get("DAWMANS_LOCAL_URL")
+    if local_url:
+        from dawmans.answer.provider.local import LocalProvider
+
+        provider = LocalProvider(local_url, os.environ.get("DAWMANS_LOCAL_MODEL"))
+        return lambda: ProviderBinding(
+            provider=provider, kind=str(ProviderKind.LOCAL), name="local"
+        )
+
+    api_key = credentials.read_key(ProviderKind.KEYED_HOSTED)
+    if api_key is None:
+        pytest.skip(
+            "no provider: set DAWMANS_LOCAL_URL to a loopback OpenAI-compatible server, "
+            "or store a key — see specs/api/answer-engine/prerequisites.md"
+        )
+    from dawmans.answer.provider.anthropic import AnthropicProvider
+
+    provider = AnthropicProvider(api_key)
+    return lambda: ProviderBinding(
+        provider=provider,
+        kind=str(ProviderKind.KEYED_HOSTED),
+        requires_key=True,
+        credential_stored=True,
+        name="anthropic",
+    )
+
+
 @pytest.mark.bench
 def test_the_five_starter_symptoms_are_answered_rather_than_refused() -> None:
-    """7.7 itself. It asks the engine, so it needs the engine: `dawmans.answer` does not
-    exist yet, and neither does the provider configuration a synthesis turn requires.
+    """7.7 itself: each of the five symptoms, asked with the starter set and the vendor
+    manuals in scope, comes back answering rather than refused.
 
-    When it does, this test asks each of the five symptoms with the starter set and the
-    vendor manuals in scope, over `POST /turn` — the engine's own surface — and asserts
-    the outcome is in `ANSWERING` and in neither member of `REFUSING`. A
-    `provider-unconfigured` or other provider outcome is a skip rather than a failure:
-    7.7 is about coverage, and a missing API key says nothing about it.
+    The turn runs through `TurnPipeline` over the committed view — the same object the
+    served `POST /turn` drives, one HTTP hop short of it — so the assertion is about the
+    engine and the corpus rather than about Starlette, and no port has to be free.
+
+    A provider-side outcome is a skip and not a failure: `provider-unconfigured`,
+    `unreachable`, a rate limit or the first-token watchdog say something about the
+    machine this ran on, and nothing about whether the store covers the question. The
+    coverage claim is the one thing that fails here.
     """
-    committed_view()
+    view_dir = committed_view()
     if importlib.util.find_spec(ENGINE) is None:
         pytest.skip(f"{ENGINE} has no implementation yet — 7.7 is unrunnable, not failing")
-    pytest.skip(f"{ENGINE} exists: wire this to POST /turn and assert the outcome")
+
+    from dawmans.answer.state.null import NullStateSource
+    from dawmans.answer.turn import TurnPipeline
+    from dawmans.answer.view import ViewWatcher
+    from dawmans.cli import _load_model
+
+    binding = _binding()
+    watcher = ViewWatcher(INDEX)
+    embedder, count_tokens = _load_model()
+    list(embedder.embed(["warm-up"]))  # the cold load is not the first question's cost
+    pipeline = TurnPipeline(
+        watcher=watcher,
+        binding=binding,
+        state_source=NullStateSource(),
+        embedder=embedder,
+        count_tokens=count_tokens,
+    )
+    sources = [record["source_id"] for record in watcher.view.sources]
+    assert AUTHORED_SOURCE_ID in sources, f"the authored store is not in {view_dir}"
+
+    async def ask_all() -> dict[str, str]:
+        """All five in one event loop, deliberately. A provider holds an
+        `httpx.AsyncClient` built once, whose pool binds to the loop that first uses
+        it — `asyncio.run` per question closes that loop under the client and the
+        second question dies with "Event loop is closed"."""
+        outcomes = {}
+        for source_file, question in STARTER_QUESTIONS.items():
+            outcome = None
+            async for event in pipeline.turn(question, sources=sources):
+                if event.name == "outcome" and outcome is None:
+                    outcome = event.data.outcome
+            outcomes[source_file] = str(outcome)
+        return outcomes
+
+    refused, unmeasured = {}, {}
+    for source_file, outcome in asyncio.run(ask_all()).items():
+        if outcome in REFUSING:
+            refused[source_file] = outcome
+        elif outcome not in ANSWERING and outcome != "ranked-causes":
+            # Provider-side, not coverage: recorded, and never a pass either.
+            unmeasured[source_file] = outcome
+
+    if unmeasured and not refused:
+        pytest.skip(f"no coverage verdict — the provider produced {unmeasured}")
+    assert not refused, (
+        f"7.7: the starter set exists to stop these being refused, and they were: {refused}"
+    )
+    assert not unmeasured, f"answered where measured, but {unmeasured} never reached synthesis"
 
 
 # --- 5.6: 200 entries, ingested and validated ------------------------------

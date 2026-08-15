@@ -68,7 +68,18 @@ class Citation:
     entry_location: str | None = None  # authored-triage only
     unbacked: bool = False
     degraded: bool = False
-    has_figures: tuple[int, ...] = ()  # pages carrying figures; empty = none
+    # CONTRACTS §2 as `data/manual-corpus` actually publishes it: a bool on
+    # the passage, set when any unit in the chunk carries a figure
+    # (`corpus/chunk.py`: `any(unit.flags.has_figures …)`). This was modelled
+    # here as a tuple of figure pages, which nothing has ever produced — the
+    # only list-shaped fixture in the tree is this package's own. Against the
+    # real index it crashed the turn (`tuple(True)` → TypeError) mid-stream,
+    # and where it did not crash it was worse: `ui`'s records.ts types the
+    # field `boolean` and renders on truthiness, and an empty JS array is
+    # truthy, so every vendor citation would have claimed a figure. §3's
+    # "figure on p*N*" is served by the citation's own `page`, which is what
+    # `CitationEntry.svelte` reads. Producer, transport and consumer now agree.
+    has_figures: bool = False
 
     def __post_init__(self) -> None:
         if self.kind not in (VENDOR_MANUAL, AUTHORED_TRIAGE):

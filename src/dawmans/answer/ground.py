@@ -92,13 +92,25 @@ def build_citation(
         entry_location=passage.get("entry_location"),
         unbacked=bool(passage.get("unbacked", False)) or unbacked_for_turn,
         degraded=bool(passage.get("degraded", False)),
-        has_figures=tuple(passage.get("has_figures") or ()),
+        has_figures=bool(passage.get("has_figures", False)),
     )
 
 
 def fact_shaped(text: str) -> bool:
     """Arm (a): a numeric literal, a run of two or more Capitalised or
-    ALL-CAPS tokens, or a menu path."""
+    ALL-CAPS tokens, or a menu path.
+
+    A block with no letter in it states nothing and is never fact-shaped.
+    That is not a softening of the rule: a claim about a product is made in
+    words, and `2.` on a line of its own is a list marker. Without this,
+    every heading a model numbers `## 2.` tripped arm (a) on the bare
+    numeral, and the turn-level flag — which the surface shows as a warning
+    that the answer may be unsupported — was raised on all five starter
+    symptoms, on answers whose every prose block was cited. A warning that
+    fires on every answer tells the user nothing.
+    """
+    if not any(character.isalpha() for character in text):
+        return False
     if any(len(run.split()) >= 2 for run in terms.capitalised_runs(text)):
         return True
     if terms.numeric_literals(text):

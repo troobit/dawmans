@@ -769,3 +769,136 @@ documentation of the request rather than the thing each provider re-renders.
   enforces their agreement.
 - A provider constructed directly with structured fields but no `user` gets the poorer fallback
   rendering — no roster, no terminal direction — with no warning.
+
+---
+
+## Decision 12: `has_figures` is the corpus's bool, not a list of figure pages
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+`CONTRACTS.md` §2 describes `has_figures` as "the section contains figures, with their page",
+and §3 says the surface shows it as "figure on p*N*". Three implementations read that
+differently. `data/manual-corpus` publishes a bool, set by `chunk.py` from
+`any(unit.flags.has_figures …)`. `ui/ask-and-source-picker` types the field `boolean` in
+`records.ts` and renders `figure on p{citation.page}` — the citation's own page, on truthiness.
+This spec alone modelled it as `tuple[int, ...]`, the pages carrying figures, and built each
+citation with `tuple(passage["has_figures"])`.
+
+Nothing detected the disagreement, because nothing had ever run the engine against a real index:
+every fixture on this side was written to match this side's own assumption. The first real
+question that cited a figured vendor passage raised `TypeError: 'bool' object is not iterable`
+inside `build_citation`, killing the SSE stream mid-turn with a 500. Four of the five starter
+symptoms failed that way.
+
+### Decision
+
+`Citation.has_figures` is a `bool`, copied from the passage as the corpus publishes it.
+
+### Rationale
+
+The producer and the consumer already agreed with each other; only the intermediary disagreed
+with both, and its reading was never fed by any real data. §3's "figure on p*N*" is satisfied
+without page-level data, because the page shown is the citation's own — which is what the
+surface already renders and what a text-only index can honestly offer.
+
+The tuple was worse than merely unused. `[]` is truthy in JavaScript, so a turn that did *not*
+crash would have sent `has_figures: []` to a surface that tests truthiness, marking every vendor
+citation as carrying a figure. The crash was the visible half of the defect; a false figure
+marker on every citation was the quiet half.
+
+### Alternatives Considered
+
+- **Change the corpus to publish figure pages**: Satisfies the strictest reading of §2 - Rejected
+  because the pages are not held after chunking, it forces an ingestion-version bump and a full
+  re-ingest, and it would silently break the surface: an empty JS array is truthy, so every
+  citation would gain a figure marker with no error anywhere.
+- **Accept either shape in `build_citation`**: The smallest possible change - Rejected because it
+  leaves three implementations holding two meanings and the next reader still cannot tell which is
+  intended. Tolerance at a seam hides a disagreement rather than settling it.
+- **Amend CONTRACTS to specify pages, and defer**: Correct on paper - Rejected because the
+  amendment would oblige work in two other specs to serve a display no one has asked for, while
+  the observed defect is that the engine crashes on a real corpus.
+
+### Consequences
+
+**Positive:**
+- The three implementations state one thing, and the field is now typed as its only producer emits it.
+- Every turn citing a figured vendor passage completes; the five starter symptoms answer.
+- The surface's figure marker means what it says.
+
+**Negative:**
+- "With their page" in §2 remains loose wording that this decision reads rather than rewrites; a
+  future figure-page feature will need the corpus to carry data it currently discards.
+- A citation cannot say *which* page holds the figure when a passage spans several.
+
+### Impact
+
+`answer/envelope.py` (`Citation.has_figures`), `answer/ground.py` (`build_citation`), and the
+fixtures in `tests/answer/test_ground.py` that carried the list shape. No corpus or surface change.
+
+---
+
+## Decision 13: A block with no letters is never fact-shaped
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The 3.7 ungrounded rule fires on an uncited block that is fact-shaped — arm (a): a numeric
+literal, a two-or-more-token capitalised run, or a menu path. `docs/agent-notes/answer-engine.md`
+already recorded that the numeric class is loose ("2 causes" matches), judged acceptable for
+presence-testing.
+
+Asked five real questions against the real corpus, every answer came back flagged ungrounded. The
+cause was not loose prose: a model that numbers its sections `## 2.` produces a heading whose
+entire content is `2.`, the numeric class matched the bare digit, and the heading carries no
+citation because there is nothing in it to cite. Every prose block in those answers *was* cited.
+The turn-level flag is shown to the user as a warning that the answer may be unsupported.
+
+### Decision
+
+`fact_shaped` returns False for text containing no alphabetic character.
+
+### Rationale
+
+A claim about a product is made in words. `2.`, `3.` and `—` are list furniture, and a block with
+no letters in it states nothing that could be grounded or ungrounded. The narrowing is "no letters
+at all", which leaves every real numeric claim inside arm (a): `0 dB`, `512 samples` and
+`44.1 kHz` all sit beside words.
+
+A warning that fires on every answer is not a warning. The rule's value is that it is rare and
+therefore read, and this defect made it unanimous — the failure mode where a correct-in-principle
+heuristic becomes noise the user learns to dismiss.
+
+### Alternatives Considered
+
+- **Require a unit on the numeric class**: Removes bare integers generally - Rejected because a
+  bare integer is often the fact itself ("MIDI channel 10", "bank 2"), and arm (a) would stop
+  catching the claims it exists for.
+- **Fix only the prompt, so no model emits `## 2.`**: Removes the observed trigger - Rejected
+  because the prompt governs one model's habits and the rule must be total over any provider's
+  output. The prompt was corrected too, in the same change, for the separate reason that the
+  step type was being lost.
+- **Exempt headings from arm (a)**: Narrow and targeted - Rejected because an uncited heading
+  stating a product fact is exactly what should be flagged; the defect is the empty content, not
+  the block type.
+
+### Consequences
+
+**Positive:**
+- The ungrounded flag went from firing on 5 of 5 real answers to 3 of 5, and the 3 are genuine —
+  uncited ordered steps naming Live's own UI, which is arm (b) working as specified.
+- The rule stays total over blocks and needs no block-type special cases.
+
+**Negative:**
+- A block of pure numerals that *is* an unsupported claim — a bare table row of values — is no
+  longer caught by arm (a).
+
+### Impact
+
+`answer/ground.py` (`fact_shaped`), with the prompt's step-marker wording corrected alongside in
+`answer/prompt.py`.

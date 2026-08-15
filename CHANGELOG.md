@@ -10,7 +10,46 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Fixed
+
+- **The engine crashed on every turn citing a manual passage that carries a figure.**
+  `Citation.has_figures` was modelled as a tuple of figure pages while `data/manual-corpus`
+  publishes a bool and `ui/ask-and-source-picker` types the field `boolean`, so `build_citation`
+  ran `tuple(True)` and the SSE stream died mid-turn with a 500. Four of the five starter symptoms
+  failed this way the first time they were asked. The field is now the bool its only producer
+  emits (`api/answer-engine` Decision 12). The crash was the visible half: an empty JS array is
+  truthy, so a turn that did not crash would have marked every vendor citation as carrying a
+  figure.
+
+- **The ungrounded warning fired on every answer.** A model that numbers its sections `## 2.`
+  produces a heading whose entire content is `2.`, which the numeric class read as a fact-shaped
+  token in an uncited block — so all five starter symptoms came back flagged while every prose
+  block in them was cited. A block with no letter in it is no longer fact-shaped
+  (`api/answer-engine` Decision 13): a claim about a product is made in words. Real numeric claims
+  (`0 dB`, `512 samples`) sit beside words and still fire arm (a).
+
+- **The system prompt was read literally by a local model.** "Respond in the format
+  dawmans/answer-framing/1" put that string on line 1 instead of an outcome token, so every turn
+  degraded to the unparsed path — 0 of 3 measured, and telling the model never to print the name
+  made it worse. The format is now named in a parenthetical after the structure, which measured 3
+  of 3 parsed. Separately, the ordered-step marker written `N. ` was copied verbatim against a
+  parser requiring `^(\d+)\.`, so every step arrived as a paragraph beginning "N.".
+
+- **`make bench-answer` could not run against a local provider at all**, and lied when it failed.
+  A provider's `httpx.AsyncClient` binds to the first event loop that uses it, so `asyncio.run` per
+  question killed the second question with "Event loop is closed"; a provider's turns now share one
+  loop. It also passed no model name, which any server hosting more than one answers with an error
+  on every question — `--local-model` now supplies it. And a run where nothing reached synthesis
+  printed "all budgets met"; an empty sample now fails.
+
 ### Changed
+
+- **`data/symptom-triage` 7.7 is a real assertion.** The acceptance test asked nothing: it was
+  written while `api/answer-engine` had no implementation and stood as a skip reading "wire this to
+  POST /turn" through that spec's entire build. It now asks the five starter symptoms through
+  `TurnPipeline` over the committed view and fails on a refusal. Running it for the first time is
+  what found the two engine defects above. It passes: five of five answered, none refused, against
+  the four real manuals and a 20B model served over loopback.
 
 - `SPOUT.md` is now gitignored as a generated output artifact.
 

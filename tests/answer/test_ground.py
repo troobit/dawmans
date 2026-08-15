@@ -12,7 +12,7 @@ from hypothesis import given
 from hypothesis import strategies as st
 
 from dawmans.answer import ground
-from dawmans.answer.parse import Bullet, OrderedStep, Paragraph, parse
+from dawmans.answer.parse import Bullet, Heading, OrderedStep, Paragraph, parse
 from dawmans.triage import terms
 
 LIVE = "ableton/live-12"
@@ -41,7 +41,7 @@ LIVE_PASSAGE = {
     "page_end": 313,
     "text": "The Track Activator mutes the track output",
     "degraded": True,
-    "has_figures": [313],
+    "has_figures": True,
 }
 TRIAGE_PASSAGE = {
     "passage_id": f"{TRIAGE}#t1",
@@ -126,9 +126,28 @@ class TestFieldCopy:
         assert citation.section_title == "Track Activator"
         assert citation.page == 312
         assert citation.degraded is True
-        assert citation.has_figures == (313,)
+        assert citation.has_figures is True
         assert citation.unbacked is False
         assert citation.entry_location is None
+
+    def test_has_figures_is_the_bool_the_corpus_publishes(self):
+        # Regression, found by asking the real index a real question rather
+        # than by reading the record: `data/manual-corpus` sets this from
+        # `any(unit.flags.has_figures …)`, so what arrives is `True`/`False`
+        # and never a list of pages. This package modelled it as a tuple and
+        # built the citation with `tuple(...)`, which raised TypeError on the
+        # first vendor passage carrying a figure and killed the turn
+        # mid-stream. `ui`'s records.ts types it `boolean`, so the bool is
+        # also what the surface reads.
+        for published, expected in ((True, True), (False, False)):
+            citation = ground.build_citation(
+                {**LIVE_PASSAGE, "has_figures": published}, LIVE_SOURCE
+            )
+            assert citation.has_figures is expected
+
+    def test_a_passage_with_no_has_figures_key_is_not_figured(self):
+        passage = {name: value for name, value in LIVE_PASSAGE.items() if name != "has_figures"}
+        assert ground.build_citation(passage, LIVE_SOURCE).has_figures is False
 
     def test_pageless_citation_fields_are_absent_never_empty(self):
         # The pageless-citation property: absent is None — never an empty
@@ -205,6 +224,23 @@ class TestUngroundedRule:
         uncited = step("Click it to re-enable the track.")
         assert ground.ground_turn(None, (cited,), SUPPLIED, SOURCES).ungrounded is False
         assert ground.ground_turn(None, (cited, uncited), SUPPLIED, SOURCES).ungrounded is True
+
+    def test_a_block_with_no_letters_is_never_fact_shaped(self):
+        # Regression from the first real turns: a model that numbers its
+        # sections `## 2.` produces a heading whose whole content is `2.`,
+        # and the numeric class matched the bare digit. Every one of the
+        # five starter symptoms came back flagged ungrounded while every
+        # prose block in them was cited.
+        for marker in ("2.", "3.", "1)", "—", "  4. "):
+            assert not ground.fact_shaped(marker)
+            assert not ground.is_ungrounded(Heading(text=marker, markers=()), SUPPLIED)
+
+    def test_a_numeral_beside_words_is_still_fact_shaped(self):
+        # The narrowing is "no letters at all", not "no bare numerals":
+        # 7.3's mandated cause turns on an output running above 0 dB, and
+        # that claim is exactly what arm (a) exists to catch.
+        assert ground.fact_shaped("set the output to 0 dB")
+        assert ground.is_ungrounded(paragraph("raise the buffer to 512 samples"), SUPPLIED)
 
     def test_bullets_follow_arm_a_not_arm_b(self):
         # Arm (b) is ordered steps only; a bullet with no fact-shaped
