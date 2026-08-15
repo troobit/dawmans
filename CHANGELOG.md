@@ -10,7 +10,44 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`README.md` now introduces the product.** It was a one-line stub. It now carries the product
+  intro, the stack table, mermaid diagrams for the system, a turn and the ingestion run, a
+  three-depth walk through the deployment patterns (the ingest/serve extras split, the loopback
+  binding, the four-step startup order, provider selection as runtime state), and a table of every
+  configuration surface with whether it is tracked.
+
+- **`AGENTS.md` and `web/README.md` now describe this repository.** Both were unfilled template
+  text. `AGENTS.md` claimed `build`, `test` and `clean` still error and that `make lint` runs only
+  the spelling check — all three false since the stack landed — and documented a `nextup.md` entry
+  point that does not exist here. It now carries the real commands, how to run a single test on
+  either side, the setup steps that need network or the vendor PDFs, the AGPL confinement rule, the
+  commit and branch conventions, and the fact that CI checks spelling and nothing else.
+  `web/README.md` was the stock `sv` scaffold; it now documents the surface's own structure, the
+  Origin-rewriting dev proxy, and the browser install the e2e suite needs.
+
 ### Fixed
+
+- **Every compound term in the corpus was indexed and unreachable from any question.**
+  `index/lexical.py::tokenise` keeps a compound whole *and* in parts — `Dry/Wet` indexes as
+  `dry/wet`, `dry`, `wet` — so that model names, version strings and hyphenated/slashed tokens match
+  exactly (`data/manual-corpus` 8.8). But `answer/retrieve.py::tokenize_query` called
+  `bm25s.tokenize`, whose default splitter emits the parts only and needs two word characters, so no
+  question ever produced `dry/wet`, `mid-side` or `re-enable`, and `no sound from track 3` did not
+  match on `3`. The fragments still matched, so the cost was ranking signal rather than results and
+  nothing failed — parity was asserted only over in-memory fixtures that tokenise both sides with
+  the same function and so could not see them drift. `tokenize_query` now calls `tokenise` itself;
+  the corpus owns the rule that produced its vocabulary, and a second implementation on the query
+  side was the drift. Measured over the real 1,436-passage index, 6 of 10 benchmark questions changed
+  their supplied passages — all compound- or numeral-bearing, with the prose controls unmoved — at
+  no latency cost (median 1.10 → 1.06 ms, p95 1.51 → 1.47 ms, against 4.2's 10 ms / 50 ms).
+
+- **Stale agent notes.** `web-surface.md` gave the dev proxy's default engine origin as
+  `127.0.0.1:8000` (it is `8722`), described the `web/build` mount as future work and `dev-engine`
+  as a placeholder echo, and left the turn-stream header's engine half open — the engine has sent
+  `dawmans-turn-stream` since the HTTP surface landed. `answer-engine.md` still described the
+  manual-corpus index build as not yet implemented.
 
 - **The engine crashed on every turn citing a manual passage that carries a figure.**
   `Citation.has_figures` was modelled as a tuple of figure pages while `data/manual-corpus`
@@ -43,6 +80,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   printed "all budgets met"; an empty sample now fails.
 
 ### Changed
+
+- **`make bench-retrieval`** measures 4.2 against the real index without a provider. The only
+  real-corpus retrieval figure previously lived inside a turn that needed a Keychain key, so the
+  budget a retrieval change actually moves was unmeasurable on a machine holding no key — which is
+  how the tokeniser divergence above went unbenchmarked. It prints the tokens and the supplied
+  passage ids per question, so a ranking change is readable and not merely present.
 
 - **`data/symptom-triage` 7.7 is a real assertion.** The acceptance test asked nothing: it was
   written while `api/answer-engine` had no implementation and stood as a skip reading "wire this to

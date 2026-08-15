@@ -1,7 +1,8 @@
 # Web surface (`web/`)
 
-SvelteKit SPA for `ui/ask-and-source-picker`, built to static assets in `web/build` and
-(eventually) mounted at `/` by the answer-engine process so the page shares the engine's origin.
+SvelteKit SPA for `ui/ask-and-source-picker`, built to static assets in `web/build` and mounted at
+`/` by the answer-engine process so the page shares the engine's origin. The mount is live:
+`dawmans serve` defaults `--static-dir` to `<root>/web/build` when that directory exists.
 
 ## Setup facts
 
@@ -11,11 +12,14 @@ SvelteKit SPA for `ui/ask-and-source-picker`, built to static assets in `web/bui
 - `@sveltejs/adapter-static` with `ssr = false` / `prerender = true` in `src/routes/+layout.ts`.
   Output directory is the adapter default, `build/`.
 - Dev proxy (`/turn`, `/passages`, `/sources`, `/provider` → `$ENGINE_ORIGIN`, default
-  `http://127.0.0.1:8000`) **must rewrite `Origin` in a `proxyReq` hook** — `changeOrigin: true`
-  only rewrites `Host`, and the engine's rebinding guard 403s any Origin outside its own loopback
-  set. Verified working by curling through `vite dev` to a stub server. Don't "simplify" this away.
-- Makefile: `make web-install / web-build / web-test`, and `make dev` runs `dev-web` + `dev-engine`
-  with `-j2` (`dev-engine` is a placeholder echo until the engine exists).
+  `http://127.0.0.1:8722` — `cli.DEFAULT_PORT`, and the guard checks Origin against the port it
+  bound, so a proxy pointed elsewhere is 403 rather than merely unrouted) **must rewrite `Origin`
+  in a `proxyReq` hook** — `changeOrigin: true` only rewrites `Host`, and the engine's rebinding
+  guard 403s any Origin outside its own loopback set. Verified working by curling through
+  `vite dev` to a stub server. Don't "simplify" this away.
+- Makefile: `make web-install / web-build / web-test / web-e2e / web-lint`, and `make dev` runs
+  `dev-web` + `dev-engine` with `-j2`. `dev-engine` is `uv run dawmans serve` — the placeholder
+  echo is gone.
 
 ## Contract types
 
@@ -50,7 +54,10 @@ per-kind "not applicable" fields are structurally absent rather than optional-ev
   dispatched) and `turnEvents` (version check first, yields frames, **returns** `{complete}` — the
   generator's return value, read by iterating manually, is how end-without-`done` is signalled).
   **`TURN_STREAM_HEADER = 'dawmans-turn-stream'`**: CONTRACTS §4b fixes the token but no spec names
-  the header — this constant is the surface's choice and the engine implementation must match it.
+  the header — this constant was the surface's choice, and the engine now matches it
+  (`answer/http/app.py` sets `dawmans-turn-stream: TURN_STREAM_VERSION` on the turn response). The
+  name is written down twice with no shared source; changing either side alone breaks every turn
+  with a version-mismatch broken state.
 - `blocks.ts` — the append-only block parser. `PREFIX_LIMIT` is coupled to the longest sigil
   (`!conflict `, 10 chars); a longer sigil must move it. Unknown sigils drop their wrapper only when
   the token ends within the limit, else the text stays verbatim. Marker/key candidates are buffered

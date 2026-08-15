@@ -84,9 +84,14 @@ wiring and timing).
   dict where `indptr[t]..indptr[t+1]` slices the doc postings for token id `t` (ids via
   `vocab_dict`). df = slice length; the same slice gives "which docs share the term". No corpus
   re-tokenisation. Pinned bm25s 0.3.10 — re-check on upgrade.
-- Query tokenisation is `bm25s.tokenize(question, stopwords=None, return_ids=False)`. The
-  `stopwords=None` must match what the (not yet implemented) manual-corpus index build uses;
-  parity is asserted only through the in-memory fixtures for now.
+- Query tokenisation is `index/lexical.py::tokenise` — **the index build's own function, called
+  directly**, not bm25s's tokeniser configured to match. It used to be
+  `bm25s.tokenize(question, stopwords=None)`, which emits a compound's parts but never the compound
+  and drops single characters, so every compound in the vocabulary was indexed and unreachable and
+  `track 3` never matched on `3`. The import direction is deliberate: the corpus owns the rule that
+  produced its vocabulary, and `lexical.py`'s only dependency is `bm25s`, so a serve-only
+  environment can import it. Guard: `tests/answer/test_lexical_parity.py`. Full account, with the
+  before-and-after ranking measurements, in `retrieval-approach.md` §3.
 - `bm25.get_scores(tokens, weight_mask=mask)` returns full-corpus scores with masked rows zeroed;
   lexical candidacy additionally requires score > 0, so masked and no-overlap rows never rank.
 - Fixture trick (`tests/answer/corpus_fixtures.py`): `make_view()` builds a `CorpusView` entirely

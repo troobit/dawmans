@@ -20,11 +20,11 @@ from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Protocol
 
-import bm25s
 import numpy as np
 
 from dawmans.answer.scope import device_scope, in_device_scope
 from dawmans.answer.view import CorpusView
+from dawmans.index.lexical import tokenise
 
 # BGE asymmetric retrieval: the question carries the query instruction;
 # passages were embedded bare with their citation header.
@@ -65,10 +65,28 @@ def embed_query(embedder: Embedder, question: str) -> np.ndarray:
 
 
 def tokenize_query(question: str) -> tuple[str, ...]:
-    """The index build's tokenisation applied to the question — same
-    pattern, no stopword list — so query terms land in the index vocabulary."""
-    [tokens] = bm25s.tokenize(question, stopwords=None, return_ids=False, show_progress=False)
-    return tuple(tokens)
+    """The index build's own tokeniser, applied to the question.
+
+    It must be *the same function*, not the same settings: `tokenise`
+    keeps a compound whole **and** in parts (`Dry/Wet` → `dry/wet`,
+    `dry`, `wet`) and keeps bare numerals, while `bm25s.tokenize`'s
+    default splitter emits the parts only and drops single characters.
+    Calling bm25s here — which this did — left every compound in the
+    vocabulary indexed and unreachable from any question: the model
+    names, version strings and hyphenated/slashed tokens that are the
+    whole point of `data/manual-corpus` 8.8 and its custom tokeniser.
+    The fragments still matched, so the cost was ranking signal rather
+    than results, and no test saw it: parity was asserted only over
+    in-memory fixtures that tokenise both sides with the same function.
+    `test_lexical_parity.py` is the test that would have.
+
+    Importing `index.lexical` from the answer side is safe in a
+    serve-only environment — its one dependency is bm25s, which `serve`
+    already installs. It is the corpus's vocabulary, so the corpus owns
+    the rule that produces it; a second implementation here is exactly
+    the drift this replaces.
+    """
+    return tuple(tokenise(question))
 
 
 def rrf_scores(

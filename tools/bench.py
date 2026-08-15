@@ -18,6 +18,15 @@ Also calibrates Decision 8's history-token margin: the resident BGE
 tokeniser's counts against the provider's count_tokens over sample
 prompts, reporting whether the configured 10% covers the observed
 divergence — the margin is a guess until this runs.
+
+`--retrieval-only` runs 4.2 alone, against the real embed and the real
+index but **without a provider**, so the one budget a retrieval change
+moves stays measurable on a machine holding no key. It was added for
+exactly that: the query/index tokeniser repair had no reproducible
+before-and-after, because the only real-corpus retrieval figure lived
+inside a turn that needed a key to reach. It also prints the tokens and
+the supplied passage ids per question, which is what makes a ranking
+change readable rather than merely present.
 """
 
 import argparse
@@ -38,6 +47,22 @@ QUESTIONS = [
     ("Which MIDI note does the kick drum use in a drum rack?", "answer"),
     ("no sound from track 3", "narrowing"),
 ]
+
+#: `--retrieval-only`'s set. The compound-bearing questions come first and are
+#: the point: `Dry/Wet`, `mid-side` and `re-enable` are 8.8's own shapes, and a
+#: query tokeniser that stops producing the whole compound moves them and
+#: leaves the prose questions below untouched. `track 3` carries the bare
+#: numeral. Ordinary questions follow as the no-regression control.
+RETRIEVAL_QUESTIONS = [
+    "What does the Dry/Wet control do?",
+    "How do I use a mid-side EQ?",
+    "How do I re-enable a muted track?",
+    "no sound from track 3",
+    "What does the Track Activator do?",
+    "Which MIDI note does the kick drum use in a drum rack?",
+    "latency when monitoring",
+]
+RETRIEVAL_REPEATS = 12
 
 
 def p95(values):
@@ -153,6 +178,47 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
     return not failed
 
 
+def bench_retrieval(watcher, embedder):
+    """4.2 on its own: real embed, real index, no provider.
+
+    Reports the tokens and the supplied passage ids per question as well as
+    the timings, because a retrieval change is judged on what it moved and
+    not only on whether it stayed inside the budget.
+    """
+    import statistics
+    import time
+
+    from dawmans.answer.retrieve import embed_query, retrieve, tokenize_query
+
+    view = watcher.view
+    sources = [record["source_id"] for record in view.sources]
+    print(f"\n== retrieval only ({len(view.passages)} passages, {len(sources)} sources) ==")
+
+    samples = []
+    for question in RETRIEVAL_QUESTIONS:
+        query = embed_query(embedder, question)
+        per_question = []
+        for _ in range(RETRIEVAL_REPEATS):
+            start = time.perf_counter()
+            retrieval = retrieve(view, question, query, sources)
+            per_question.append((time.perf_counter() - start) * 1000.0)
+        samples += per_question
+        supplied = [scored.passage_id for scored in retrieval.supplied]
+        print(f"  {question!r} — median {statistics.median(per_question):.1f}ms")
+        print(f"    tokens   {list(tokenize_query(question))}")
+        print(f"    supplied {supplied}")
+
+    median = statistics.median(samples)
+    tail = p95(samples)
+    ok = median <= RETRIEVAL_TARGETS_MS["median"] and tail <= RETRIEVAL_TARGETS_MS["p95"]
+    print(
+        f"\n  retrieval median {median:.2f}ms vs {RETRIEVAL_TARGETS_MS['median']:.0f}ms, "
+        f"p95 {tail:.2f}ms vs {RETRIEVAL_TARGETS_MS['p95']:.0f}ms "
+        f"[{'ok' if ok else 'MISSED'}]"
+    )
+    return ok
+
+
 def calibrate_margin(api_key, model, view, count_tokens):
     """Decision 8: is the 10% margin enough for the tokeniser divergence?"""
     import anthropic
@@ -190,6 +256,11 @@ def main(argv=None):
     parser.add_argument("--index-dir", type=Path, default=Path("index"))
     parser.add_argument("--local-url", default=None, help="Bench a local provider too")
     parser.add_argument(
+        "--retrieval-only",
+        action="store_true",
+        help="measure 4.2 against the real index without a provider (needs no key)",
+    )
+    parser.add_argument(
         "--local-model",
         default=None,
         # Optional to the contract and required in practice: a server holding more
@@ -207,9 +278,12 @@ def main(argv=None):
     from dawmans.answer.provider.base import ProviderKind
     from dawmans.cli import _load_model
 
-    api_key = credentials.read_key(ProviderKind.KEYED_HOSTED)
-    if api_key is None and args.local_url is None:
-        skip("no Keychain key stored for the Anthropic provider and no --local-url given")
+    api_key = None if args.retrieval_only else credentials.read_key(ProviderKind.KEYED_HOSTED)
+    if not args.retrieval_only and api_key is None and args.local_url is None:
+        skip(
+            "no Keychain key stored for the Anthropic provider and no --local-url given "
+            "— `--retrieval-only` measures 4.2 without either"
+        )
 
     print("loading and warming the embedding model …")
     embedder, count_tokens = _load_model()
@@ -220,6 +294,11 @@ def main(argv=None):
 
     watcher = ViewWatcher(args.index_dir)
     all_ok = True
+
+    if args.retrieval_only:
+        ok = bench_retrieval(watcher, embedder)
+        print("\nbench:", "4.2 met" if ok else "4.2 MISSED — see above")
+        return 0 if ok else 1
 
     if api_key is not None:
         from dawmans.answer.provider.anthropic import DEFAULT_MODEL, AnthropicProvider

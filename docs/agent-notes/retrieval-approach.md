@@ -283,6 +283,54 @@ Verify that "Dry/Wet" survives as something matchable, that "TS-999"-style ident
 split, and that bare numerals ("38") are retained rather than dropped as stopword-like noise.
 This is a real source of silent BM25 failure and is worth an explicit test.
 
+### The caveat came true — index and query tokenisers diverged (fixed)
+
+They were two different functions, and only the index side got the custom one:
+
+- **Index** (`index/lexical.py::tokenise`) — a custom regex over `[a-z0-9]` runs joined by
+  `-/._`, emitting each compound **whole followed by its parts**.
+- **Query** (`answer/retrieve.py::tokenize_query`) — `bm25s.tokenize(..., stopwords=None)`,
+  bm25s's default splitter, which emitted **the parts only** and dropped single characters.
+
+Measured before the repair:
+
+| Input | Index tokens | Query tokens |
+|---|---|---|
+| `Dry/Wet` | `dry/wet`, `dry`, `wet` | `dry`, `wet` |
+| `4th-gen` | `4th-gen`, `4th`, `gen` | `4th`, `gen` |
+| `bge-small-en-v1.5` | whole + `bge`, `small`, `en`, `v1`, `5` | `bge`, `small`, `en`, `v1` |
+| `track 3` | `track`, `3` | `track` |
+
+So every compound in the vocabulary was indexed and unreachable — the exact-match half of
+`data/manual-corpus` 8.8, the reason the custom tokeniser exists at all — and bare numerals were
+dropped by the two-word-character minimum in bm25s's default pattern. `tokenise`'s own docstring
+asserts "a query goes through this same function"; it did not.
+
+It cost ranking signal rather than results (the fragments still matched, and dense retrieval was
+untouched), which is why nothing caught it: parity was asserted only over in-memory fixtures that
+tokenise both sides with the same function, so no test could see the two sides drift.
+
+**The fix**: `tokenize_query` now calls `dawmans.index.lexical.tokenise`. Importing the index module
+from the answer side is safe in a serve-only environment — `lexical.py`'s one dependency is `bm25s`,
+which `serve` already installs — and it is the right direction, because the corpus owns the rule that
+produced its vocabulary. A second implementation on the query side is the drift itself.
+
+`tests/answer/test_lexical_parity.py` is the guard: it asserts the two callables agree on the same
+text, that each of 8.8's shapes survives whole *and* in parts, that a bare numeral survives, and that
+neither side applies a stopword list. Replayed against the old implementation it fails 10 assertions,
+so it is a regression test and not a tautology.
+
+**What it moved**, measured with `make bench-retrieval` over the real 1,436-passage index, before and
+after: 6 of 10 questions changed their supplied set, all of them compound- or numeral-bearing; the
+prose controls did not move. Latency was unaffected — median 1.10 → 1.06 ms, p95 1.51 → 1.47 ms,
+against 4.2's 10 ms / 50 ms. The change is a ranking change, not a cost.
+
+A note on what came back with it: `tokenise` has no stopword list, so `a` and `i` are now query terms
+where bm25s's two-character minimum had silently dropped them. That is the intended behaviour on both
+sides (Decision 2 — a list holding `on` but not `off` is worse than no list), and a term appearing in
+nearly every passage carries almost no IDF weight, so it costs nothing measurable. Parity is the
+property; the stopword decision belongs to `tokenise` and is made once, there.
+
 ---
 
 ## 4. Chunking for citable manuals

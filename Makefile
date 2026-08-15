@@ -3,7 +3,7 @@
 
 .DEFAULT_GOAL := help
 .PHONY: help build build-py build-serve test test-py lint lint-py format spelling clean \
-	fetch-model fixtures bench bench-ingest bench-answer serve \
+	fetch-model fixtures bench bench-ingest bench-answer bench-retrieval serve \
 	web-install web-build web-test web-e2e web-lint dev dev-web dev-engine
 
 help: ## List available targets
@@ -70,6 +70,9 @@ bench-ingest: ## Time a full-corpus rebuild (manual-corpus 8.1); skipped when ma
 
 bench-answer: ## Real-provider, real-index answer timing (skips when either is absent)
 	uv run python tools/bench.py
+
+bench-retrieval: ## Real-index retrieval timing (4.2) alone — needs no provider key
+	uv run python tools/bench.py --retrieval-only
 
 web-install: ## Install web/ dependencies
 	cd web && pnpm install
