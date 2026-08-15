@@ -15,6 +15,7 @@
 	import { scheduleFirstPaint } from '../state/perf.svelte';
 	import { passages as defaultPassages, type PassageStore } from '../state/passages.svelte';
 	import { scope as defaultScope, type ScopeStore } from '../state/scope.svelte';
+	import { sources as defaultSources, type SourcesStore } from '../state/sources.svelte';
 	import type { ThreadStore } from '../state/thread.svelte';
 	import CitationList from './CitationList.svelte';
 
@@ -22,20 +23,23 @@
 		turn,
 		thread = null,
 		scope = defaultScope,
-		passages = defaultPassages
+		passages = defaultPassages,
+		sources = defaultSources
 	}: {
 		turn: Turn;
 		thread?: ThreadStore | null;
 		scope?: ScopeStore;
 		passages?: PassageStore;
+		sources?: Pick<SourcesStore, 'displayName'>;
 	} = $props();
 
-	/** A contributing source's display name, resolved through the turn's citations (4.7). */
+	/** A contributing source's display name, resolved through the turn's citations (4.7),
+	 *  falling back to the sources store when no citation carried the name. */
 	function sourceName(sourceId: string): string {
 		for (const citation of turn.citations.values()) {
 			if (citation.source_id === sourceId) return citation.display_name;
 		}
-		return sourceId;
+		return sources.displayName(sourceId) ?? sourceId;
 	}
 
 	/**
@@ -71,15 +75,6 @@
 
 <!-- 13.5: fragments are never announced individually; the announcer carries transitions. -->
 <div class="answer" aria-live="off" aria-busy={streaming}>
-	{#if turn.envelope.scope_dropped !== undefined}
-		<!-- 3.11: the engine's prune, reported with this turn — never the user's own narrowing. -->
-		<p class="scope-dropped">
-			The corpus no longer holds
-			{turn.envelope.scope_dropped.map((ref) => ref.display_name).join(', ')} — the engine left
-			{turn.envelope.scope_dropped.length === 1 ? 'it' : 'them'} out of this question's scope.
-		</p>
-	{/if}
-
 	{#if turn.envelope.direct_answer !== undefined}
 		<!-- 4.3: the actionable answer first, before detail and citations. -->
 		<p class="direct">{turn.envelope.direct_answer}</p>
@@ -112,6 +107,11 @@
 		{/if}
 	{/each}
 
+	<!-- The sub-answer sections below paint as their events land, even though a
+	     later body_delta then pushes them down: 4.2's no-reflow guarantee is the
+	     streamed prose's (design "Streaming without reflow"), and the design's
+	     5.8 approach expects citations to be usable while content above still
+	     grows, restoring the reading position by rect on collapse. -->
 	{#if turn.envelope.uncovered_parts !== undefined}
 		<!-- 4.8: subordinate to the answer, never a refusal or a failure. -->
 		<div class="uncovered">
@@ -222,7 +222,6 @@
 		color: var(--colour-accent); /* spelling-ignore */
 	}
 
-	.scope-dropped,
 	.contributing {
 		color: var(--colour-text-secondary); /* spelling-ignore */
 		font-size: var(--font-size-control);

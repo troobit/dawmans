@@ -174,6 +174,18 @@
 				>
 				<span class="state">{stateLabel(turn)}</span>
 			</header>
+			{#if turn.envelope.scope_dropped !== undefined && turn.envelope.outcome !== 'unknown-source-id'}
+				<!-- 3.11: the engine's prune, reported with the turn whatever its outcome —
+				     CONTRACTS §4 places `scope_dropped` before `outcome`, so it can accompany
+				     narrowing, coverage failure or an error just as well as an answer. The
+				     `unknown-source-id` turn is excluded: there the field carries the rejected
+				     ids and ErrorView renders the 9.11 wording instead. -->
+				<p class="scope-dropped">
+					The corpus no longer holds
+					{turn.envelope.scope_dropped.map((ref) => ref.display_name).join(', ')} — the engine left
+					{turn.envelope.scope_dropped.length === 1 ? 'it' : 'them'} out of this question's scope.
+				</p>
+			{/if}
 			{#if isErrorFamily(turn)}
 				<ErrorView
 					{turn}
@@ -286,6 +298,7 @@
 		color: var(--colour-text-secondary); /* spelling-ignore */
 	}
 
+	.scope-dropped,
 	.incomplete-note,
 	.abandoned-note {
 		margin: 0;

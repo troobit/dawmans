@@ -29,7 +29,9 @@ type StoredScope = {
 
 export class ScopeStore {
 	#available: string[] = [];
-	#seen: string[] = [];
+	// Reactive: the picker's "new" badge (2.4) clears the moment a submit marks
+	// the sources seen, not at the next unrelated re-render.
+	#seen = $state.raw<string[]>([]);
 	#lastQuestionAt = 0;
 	#selected = $state.raw<string[]>([]);
 	#released = $state.raw<string[] | null>(null);

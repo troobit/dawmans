@@ -76,8 +76,8 @@ test('the core loop needs zero pointer use: ask, narrow, cancel, widen, expand, 
 	await tabToText(page, 'All in scope', { shift: true });
 	await page.keyboard.press('Enter');
 	await page.keyboard.press('Escape');
-	await expect(page.getByText('All 3 sources in scope')).toBeVisible();
-	expect(await focusedText(page)).toContain('sources in scope');
+	await expect(page.locator('button.indicator')).toContainText('All in scope:');
+	expect(await focusedText(page)).toContain('All in scope');
 
 	// Expand a citation and open it at source (5.5, 5.6).
 	await askInput(page).focus();

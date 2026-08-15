@@ -12,6 +12,7 @@
 	renderer is unknown cannot be trusted to any renderer.
 -->
 <script lang="ts">
+	import { untrack } from 'svelte';
 	import { EngineRejection } from '../engine/client';
 	import { UnknownStreamVersionError } from '../engine/sse';
 	import type { Turn } from '../engine/turn.svelte';
@@ -46,12 +47,17 @@
 		outcome === 'unknown-source-id' ? (turn.envelope.scope_dropped ?? []) : []
 	);
 
-	// 9.11: drop the rejected ids from the stored scope. Idempotent — a re-run
-	// finds them already deselected and touches nothing.
+	// 9.11: drop the rejected ids from the stored scope — once, when the outcome
+	// arrives. The scope reads are untracked: a tracked read would re-run this on
+	// every scope change and veto the user's own later re-selection (3.8 is a
+	// one-time drop, not a standing suppression).
 	$effect(() => {
-		for (const ref of rejectedSources) {
-			if (scope.isSelected(ref.source_id)) scope.toggle(ref.source_id);
-		}
+		const refs = rejectedSources;
+		untrack(() => {
+			for (const ref of refs) {
+				if (scope.isSelected(ref.source_id)) scope.toggle(ref.source_id);
+			}
+		});
 	});
 
 	// 9.8: count `retry_after` down where supplied; absence is never a fault.

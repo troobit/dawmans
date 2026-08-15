@@ -354,3 +354,31 @@ so the e2e specs never leak into the unit run.
   real aborted fetch does) and `fakeEngine()` (records `TurnRequest`s, one channel per turn,
   wires the abort signal). Thread and component tests both inject `fakeEngine().submit` into
   `new ThreadStore({...})`.
+
+## Review-pass fixes (post-Phase 9)
+
+A requirements review over the finished surface found and fixed these; the regression tests sit in
+the named suites.
+
+- **Effects that mutate a store must untrack their store reads** — `ErrorView`'s 9.11 drop read
+  `scope.isSelected` inside `$effect`, so the effect re-ran on every scope change and vetoed the
+  user's own re-selection while the turn stayed mounted. The drop is now wrapped in `untrack`
+  (`errors.test.ts` "drops once").
+- **Timer effects keyed on a boolean don't reset across turns** — `WorkingIndicator` derived
+  `waiting` stayed `true` when a follow-up replaced a still-waiting turn, so the 8.10 threshold
+  counted from the old turn. The effect now keys on the waiting *turn object* (`waiting.test.ts`
+  "measures the threshold from each turn").
+- **`scope_dropped` renders in `ThreadView`, above the renderer switch** — it can accompany any
+  outcome (CONTRACTS §4 puts it before `outcome`), not only an answer. `unknown-source-id` is
+  excluded there because `ErrorView` owns that wording (9.11).
+- **Provider disclosure ack given before Save is held pending** in `ProviderConfig` and recorded
+  against the identity the engine reports *after* `choose()` — acknowledging while another
+  provider is still configured must not write the ack under the old identity (10.4).
+- **History guard**: `record()` skips `renderer === null` failures (9.15/9.19 rejections) and
+  `incomplete` turns with no content at all — 12.7 retains only the 9.14 partial.
+- **Scope indicator** at all-in-scope with ≤3 sources names them ("All in scope: A, B, C") so 2.6/
+  2.7/3.3 hold together; `scope.seen` is now `$state.raw` so the picker's 2.4 "new" badge clears
+  reactively on submit.
+- **Decision 9**: 4.2's no-reflow guarantee is scoped to the streamed prose. Do NOT defer the
+  citation list to stream end to satisfy 4.2's letter — it breaks 5.8's mid-stream expansion
+  (the e2e suite exercises it) and contradicts the design's recorded 5.8 approach.

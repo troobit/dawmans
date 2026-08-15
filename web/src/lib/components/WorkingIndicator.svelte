@@ -39,12 +39,18 @@
 	 * arriving text itself is the liveness and the indicator leaves (design
 	 * "The turn, client-side").
 	 */
-	const waiting = $derived(thread.active !== null && thread.active.marks.firstByte === undefined);
+	const waitingTurn = $derived(
+		thread.active !== null && thread.active.marks.firstByte === undefined ? thread.active : null
+	);
+	const waiting = $derived(waitingTurn !== null);
 
 	let elapsed = $state(0);
 
+	// Keyed on the turn itself, not the boolean: a follow-up submitted while the
+	// previous turn was still waiting keeps `waiting` true, and the 8.10
+	// threshold must be measured from the new turn's submission.
 	$effect(() => {
-		if (!waiting) return;
+		if (waitingTurn === null) return;
 		elapsed = 0;
 		const interval = setInterval(() => {
 			elapsed += 1;

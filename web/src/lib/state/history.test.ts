@@ -178,6 +178,28 @@ describe('what is retained (12.7)', () => {
 		expect(stored()).toEqual([]);
 	});
 
+	it('does not retain a failed turn with no renderer — a rejection is not an exchange', () => {
+		// A 9.15 request rejection or a 9.19 unknown stream version: no outcome
+		// ever arrived, nothing was answered.
+		const turn = new Turn('anything', SCOPE);
+		turn.state = 'failed';
+		const store = new HistoryStore();
+		store.record(turn);
+		expect(stored()).toEqual([]);
+	});
+
+	it('does not retain an incomplete turn with nothing in it', () => {
+		// The engine died before the first byte: outcome `incomplete` was
+		// synthesised, but there is no partial answer for 12.7 to retain.
+		const turn = new Turn('anything', SCOPE);
+		turn.state = 'failed';
+		turn.renderer = 'answer';
+		turn.envelope = { outcome: 'incomplete' };
+		const store = new HistoryStore();
+		store.record(turn);
+		expect(stored()).toEqual([]);
+	});
+
 	it('retains a partial kept under 9.14, marked incomplete', () => {
 		// A stream that dropped mid-answer: the partial text is retained on
 		// screen and in history, never presented as a finished answer.

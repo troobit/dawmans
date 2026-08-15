@@ -7,7 +7,8 @@ import { expect, type Page } from '@playwright/test';
 /** Load the surface and wait for the engine-backed chrome to be ready. */
 export async function openSurface(page: Page): Promise<void> {
 	await page.goto('/');
-	await expect(page.getByText('All 3 sources in scope')).toBeVisible();
+	// All three stub sources in scope: named, per 2.6/2.7.
+	await expect(page.locator('button.indicator')).toContainText('All in scope:');
 }
 
 export function askInput(page: Page) {

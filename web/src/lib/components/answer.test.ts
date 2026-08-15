@@ -176,6 +176,20 @@ describe('citation markers (Decision 3)', () => {
 		await tick();
 		expect(container.querySelector('.marker')?.textContent).toBe('1');
 	});
+
+	it('renders the citation entry while the body still streams — 5.8 expects it usable mid-stream', async () => {
+		// A citation event interleaved with body deltas paints its entry below
+		// the growing body: 4.2's no-reflow guarantee is the streamed prose's
+		// (design "Streaming without reflow"), and the 5.8 rect-based restore
+		// exists precisely because content above an entry grows while streaming.
+		const turn = makeTurn();
+		const { container } = render(AnswerView, { props: { turn } });
+		emit(turn, 'outcome', { outcome: 'answered' });
+		emit(turn, 'body_delta', { text: 'Turn up the monitor knob [[p:live/manual#0001]].\n' });
+		emit(turn, 'citation', liveCitation);
+		await tick();
+		expect(container.querySelector('.citations')?.textContent).toContain('Live 12 Manual');
+	});
 });
 
 describe('contributing sources (4.7)', () => {
@@ -257,18 +271,41 @@ describe('partial answers (4.8, 4.9)', () => {
 });
 
 describe('dropped scope reported with the turn (3.11)', () => {
+	// The notice is ThreadView's, above the renderer switch: the prune is
+	// turn-level and can accompany any outcome, not only an answer.
+	async function mountThread() {
+		localStorage.clear();
+		sessionStorage.clear();
+		const engine = fakeEngine();
+		const scope = new ScopeStore();
+		scope.load(['live/manual', 'old/manual']);
+		const thread = new ThreadStore({ scope, submit: engine.submit });
+		const { container } = render(ThreadView, { props: { thread } });
+		thread.submit('no sound');
+		await vi.waitFor(() => expect(engine.channels).toHaveLength(1));
+		return { container, channel: engine.channels[0] };
+	}
+
 	it('names the dropped sources and states the corpus no longer holds them', async () => {
-		const turn = makeTurn();
-		const { container } = render(AnswerView, { props: { turn } });
-		emit(turn, 'scope_dropped', [{ source_id: 'old/manual', display_name: 'Old Synth Manual' }]);
-		emit(turn, 'outcome', { outcome: 'answered' });
-		await tick();
+		const { container, channel } = await mountThread();
+		channel.emit('scope_dropped', [{ source_id: 'old/manual', display_name: 'Old Synth Manual' }]);
+		channel.emit('outcome', { outcome: 'answered' });
+		await vi.waitFor(() => expect(container.querySelector('.scope-dropped')).not.toBeNull());
 
 		const notice = container.querySelector('.scope-dropped');
 		expect(notice?.textContent).toContain('Old Synth Manual');
 		expect(notice?.textContent).toMatch(/no longer holds/i);
 		// The engine's prune, never presented as the user's own narrowing.
 		expect(notice?.textContent).not.toMatch(/you (removed|narrowed|deselected)/i);
+	});
+
+	it('accompanies a non-answer outcome just the same', async () => {
+		const { container, channel } = await mountThread();
+		channel.emit('scope_dropped', [{ source_id: 'old/manual', display_name: 'Old Synth Manual' }]);
+		channel.emit('outcome', { outcome: 'needs-narrowing' });
+		channel.emit('narrowing', { question: 'Which device?', candidates: ['Live', 'the APC'] });
+		await vi.waitFor(() => expect(container.querySelector('.scope-dropped')).not.toBeNull());
+		expect(container.querySelector('.scope-dropped')?.textContent).toContain('Old Synth Manual');
 	});
 });
 

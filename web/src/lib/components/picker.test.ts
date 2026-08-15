@@ -136,8 +136,19 @@ describe('collapse behaviour (2.11)', () => {
 
 describe('the scope indicator (2.5, 2.6, 2.7, 3.3, 3.10, 11.6)', () => {
 	it('states all-sources explicitly rather than a bare count (2.7)', async () => {
+		const many = [manual('a/1'), manual('b/2'), manual('c/3'), manual('d/4'), manual('e/5')];
+		await mount(payload(many));
+		expect(indicatorButton().textContent).toMatch(/all 5 sources/i);
+	});
+
+	it('names the sources while stating all-in-scope at three or fewer (2.6 with 2.7)', async () => {
+		// The live corpus shape: all three in scope — both obligations hold at once.
 		await mount(payload(THREE));
-		expect(indicatorButton().textContent).toMatch(/all 3 sources/i);
+		const text = indicatorButton().textContent ?? '';
+		expect(text).toMatch(/all in scope/i);
+		expect(text).toMatch(/ableton live-12/i);
+		expect(text).toMatch(/akai apc-key-25/i);
+		expect(text).toMatch(/your triage notes/i);
 	});
 
 	it('names the sources rather than counting them at three or fewer (2.6)', async () => {
@@ -233,6 +244,37 @@ describe('toggling sources (2.2, 2.8, 13.4)', () => {
 		for (const button of screen.getAllByRole('button')) {
 			expect(button.textContent?.trim() || button.getAttribute('aria-label')).toBeTruthy();
 		}
+	});
+});
+
+describe('newness marking (2.4)', () => {
+	it('marks a source the picker has not seen before, until the next submitted question', async () => {
+		const { scope, container } = await mount(payload(THREE));
+		await expand();
+		// Nothing has been submitted yet: every reported source is new.
+		expect(container.querySelectorAll('.mark.new')).toHaveLength(3);
+
+		// Newness ends at the next submit, not at render.
+		scope.noteQuestionSubmitted();
+		await tick();
+		expect(container.querySelectorAll('.mark.new')).toHaveLength(0);
+	});
+
+	it('marks only the unseen source where the others were already submitted against', async () => {
+		// A prior session: the two manuals seen, then the triage store appears.
+		const seenIds = ['ableton/live-12', 'akai/apc-key-25'];
+		localStorage.setItem(
+			'dawmans.scope',
+			JSON.stringify({ selected: seenIds, seen: seenIds, known: seenIds, lastQuestionAt: Date.now() })
+		);
+		sessionStorage.setItem('dawmans.session', '1');
+		const { container } = await mount(payload(THREE));
+		await expand();
+		const badged = [...container.querySelectorAll('li.source')].filter(
+			(li) => li.querySelector('.mark.new') !== null
+		);
+		expect(badged).toHaveLength(1);
+		expect(badged[0]?.textContent).toMatch(/your triage notes/i);
 	});
 });
 

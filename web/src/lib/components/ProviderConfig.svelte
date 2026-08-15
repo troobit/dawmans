@@ -23,17 +23,34 @@
 	let key = $state('');
 	let reveal = $state(false);
 	let testResult = $state<string | null>(null);
+	// 10.4: an acknowledgement given before Save is pending — the identity it
+	// belongs to is the one the engine reports *after* the save, not whatever
+	// provider was configured when the button was pressed.
+	let ackPending = $state(false);
 
 	const kind = $derived(chosenKind ?? provider.status?.kind ?? null);
 	const status = $derived(provider.status);
+	const acknowledged = $derived(provider.disclosureAcknowledged || ackPending);
+
+	function acknowledge() {
+		ackPending = true;
+		// Where the engine already reports the shared backend, the identity is
+		// known now and the acknowledgement is recorded immediately.
+		if (provider.status?.kind === 'shared-backend') provider.acknowledgeDisclosure();
+	}
 
 	async function save() {
 		if (kind === null) return;
 		if (kind === 'local' && model.trim() === '') return; // 10.3: an endpoint or model is the configuration
 		await provider.choose(kind, model.trim() !== '' ? model.trim() : undefined);
-		// 10.4: the disclosure holds the surface open until acknowledged; every
-		// other save returns to the ask surface, question and scope untouched (10.11).
-		if (kind === 'shared-backend' && !provider.disclosureAcknowledged) return;
+		// 10.4: a pending acknowledgement is stored against the identity the
+		// engine now reports; the disclosure holds the surface open until
+		// acknowledged. Every other save returns to the ask surface, question
+		// and scope untouched (10.11).
+		if (kind === 'shared-backend') {
+			if (ackPending) provider.acknowledgeDisclosure();
+			if (!provider.disclosureAcknowledged) return;
+		}
 		onclose?.();
 	}
 
@@ -75,6 +92,7 @@
 				checked={kind === 'keyed-hosted'}
 				onchange={() => {
 					chosenKind = 'keyed-hosted';
+					ackPending = false;
 				}}
 			/>
 			Hosted with your key
@@ -87,6 +105,7 @@
 				checked={kind === 'local'}
 				onchange={() => {
 					chosenKind = 'local';
+					ackPending = false;
 				}}
 			/>
 			Local model on this machine
@@ -146,10 +165,10 @@
 			<p>
 				Question text and retrieved passages leave this machine when the shared backend answers.
 			</p>
-			{#if provider.disclosureAcknowledged}
+			{#if acknowledged}
 				<p class="acknowledged">Acknowledged for this backend.</p>
 			{:else}
-				<button type="button" onclick={() => provider.acknowledgeDisclosure()}>
+				<button type="button" onclick={acknowledge}>
 					Acknowledge — questions may leave this machine
 				</button>
 			{/if}
@@ -220,7 +239,7 @@
 	.credential,
 	.actions {
 		display: flex;
-		align-items: center;
+		align-items: center; /* spelling-ignore */
 		gap: var(--space-s, 0.5rem);
 		flex-wrap: wrap;
 	}

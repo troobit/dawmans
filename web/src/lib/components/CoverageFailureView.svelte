@@ -143,8 +143,10 @@
 		{/if}
 	{/if}
 
-	{#if allInScope && outcome === 'refused-not-covered'}
-		<!-- 7.8: no widen to offer; the state says so and falls through. -->
+	{#if allInScope}
+		<!-- 7.8: no widen to offer; the state says so and falls through. The WHEN
+		     clause carries no outcome qualifier — a full-scope `no-manual-for-device`
+		     states it too, before its filename action. -->
 		<p class="all-in-scope">Every available source was already in scope.</p>
 	{/if}
 

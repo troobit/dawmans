@@ -58,6 +58,17 @@ export class HistoryStore {
 		if (turn.envelope.outcome === 'cancelled') return;
 		if (turn.renderer === 'error' || turn.renderer === 'broken' || turn.renderer === 'empty-scope')
 			return;
+		// A failed turn with no renderer (a 9.15 rejection, an unknown stream
+		// version) is a failed exchange, not an answer — 12.7 retains only the
+		// 9.14 partial, so an "incomplete" turn with nothing in it stays out too.
+		if (turn.renderer === null) return;
+		if (
+			turn.incomplete &&
+			turn.envelope.direct_answer === undefined &&
+			turn.blocks.length === 0 &&
+			turn.citations.size === 0
+		)
+			return;
 		if (turn.state !== 'settled' && turn.state !== 'failed') return;
 
 		const entry: HistoryEntry = {

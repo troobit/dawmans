@@ -256,6 +256,24 @@ describe('the shared-backend disclosure (10.4)', () => {
 		await vi.waitFor(() => expect(onclose).toHaveBeenCalledOnce());
 	});
 
+	it('records an acknowledge-before-save against the backend actually saved, not the previous provider', async () => {
+		// The natural first-time flow: a local provider is configured, the user
+		// selects the shared backend, reads and acknowledges the disclosure,
+		// then saves. The acknowledgement belongs to the shared backend the save
+		// produces — never to the local provider still reported at click time.
+		const { provider, onclose } = await mount({ kind: 'local', model: 'ollama/llama3', masked: null });
+		await fireEvent.click(screen.getByRole('radio', { name: /shared/i }));
+		await fireEvent.click(screen.getByRole('button', { name: /acknowledge/i }));
+
+		// Nothing recorded against the local identity.
+		expect(localStorage.getItem(DISCLOSURE_ACK_KEY) ?? '').not.toContain('local');
+
+		await fireEvent.click(screen.getByRole('button', { name: /^save$/i }));
+		await vi.waitFor(() => expect(onclose).toHaveBeenCalledOnce());
+		expect(provider.blocksFirstTurn).toBe(false);
+		expect(localStorage.getItem(DISCLOSURE_ACK_KEY)).toContain('shared-backend');
+	});
+
 	it('stores the acknowledgement against the backend identity, so changing backend re-arms it', async () => {
 		const stub = stubProvider({ kind: 'shared-backend', model: 'backend-a', masked: null });
 		void stub;

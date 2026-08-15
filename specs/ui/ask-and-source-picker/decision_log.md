@@ -502,3 +502,58 @@ it.
   sentence is owed to `api/answer-engine`'s design when the route is implemented.
 - Two rapid first submits can both carry null and start two conversations; the engine's own
   cancel-on-new-question rule (its 9.13) already bounds the effect to the abandoned turn.
+
+---
+
+## Decision 9: 4.2's no-reflow guarantee covers the streamed prose, not the sub-answer sections
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+CONTRACTS §4b leaves `citation`, `contributing_sources` and `uncovered_parts` unordered relative
+to `body_delta`, so a citation entry can paint below a body that is still growing — and every
+later delta then pushes that entry down. Read literally, 4.2 ("the system SHALL NOT change the
+vertical position of text that has already been rendered" while streaming) forbids this. But the
+design's own 5.8 approach records the citation element's rect before expansion *because* "content
+above may have grown while streaming continued", and 5.18 prefetches passages on focus — both
+presuppose citations that exist and are usable while the stream is still running. A review pass
+flagged the tension; deferring the citation list to stream end was tried and broke 5.8's
+mid-stream expansion, which the browser suite exercises deliberately.
+
+### Decision
+
+4.2 is honoured for the streamed prose — block typing fixed at the first line, width-stable
+markers, the working indicator below the thread — while the citation list, contributing-sources
+line and uncovered-parts section paint as their events land, below the growing body. 5.8's
+rect-based position restore is the compensation for the movement this permits.
+
+### Rationale
+
+The two requirements are jointly satisfiable only by scoping 4.2: 5.8 and 5.18 make no sense
+unless citations are interactable mid-stream. The reading cost 4.2 protects against — text
+shifting under the user's eyes — concerns the prose being read; the list below is chrome the user
+reaches deliberately, and the one interaction that cares about its position (collapse after
+expansion) restores it explicitly. The e2e no-reflow proof samples exactly the prose block
+classes, which is this scoping stated as a test.
+
+### Alternatives Considered
+
+- **Defer the sub-answer sections until the turn settles**: Structurally satisfies 4.2's letter -
+  Rejected: breaks 5.8's mid-stream expansion and 5.18's focus prefetch during long streams, and
+  contradicts the design's recorded 5.8 approach.
+- **Reserve fixed space for the citation list up front**: No movement, no deferral - Rejected: the
+  entry count is unknown until the stream ends, so the reservation is either wrong or a scrollable
+  inner region — a disclosure by another name, which 5.x forbids for citation obligations.
+
+### Consequences
+
+**Positive:**
+- Citations are readable and expandable as soon as they arrive, keeping 5.18's 150 ms target
+  reachable during long streams.
+- The streamed prose keeps its structural no-reflow guarantee, provable by the browser suite.
+
+**Negative:**
+- Already-painted citation entries move down while the body grows; a user reading the list during
+  a long stream sees it shift. 5.8's restore covers the expansion path only.

@@ -242,6 +242,15 @@ describe('all sources already in scope (7.8, 9.2)', () => {
 		expect(thread.draft).toBe('why is the kick distorting?');
 	});
 
+	it('says so on no-manual-for-device too — the WHEN clause carries no outcome qualifier', async () => {
+		const { container } = await settle('no-manual-for-device', [
+			['required_device', { device: 'boss/rc-505', display_name: 'Boss RC-505' }]
+		]);
+		const state = container.querySelector('.coverage-failure');
+		expect(state?.textContent).toMatch(/already in scope|every available source/i);
+		expect(screen.queryByRole('button', { name: /widen|all sources/i })).toBeNull();
+	});
+
 	it('falls through to the filename action where a required device was named', async () => {
 		const writeText = vi.fn().mockResolvedValue(undefined);
 		Object.defineProperty(navigator, 'clipboard', {

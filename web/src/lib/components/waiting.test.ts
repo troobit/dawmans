@@ -230,6 +230,30 @@ describe('the per-provider-class threshold (8.5, 8.10)', () => {
 		expect(container.textContent).toMatch(/taking longer than usual/i);
 	});
 
+	it('measures the threshold from each turn, not from the first — a follow-up mid-wait resets it', async () => {
+		vi.useFakeTimers();
+		const { container } = render(ThreadView, {
+			props: { thread, scope, providerClass: 'hosted' }
+		});
+		thread.submit('no sound');
+		await tick();
+
+		// A follow-up while the first turn is still awaiting first content.
+		vi.advanceTimersByTime(2000);
+		await tick();
+		thread.submit('still no sound');
+		await tick();
+
+		// 8.10: 3 s after *this* submission — the earlier turn's 2 s do not count.
+		vi.advanceTimersByTime(2000);
+		await tick();
+		expect(container.textContent).not.toMatch(/taking longer than usual/i);
+
+		vi.advanceTimersByTime(1000);
+		await tick();
+		expect(container.textContent).toMatch(/taking longer than usual/i);
+	});
+
 	it('cancel returns to ready with the question preserved, never presenting partial output as finished (8.6)', async () => {
 		vi.useFakeTimers();
 		render(ThreadView, { props: { thread, scope, providerClass: 'hosted' } });

@@ -166,7 +166,7 @@ afterEach(() => {
 describe('assembly: one surface, loaded from the engine', () => {
 	it('renders the scope bar, the thread, and the ask input once the sources load', async () => {
 		await mountPage();
-		expect(screen.getByText('All 3 sources in scope')).toBeTruthy();
+		expect(screen.getByText(/All in scope:/)).toBeTruthy();
 		expect(screen.getByRole('region', { name: 'Conversation' })).toBeTruthy();
 		expect(askInput()).toBeTruthy();
 		expect(screen.getByRole('button', { name: 'History' })).toBeTruthy();
@@ -181,7 +181,7 @@ describe('assembly: one surface, loaded from the engine', () => {
 		harness.server.failSources = false;
 		await fireEvent.click(screen.getByRole('button', { name: /retry/i }));
 		await flush();
-		expect(screen.getByText('All 3 sources in scope')).toBeTruthy();
+		expect(screen.getByText(/All in scope:/)).toBeTruthy();
 		expect(askInput()).toBeTruthy();
 	});
 

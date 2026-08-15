@@ -41,7 +41,12 @@
 	const glyph = $derived(scopeState === 'all' ? '●' : scopeState === 'none' ? '○' : '◐');
 	const indicator = $derived.by(() => {
 		if (scopeState === 'none') return 'No sources in scope';
-		if (scopeState === 'all') return `All ${total} sources in scope`; // 2.7: explicit, never a bare count
+		if (scopeState === 'all') {
+			// 2.7: explicit, never a bare count — and at ≤3 the names carry too (2.6, 3.3).
+			return selectedNames.length <= 3
+				? `All in scope: ${selectedNames.join(', ')}`
+				: `All ${total} sources in scope`;
+		}
 		if (selectedNames.length <= 3) return `${selectedNames.join(', ')} in scope`; // 2.6, 3.3
 		return `${selectedNames.length} of ${total} sources in scope`; // 2.5
 	});
@@ -125,6 +130,11 @@
 							<span class="kind">
 								{record.kind === 'authored-triage' ? 'your own notes (authored)' : 'manual'}
 							</span>
+							{#if !scope.seen.includes(record.source_id)}
+								<!-- 2.4: visibly new until the next submitted question; the word is
+								     the channel (11.6), and the checkbox is the one-activation add. -->
+								<span class="mark new">new</span>
+							{/if}
 							{#if assumedDevice(record) !== null}
 								<!-- 2.10: the mismatch known before the question is asked. -->
 								<span class="mark">describes {assumedDevice(record)} — unconfirmed for your rig</span>

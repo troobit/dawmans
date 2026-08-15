@@ -262,6 +262,19 @@ describe('unknown-source-id (9.11)', () => {
 		expect(engine.requests[1].sources).not.toContain('ghost/manual');
 		expect(engine.requests[1].sources).toContain('live/manual');
 	});
+
+	it('drops once — a later re-selection by the user is not vetoed', async () => {
+		await settle({ outcome: 'unknown-source-id' }, [
+			['scope_dropped', [{ source_id: 'ghost/manual', display_name: 'Ghost Manual' }]]
+		]);
+		expect(scope.isSelected('ghost/manual')).toBe(false);
+
+		// 3.8/9.11 describe a one-time drop, not a standing suppression: with the
+		// turn still on screen, putting the source back must stick.
+		scope.toggle('ghost/manual');
+		await tick();
+		expect(scope.isSelected('ghost/manual')).toBe(true);
+	});
 });
 
 describe('no-sources-selected renders as the empty-scope state (9.12)', () => {
