@@ -12,6 +12,33 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/lib/components/SourcePicker.svelte` — the source picker** (`ui/ask-and-source-picker`
+  Phase 8). Collapsed at rest to the one-line scope indicator, which is itself the expand/collapse
+  control (2.11): "All N sources in scope" (2.7), names at three or fewer in scope (2.6, 3.3), else
+  "n of m", with a scope glyph as the greyscale-safe channel (3.10, 11.6). Expanded: per-source
+  checkboxes with a filled/hollow marker plus the word in/out of scope (2.14), the kind stated on
+  every entry so authored notes are never mistaken for vendor documentation (2.12), the
+  assumed-revision and sparse-text marks (2.10), all/none controls (2.8), a substring filter from
+  twelve sources (2.13), and the known-gaps group rendered apart, never selectable, and omitted
+  entirely while the report is empty (2.9). Registers on the router's Escape stack while expanded
+  (13.3).
+- **`web/src/lib/state/provider.svelte.ts` and `ProviderConfig.svelte` — provider configuration**
+  (Phase 8). Kind-first configuration over the five provider operations (10.1): a local provider
+  configured from its endpoint or model alone and never asked for a key (10.3); the key input
+  masked with a hold-to-reveal, always empty on open, cleared after save so the engine's masked
+  tail is the only representation anywhere (10.5, 10.6); replace, clear and test-provider (10.8,
+  10.10); status rendered only from `GET /provider` (10.7). The shared-backend disclosure blocks
+  the first turn until explicitly acknowledged, stays readable afterwards, and is stored against
+  the engine-reported backend identity so changing backend re-arms it (10.4).
+- **`web/src/lib/components/HistoryPanel.svelte` and thread retention** (Phase 8). Retained
+  exchanges newest first with question and time (12.2); selecting one re-displays the stored
+  answer, scope-at-ask and citation records with no fetch (12.3, 12.4); re-ask starts a new
+  conversation against the current scope (12.5); clear-all behind a confirmation step (12.6);
+  mounted only while open, one activation each way, dismissed by Escape to its opener (12.8,
+  13.3). `history.svelte.ts` now records the client-minted conversation id on each entry so a
+  narrowing exchange is retained as part of its thread, never as a standalone unanswered
+  question (6.7).
+
 - **`web/src/lib/state/perf.svelte.ts` — per-turn marks and the slow-wait thresholds**
   (`ui/ask-and-source-picker` Phase 7). `submit` is stamped at Turn construction in the submit
   handler, `firstByte` when the first content event leaves the SSE reader, and `firstPaint` in a

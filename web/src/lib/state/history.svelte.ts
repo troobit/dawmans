@@ -74,6 +74,13 @@ export class HistoryStore {
 		this.#persist();
 	}
 
+	/** 12.6: the entire history in one action; the confirmation step is the panel's. */
+	clear(): void {
+		this.#cache = [];
+		this.#version += 1;
+		localStorage.removeItem(HISTORY_STORAGE_KEY);
+	}
+
 	#read(): HistoryEntry[] {
 		const raw = localStorage.getItem(HISTORY_STORAGE_KEY);
 		if (raw === null) return [];
