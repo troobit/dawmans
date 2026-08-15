@@ -50,18 +50,21 @@ amendment to that decision, not an ad-hoc `mkdir`.
 ## Specs
 
 All four are at **requirements and design complete**. Each design has been reviewed and repaired.
-All four now carry a `tasks.md` ledger, so every spec is implementable. Implementation has begun on
-`ui/ask-and-source-picker`: Phase 1 (scaffold, contract types and design tokens), Phase 2 (engine
-client and the turn stream), Phase 3 (scope, sources and history stores), Phase 4 (keyboard
-routing and the ask surface), Phase 5 (answer rendering and citations), Phase 6 (narrowing,
-ranked causes and coverage failure) and Phase 7 (waiting states and errors) are done.
+All four now carry a `tasks.md` ledger, so every spec is implementable. Implementation is complete
+on `ui/ask-and-source-picker`: all nine phases — Phase 1 (scaffold, contract types and design
+tokens), Phase 2 (engine client and the turn stream), Phase 3 (scope, sources and history stores),
+Phase 4 (keyboard routing and the ask surface), Phase 5 (answer rendering and citations), Phase 6
+(narrowing, ranked causes and coverage failure), Phase 7 (waiting states and errors), Phase 8 (the
+source picker, provider configuration and the history panel) and Phase 9 (page assembly,
+integration tests over a stubbed engine, and the Playwright browser and accessibility suite) —
+are done.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 84 |
 | [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ✅ (29, none started) | 60 |
 | [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ✅ (45, none started) | 111 |
-| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, 38 done) | 154 |
+| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ✅ (47, all done) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
@@ -104,15 +107,18 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 ### `specs/ui/ask-and-source-picker/`
 
 - **Files present:** `requirements.md`, `design.md`, `decision_log.md` (8 ADRs), `tasks.md`.
-- **Ledger:** 47 tasks over 9 phases, two work streams; Phase 1 (scaffold, contract types and
-  design tokens), Phase 2 (engine client, SSE reader, block parser and turn reducer), Phase 3
-  (scope, sources and history stores), Phase 4 (keyboard router, thread store, ask input,
-  symptom shortcuts and thread shell), Phase 5 (answer renderer, citation list, passage
-  expansion and open-at-source), Phase 6 (narrowing, ranked-causes and coverage-failure
-  renderers) and Phase 7 (waiting states, perf marks, error renderers and the diagnostics
-  disclosure) are done — 38 tasks — delivering `web/` with its `src/lib/engine/` layer, the
-  `src/lib/state/` stores, `src/lib/keys.ts` and the `src/lib/components/` for the answer,
-  narrowing, ranked-causes, coverage-failure, waiting and error paths.
+- **Ledger:** 47 tasks over 9 phases, two work streams — **all done**. Phase 1 (scaffold,
+  contract types and design tokens), Phase 2 (engine client, SSE reader, block parser and turn
+  reducer), Phase 3 (scope, sources and history stores), Phase 4 (keyboard router, thread store,
+  ask input, symptom shortcuts and thread shell), Phase 5 (answer renderer, citation list,
+  passage expansion and open-at-source), Phase 6 (narrowing, ranked-causes and coverage-failure
+  renderers), Phase 7 (waiting states, perf marks, error renderers and the diagnostics
+  disclosure), Phase 8 (the source picker, the provider store and configuration surface, and the
+  history panel) and Phase 9 (the assembled `+page.svelte` with its regions and submission gate,
+  the integration suite over a fake engine server, and the Playwright browser and accessibility
+  suite in `web/e2e/`) deliver the whole of `web/`: the `src/lib/engine/` layer, the
+  `src/lib/state/` stores, `src/lib/keys.ts`, the `src/lib/components/`, and the one assembled
+  surface, verified end to end in a real browser.
 - 13 requirement sections, 154 anchored criteria — **129 behavioural [B]** and **25 target-and-band
   [T]**, the latter run as the iterative loop of [`PROCESS.md`](PROCESS.md) §5.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
@@ -136,7 +142,7 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
 - Twelve cross-cutting ADRs in `DECISIONS.md` and 33 per-spec ADRs, all *accepted*.
 - Four `tasks.md` ledgers, one per spec; `data/manual-corpus` and `api/answer-engine` each carry a
   `prerequisites.md` naming what no task can do for itself.
-- The first seven implemented phases: `web/` scaffolded for `ui/ask-and-source-picker`, with the
+- The complete `ui/ask-and-source-picker` implementation: `web/` scaffolded, with the
   contract types of `CONTRACTS.md` §1–§4e in `web/src/lib/engine/records.ts`, the §11 contrast
   floors asserted from design tokens, the whole engine layer — the nine-operation client, the
   SSE turn-stream reader, the append-only §4d block parser and the event → Turn reducer with its
@@ -153,7 +159,12 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   states of §8 and §9: the synchronous acknowledgement, the working indicator with its
   reduced-motion elapsed-seconds counter and per-provider-class threshold, the one polite
   announcement region, the per-turn perf marks, the per-outcome error renderers keyed on
-  `reason`, and the 9.3 diagnostics disclosure, all tested and green.
+  `reason`, and the 9.3 diagnostics disclosure — and the Phase 9 assembly: the one
+  `+page.svelte` surface with its regions, submission gate and 3.6 release notice, an
+  integration suite driving full turns through the real client → SSE → reducer → renderer path
+  against a fake engine, and a Playwright browser suite proving no-reflow, the keyboard-only
+  loop, open-at-source, focus return, reading position, greyscale, 200% text, reduced motion,
+  announcements, the chrome ratio and the axe-core WCAG A/AA floor — all tested and green.
 
 **What is next**
 
@@ -162,7 +173,9 @@ Every spec carries a `decision_log.md` — 33 per-spec ADRs against the 12 cross
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
 - The **task phase is complete** for all four specs, and implementation is under way: the ui
-  ledger's Phases 1–6 are done, and the other three ledgers are ready to start.
+  ledger is finished — all 47 tasks across its nine phases — and the other three ledgers are
+  ready to start. The surface now needs a real engine behind it; until then it runs against the
+  test stubs only.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes

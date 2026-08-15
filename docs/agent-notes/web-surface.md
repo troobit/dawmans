@@ -67,7 +67,7 @@ per-kind "not applicable" fields are structurally absent rather than optional-ev
 
 Every store is a **class instance with `$state` fields** exporting a singleton (a reassigned
 module-level `$state` is not reactive across the module boundary). Persistence keys:
-`dawmans.scope`, `dawmans.session` (marker only), `dawmans.history`.
+`dawmans.scope`, `dawmans.session` (marker only), `dawmans.history`, `dawmans.disclosure-ack`.
 
 - `scope.svelte.ts` — selection, persistence, decay (§3, Decision 4). The stored record carries a
   `known[]` field (the available-source list at last persist) **in addition to** `seen[]`: the 2.4
@@ -90,6 +90,16 @@ module-level `$state` is not reactive across the module boundary). Persistence k
   `record(turn, thread?)` also stores the client-minted conversation id as `entry.thread` (6.7) —
   the Phase 8 history panel groups on it so a narrowing exchange is never a standalone unanswered
   question.
+
+- `provider.svelte.ts` — provider status over the five provider operations (§10). Renders **only**
+  `GET /provider` (10.7); the one legitimately local piece of state is the shared-backend
+  disclosure acknowledgement, stored under `dawmans.disclosure-ack` as the backend identity string
+  `` `${kind}:${model ?? ''}` `` — equality against the *engine-reported* identity is what makes
+  changing backend re-arm the disclosure (10.4). `blocksFirstTurn` is
+  `kind === 'shared-backend' && !acknowledged`; the page wires it (with `sources.blocksSubmission`)
+  into `ThreadStore.submitGate`. How the ack reaches the *engine* is an open seam: the api design says
+  `PUT /provider` to shared-backend "returns `requires_disclosure_ack: true` and records nothing",
+  and no ack operation exists among the five, so the engine side will need an amendment when built.
 
 - `perf.svelte.ts` — per-turn marks (8.7–8.9) and the per-provider-class "taking longer" thresholds
   (`SLOW_THRESHOLD_MS`: hosted 3 s, local 5 s, 8.10). `markFirstByte` is called by the reducer's
@@ -214,6 +224,93 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   (`#page=N` exactly); authored = the expansion + copyable `entry_location`
   (`navigator.clipboard.writeText`). No third branch, no `file://`.
 
+- `SourcePicker.svelte` — the one expand/collapse control is the indicator line itself
+  (`button[aria-expanded]`, `data-scope="all|narrowed|none"`): "All N sources in scope" (2.7),
+  names at ≤3 in scope (2.6/3.3), else "n of m sources" (2.5), with a `.scope-glyph` (● / ◐ / ○)
+  as the non-colour channel beside the wording (3.10/11.6). Expanded: per-source checkbox rows
+  with a filled/hollow `.scope-marker` **plus the word** in/out of scope (2.14), the kind stated
+  on every entry ("your own notes (authored)" vs "manual", 2.12), the 2.10 assumed-revision mark
+  (only when `hardware_applicability.device` exists — the authored store is assumed-with-no-device
+  and gets no mark), and the `low_text` "sparse text layer" mark. All/none buttons (2.8); the
+  substring filter renders only at ≥12 sources (2.13); `.gaps` (owned-but-undocumented) renders
+  apart with no inputs and is omitted entirely — heading included — when the report is empty
+  (2.9). While expanded it registers on the router's Escape stack with the indicator as opener.
+  The 2.4 "new" mark is **not** rendered yet — the store side (`seen`/`known`) exists; marking is
+  open for a later pass.
+- `ProviderConfig.svelte` — kind-first (10.1): three radios; the credential input exists only in
+  the keyed-hosted branch (masked `type="password"` by default with a hold-to-reveal button,
+  10.5); local is an "Endpoint or model" text input and Save is gated on it being non-empty
+  (10.3). Save = `provider.choose(kind, model?)` then `onclose?.()` — **except** shared-backend
+  with the disclosure unacknowledged, which keeps the surface open showing the disclosure text and
+  its Acknowledge button; the text stays rendered after acknowledgement too (10.4). The key state
+  is cleared after `saveCredential` so the engine's masked tail is the only representation left
+  anywhere (10.6); the component never touches thread or scope, which is what keeps 10.2/10.11
+  free. `.status` renders kind/model/masked from the store only (10.7).
+- `HistoryPanel.svelte` — mounted only while open; registers on the Escape stack (12.8/13.3) with
+  an injectable `opener`. Entries newest-first with a `<time datetime>` element; selecting one
+  re-displays scope-at-ask (12.4, names via a `SourcesLike`), `direct_answer`, the stored body
+  with `[[p:…]]` markers stripped, and the stored citation records through `CitationEntry` —
+  no fetch happens on re-display (12.3); passage text still refetches on explicit expansion.
+  Re-ask = `thread.clear()` + `thread.submit(entry.question)` — exactly "new conversation,
+  current scope" (12.5). Clear-all is a two-step confirm in the header calling the store's
+  `clear()` (12.6). **Gotcha:** the selected entry is `$state.raw` — a plain `$state` proxies the
+  assigned object and `selected === entry` against the store's own reference never matches.
+
+## The assembled page (`src/routes/+page.svelte`, Phase 9)
+
+- Every store and the router are optional props defaulting to the singletons — that is what lets
+  `src/routes/page.test.ts` mount the whole page over fresh instances. On mount: `sources.load()`
+  then `scope.load(sources.ids)` on success, and `provider.load()`.
+- The page's own (small) behaviour, beyond wiring: `ThreadStore.submitGate` (blocks submission on
+  `sources.blocksSubmission` or `provider.blocksFirstTurn`, 9.13/10.4), the 3.6 release notice with
+  its reinstate button (nothing else renders `scope.released`), the engine-unreachable /
+  corpus-empty notices (AskSurface is unmounted in those states — the draft survives in the
+  thread store), and the provider region's Escape-stack registration (ProviderConfig has no
+  router; HistoryPanel and SourcePicker register themselves).
+- **AskSurface owns the router's `<svelte:window>` wiring.** The page adds a window keydown that
+  delegates only while `sources.state !== 'ready'` (when AskSurface is unmounted) — two active
+  handlers would double-dismiss on Escape.
+- The scroll container is `.content` (flex:1, overflow-y auto), not the window; `main` is 100vh.
+  CitationEntry's 5.8 restore therefore scrolls the nearest ancestor whose computed overflow-y is
+  auto/scroll, falling back to `window` (jsdom reports `visible` everywhere, so unit tests still
+  see `window.scrollBy`). Don't "simplify" back to window-only — it is a silent no-op on the page.
+- Token gotcha: the background token is `--colour-bg`, **not** `--colour-background`; the body
+  styles (background, margin 0, base font) live in `+layout.svelte` as `:global(body)` because
+  tokens.css only declares values. `app.html` carries the static `<title>` (10.9: never dynamic).
+
+## Integration suite (`src/routes/page.test.ts` + `src/lib/testing/fake-server.ts`)
+
+- `installFakeEngine()` stubs global fetch for every client.ts route; turn streams are
+  turn-channel's controllable channels, one per POST /turn. Pair with `vi.unstubAllGlobals()`.
+- **Flush depth**: the real client → sse → reducer path spends several microtasks per frame; a
+  20-turn flush leaves a many-event turn still `streaming`. page.test.ts flushes 200 microtask
+  turns + `tick()`. Symptom of too-shallow: late events (citations, second cause) miss assertions.
+- The §4b completeness test types its assertion map as `Record<TurnEvent['event'], () => void>` —
+  a seventeenth event fails the type check there.
+- ErrorView wording keys on `reason`: `provider-unconfigured` without a reason renders the
+  generic sentence, so tests wanting 9.5's wording must send `reason`. `corpus-empty` is the one
+  error state with **no** button (the design records no in-app action exists).
+
+## Browser suite (`e2e/`, Playwright)
+
+- `playwright.config.ts` runs two webServers: `e2e/stub-engine.mjs` (Node http, port 8788) and
+  `vite dev --port 4173` with `ENGINE_ORIGIN` pointed at the stub — the real dev-proxy shape, so
+  the Origin rewrite is exercised. `make web-e2e` / `pnpm test:e2e`.
+- The stub picks a turn script by question substring: `narrow`, `slow` (8 s of silence — the
+  waiting/cancel window), `steps` (long streamed answer with a 2.5 s quiet stretch before the
+  final line — the reading-position test collapses in that window), `break` (unknown outcome and
+  **no `done`**, so the turn fails → the ✕ state; with `done` it settles and the state line reads
+  finished, which is what 9.4's broken *renderer* plus a settled turn produces).
+- **`reuseExistingServer: true` keeps a stale stub across edits** — `pkill -f stub-engine.mjs`
+  after changing it, or the old scripts keep serving.
+- Headless chromium has no PDF viewer: a `#page=N` popup never "navigates", so open-at-source
+  asserts the focused link's href + that a new tab opened and the opener stayed put.
+- 5.8's restore is geometrically impossible until the thread overflows `.content` — the test
+  waits for `scrollHeight > clientHeight + 40` before expanding.
+- axe runs at the WCAG A/AA tag floor (`wcag2a`, `wcag2aa`, `wcag21aa`); best-practice rules like
+  heading-order would flag the h1 → h3 jump inside answers and are deliberately out of the floor.
+- 200% text is tested as the WCAG reflow equivalence: viewport 640×400 at 100%.
+
 ## Passage cache (`src/lib/state/passages.svelte.ts`)
 
 `PassageStore` — session `Map` of `loading/ready/failed` per `passage_id`, injectable fetcher
@@ -231,8 +328,9 @@ and keep their references. Don't "simplify" this back to `[...parser.blocks]`.
 
 ## Testing stack
 
-vitest (jsdom) + @testing-library/svelte for units/components; @playwright/test + axe-core
-installed but not yet configured (no browser tests exist yet — config comes with the first one).
+vitest (jsdom) + @testing-library/svelte for units/components; @playwright/test + axe-core drive
+the browser suite in `e2e/` (see "Browser suite" below). `pnpm test` runs only `src/**/*.test.ts`,
+so the e2e specs never leak into the unit run.
 
 - **Node ≥ 22 shadows Web Storage in vitest**: Node's experimental `localStorage`/`sessionStorage`
   globals (lazy getters, undefined without `--localstorage-file`) win over jsdom's because vitest

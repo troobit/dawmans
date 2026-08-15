@@ -12,6 +12,42 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`web/src/routes/+page.svelte` — the assembled surface** (`ui/ask-and-source-picker` Phase 9).
+  One page: scope bar, thread and ask input, with the picker, history, provider configuration and
+  expanded passages as regions, not routes, so no transition can discard the typed question or
+  the scope (10.2, 10.11). The page wires what no component owns: the loads on mount (sources →
+  scope, provider), a submission gate blocking the turn while the source list is not ready (9.13)
+  or the shared-backend disclosure is unacknowledged (10.4), the 3.6 release notice with its
+  one-activation reinstate, the engine-unreachable and corpus-empty states, and the provider
+  region's place on the Escape stack. The layout applies the design tokens to the body and keeps
+  the thread at ≥ 70% of the viewport at rest (11.8).
+- **`web/src/routes/page.test.ts` and `web/src/lib/testing/fake-server.ts` — the integration
+  suite** (Phase 9). A fake engine server over global fetch, so full turns exercise the real
+  client → SSE → reducer → renderer path for every renderer family and error outcome with no
+  provider, corpus or key; the keyboard-only core loop asserted at component level (1.13); region
+  transitions asserted to preserve question and scope (10.2, 10.11); and CONTRACTS §4b re-checked
+  at the integrated level — one visible discharge per governed event, typed as a total record so
+  a seventeenth event fails the type check.
+- **`web/e2e/` — the Playwright browser and accessibility suite** (Phase 9). A scripted stub
+  engine behind the real vite dev proxy proves in a live browser: no already-painted line moves
+  while streaming (4.2); the core loop with zero pointer use (1.13, 13.1); open-at-source at
+  exactly `#page=N` in a new tab and the authored entry revealed in place (5.5, 5.19); Escape
+  returning focus to each region's opener (13.3); a mid-stream citation expand/collapse leaving
+  the entry at the same viewport offset (5.8); one announcement per state transition and never a
+  fragment (13.5); the ≥ 70% chrome ratio (11.8); every 11.6 distinction surviving greyscale; no
+  horizontal scrolling at the 200% text-size equivalence (13.7); the reduced-motion counter with
+  distinct static state shapes (13.6); and an axe-core WCAG A/AA floor over every rendered state
+  (13.2, 13.4, 13.8). Run with `make web-e2e`.
+
+### Fixed
+
+- **`CitationEntry` reading-position restore scrolls the real scroll container** (5.8). The
+  collapse restore called `window.scrollBy`, a silent no-op on the assembled page where the
+  thread scrolls inside a container; it now scrolls the nearest scrollable ancestor, falling back
+  to the window.
+
+### Added
+
 - **`web/src/lib/components/SourcePicker.svelte` — the source picker** (`ui/ask-and-source-picker`
   Phase 8). Collapsed at rest to the one-line scope indicator, which is itself the expand/collapse
   control (2.11): "All N sources in scope" (2.7), names at three or fewer in scope (2.6, 3.3), else

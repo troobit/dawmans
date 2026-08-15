@@ -62,9 +62,21 @@
 		void tick().then(() => {
 			const top = entryElement?.getBoundingClientRect().top;
 			if (top !== undefined && top !== topBeforeExpand) {
-				window.scrollBy(0, top - topBeforeExpand);
+				scrollerFor(entryElement).scrollBy(0, top - topBeforeExpand);
 			}
 		});
+	}
+
+	/**
+	 * The thread scrolls inside a container on the assembled page, so the
+	 * restore must scroll the nearest scrollable ancestor — `window.scrollBy`
+	 * is a silent no-op there. The window is the fallback, not the default.
+	 */
+	function scrollerFor(element: Element | undefined): { scrollBy(x: number, y: number): void } {
+		for (let node = element?.parentElement ?? null; node !== null; node = node.parentElement) {
+			if (/(auto|scroll)/.test(getComputedStyle(node).overflowY)) return node;
+		}
+		return window;
 	}
 
 	/** 5.19: one activation puts the entry's file and line on the clipboard. */

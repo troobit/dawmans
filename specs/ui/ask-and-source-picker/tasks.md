@@ -312,7 +312,7 @@ references:
 
 ## Phase 8: Picker, provider configuration and history panel
 
-- [ ] 39. Write tests for the source picker component <!-- id:f9ae022 -->
+- [x] 39. Write tests for the source picker component <!-- id:f9ae022 -->
   - Every source independently toggleable by keyboard alone (2.2); single all and none controls (2.8); indicator states: all-sources stated explicitly (2.7), ≤3 sources named rather than counted (2.6, 3.3), otherwise n of m, visible while asking and reading (2.5); the narrowed state is distinct from all-sources by shape and label, not colour, and survives greyscale (3.10, 11.6).
   - An `authored-triage` source lists alongside the manuals with its kind stated, selectable by exactly the same controls — never a gap, never unselectable, never always-in-scope (2.12).
   - The known-gaps group lists owned-but-undocumented hardware apart and never selectable, and is omitted entirely — heading included — when the report is empty, which is the live case; the populated group is exercised against a fixture (2.9); assumed-applicability sources carry the revision they are taken to describe (2.10), and `low_text` marks a sparse source on its entry — picker marking is the whole consumption obligation CONTRACTS §1 places on the field.
@@ -322,13 +322,13 @@ references:
   - Stream: 2
   - Requirements: [2.2](requirements.md#2.2), [2.5](requirements.md#2.5), [2.6](requirements.md#2.6), [2.7](requirements.md#2.7), [2.8](requirements.md#2.8), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [2.11](requirements.md#2.11), [2.12](requirements.md#2.12), [2.13](requirements.md#2.13), [2.14](requirements.md#2.14), [3.3](requirements.md#3.3), [3.10](requirements.md#3.10), [11.6](requirements.md#11.6), [13.4](requirements.md#13.4)
 
-- [ ] 40. Implement the source picker <!-- id:f9ae023 -->
+- [x] 40. Implement the source picker <!-- id:f9ae023 -->
   - The three groups of the design — selectable, marked selectable (assumed applicability and `low_text`), known gaps — plus the scope indicator and the collapse behaviour.
   - Blocked-by: f9ae022 (Write tests for the source picker component)
   - Stream: 2
   - Requirements: [2.2](requirements.md#2.2), [2.5](requirements.md#2.5), [2.6](requirements.md#2.6), [2.7](requirements.md#2.7), [2.8](requirements.md#2.8), [2.9](requirements.md#2.9), [2.10](requirements.md#2.10), [2.11](requirements.md#2.11), [2.12](requirements.md#2.12), [2.13](requirements.md#2.13), [2.14](requirements.md#2.14), [3.3](requirements.md#3.3), [3.10](requirements.md#3.10), [11.6](requirements.md#11.6), [13.4](requirements.md#13.4)
 
-- [ ] 41. Write tests for provider configuration <!-- id:f9ae024 -->
+- [x] 41. Write tests for provider configuration <!-- id:f9ae024 -->
   - Kind is chosen first — keyed hosted, local, or the shared backend — and credential entry is requested only for the keyed hosted kind (10.1); a local provider is configured once its endpoint or model is chosen and is never asked for a key (10.3).
   - The shared-backend disclosure that question text and passages leave the machine blocks the first turn until explicitly acknowledged, stays readable afterwards, and the acknowledgement is stored against the backend's identity so changing backend re-arms it (10.4).
   - The key input masks by default with a momentary reveal of the value being typed (10.5); a saved key is never displayed in full again and no input is ever pre-populated — the field is always empty on open and the engine's masked tail is the only representation (10.6); the indication renders from GET /provider, the engine's reported status, never the browser's stored settings, showing kind, provider and at most the final four characters (10.7).
@@ -337,13 +337,13 @@ references:
   - Stream: 2
   - Requirements: [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.3](requirements.md#10.3), [10.4](requirements.md#10.4), [10.5](requirements.md#10.5), [10.6](requirements.md#10.6), [10.7](requirements.md#10.7), [10.8](requirements.md#10.8), [10.9](requirements.md#10.9), [10.10](requirements.md#10.10), [10.11](requirements.md#10.11)
 
-- [ ] 42. Implement provider.svelte.ts and the configuration surface <!-- id:f9ae025 -->
+- [x] 42. Implement provider.svelte.ts and the configuration surface <!-- id:f9ae025 -->
   - The provider status store and the configuration region, kind-first, backed by the five provider operations.
   - Blocked-by: f9ae024 (Write tests for provider configuration)
   - Stream: 2
   - Requirements: [10.1](requirements.md#10.1), [10.2](requirements.md#10.2), [10.3](requirements.md#10.3), [10.4](requirements.md#10.4), [10.5](requirements.md#10.5), [10.6](requirements.md#10.6), [10.7](requirements.md#10.7), [10.8](requirements.md#10.8), [10.9](requirements.md#10.9), [10.10](requirements.md#10.10), [10.11](requirements.md#10.11)
 
-- [ ] 43. Write tests for the history panel <!-- id:f9ae026 -->
+- [x] 43. Write tests for the history panel <!-- id:f9ae026 -->
   - Reverse-chronological entries showing at least the question text and when it was asked (12.2); selecting one re-displays the stored answer with its citations and no engine query (12.3); the scope in force at ask time is shown (12.4).
   - Re-ask runs against the current scope and begins a new conversation — `conversation_id: null` — producing a new exchange rather than overwriting the old; continuing a thread stays available by typing a follow-up (12.5).
   - Clear-all in one action behind a confirmation step (12.6); the panel is off the ask surface, reachable and dismissible in one activation each (12.8).
@@ -351,7 +351,7 @@ references:
   - Stream: 2
   - Requirements: [12.2](requirements.md#12.2), [12.3](requirements.md#12.3), [12.4](requirements.md#12.4), [12.5](requirements.md#12.5), [12.6](requirements.md#12.6), [12.8](requirements.md#12.8)
 
-- [ ] 44. Implement the history panel <!-- id:f9ae027 -->
+- [x] 44. Implement the history panel <!-- id:f9ae027 -->
   - The panel region over history.svelte.ts, with re-display, re-ask and clear.
   - Blocked-by: f9ae026 (Write tests for the history panel)
   - Stream: 2
@@ -359,7 +359,7 @@ references:
 
 ## Phase 9: Assembly and browser verification
 
-- [ ] 45. Write integration tests over a stubbed engine <!-- id:f9ae028 -->
+- [x] 45. Write integration tests over a stubbed engine <!-- id:f9ae028 -->
   - A fake SSE server standing in for the engine, per the design's testing strategy — no provider, corpus or key needed by any test; full turns exercised through client → sse → reducer → renderer for each renderer family: answer, partial, narrowing, ranked causes, coverage failure, and each error outcome.
   - The keyboard-only core loop asserted end to end at component level — ask, narrow, cancel, widen scope, expand a citation and open it (1.13).
   - Region transitions preserve the typed question and the scope: into and out of provider configuration and history (10.2, 10.11).
@@ -368,7 +368,7 @@ references:
   - Stream: 1
   - Requirements: [1.13](requirements.md#1.13), [10.2](requirements.md#10.2), [10.11](requirements.md#10.11)
 
-- [ ] 46. Assemble the page and wire the regions <!-- id:f9ae029 -->
+- [x] 46. Assemble the page and wire the regions <!-- id:f9ae029 -->
   - +page.svelte as the one surface: scope bar, thread, ask input; picker, history, provider configuration and expanded passages as regions, not routes — navigation would discard the typed question and scope, which 10.2 and 10.11 forbid.
   - The picker expands in place under the scope bar pushing the thread down — legal because 4.2 constrains movement while streaming and expansion is a deliberate activation; collapsed at rest once a scope is chosen (2.11).
   - Overlay regions never trap focus, each dismissed with Escape returning focus to its opener; history one activation each way (12.8); chrome laid out toward 11.8's ≥ 70% content at 1280×800 collapsed.
@@ -377,7 +377,7 @@ references:
   - Stream: 1
   - Requirements: [2.11](requirements.md#2.11), [11.8](requirements.md#11.8), [12.8](requirements.md#12.8)
 
-- [ ] 47. Add the Playwright browser and accessibility suite <!-- id:f9ae02a -->
+- [x] 47. Add the Playwright browser and accessibility suite <!-- id:f9ae02a -->
   - No-reflow: over a scripted stream, the `top` of every already-painted line is unchanged at every subsequent frame (4.2) — the browser-level proof of Decision 2.
   - Keyboard-only loop with zero pointer use: ask, narrow, cancel, widen scope, expand a citation and open it (1.13, 13.1); each region dismissed with Escape returns focus to its opener (13.3); expanding and collapsing a citation mid-stream leaves it at the same viewport offset (5.8).
   - Open at source: a vendor-manual citation activates a link whose fragment is exactly `#page=N` with nothing appended; an authored citation reveals the entry in place with `entry_location` copyable and no navigation leaving the tab (5.5).

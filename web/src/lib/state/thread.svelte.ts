@@ -42,6 +42,13 @@ export class ThreadStore {
 	/** 1.6: the component focuses the emptied input when a turn settles. */
 	onSettled: (() => void) | null = null;
 
+	/**
+	 * A page-installed gate consulted before any submission: false blocks it.
+	 * Phase 9 wires the source-list state (9.13) and the shared-backend
+	 * disclosure (10.4) through it — neither is this store's own subject.
+	 */
+	submitGate: (() => boolean) | null = null;
+
 	readonly #scope: ScopeLike;
 	readonly #history: HistoryLike | null;
 	readonly #submit: SubmitFn;
@@ -102,6 +109,7 @@ export class ThreadStore {
 		const fromDraft = question === undefined;
 		const text = question ?? this.draft;
 		if (text.trim() === '') return null;
+		if (this.submitGate !== null && !this.submitGate()) return null;
 		if (!this.#scope.canSubmit) return null;
 		if (text.length > QUESTION_LIMIT) return null;
 
