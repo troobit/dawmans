@@ -110,7 +110,7 @@ references:
 
 ## Phase 4: Emission, identity and the loader
 
-- [ ] 13. Write tests for authored identity and the SourceRecord <!-- id:f3stq0d -->
+- [x] 13. Write tests for authored identity and the SourceRecord <!-- id:f3stq0d -->
   - source_id is the constant `authored/triage` per CONTRACTS 1 - 3.1's content-derived clause is the recorded defect, and only its operative half (independent of any filename, 1.8) is tested. display_name is `My Triage Notes`; hardware_applicability is `assumed` unconditionally and nothing in configuration can raise it (CONTRACTS 1 over 3.8's literal text); vendor, product, doctype, lang, doc_version, page_count and low_text are absent - manual-corpus 12.5's constructor refuses them.
   - passage_id is corpus.passage_id("authored/triage", passage_text) - the same function over the same canonical form as a manual passage (3.9).
   - Property - cosmetic invariance: perturbing marker style, blank lines, key casing, line endings, frontmatter key order and pointer targets leaves the ID unchanged (8.2's authored half). Property - sensitivity: any change to symptom, phrasings, preamble, cause statement, check or notes changes it. Property - canonical idempotence: render(parse(render(parse(f)))) == render(parse(f)).
@@ -119,13 +119,13 @@ references:
   - Stream: 1
   - Requirements: [1.8](requirements.md#1.8), [3.1](requirements.md#3.1), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [3.9](requirements.md#3.9)
 
-- [ ] 14. Implement identity and the SourceRecord construction <!-- id:f3stq0e -->
+- [x] 14. Implement identity and the SourceRecord construction <!-- id:f3stq0e -->
   - Canonical rendering in parse.py is the hashed text; the record is constructed once per run in loader.py.
   - Blocked-by: f3stq0d (Write tests for authored identity and the SourceRecord)
   - Stream: 1
   - Requirements: [1.8](requirements.md#1.8), [3.1](requirements.md#3.1), [3.7](requirements.md#3.7), [3.8](requirements.md#3.8), [3.9](requirements.md#3.9)
 
-- [ ] 15. Write tests for unit emission, splitting and unbacked <!-- id:f3stq0f -->
+- [x] 15. Write tests for unit emission, splitting and unbacked <!-- id:f3stq0f -->
   - The emission table of design 'Passage emission': symptom + phrasings + preamble first as Unit(repeat_on_split=True); each cause one Unit(atomic=True) in declared order, unmerged and undeduplicated (property - order preservation, 1.5 - the order becomes CONTRACTS 4c rank); closing statement atomic; Region(section_number=None, section_title=symptom, section_path=(), page_start=None, page_end=None, inferred=False) (3.4, 3.5); degraded=False and has_figures=False on every unit (3.6).
   - One passage per entry (Decision 2), split only over the 350-word cap and only between causes. Property - split invariants: every emitted passage contains the symptom exactly once and no cause spans two passages (3.3). Chunk overlap is suppressed for authored regions, or the second chunk carries the symptom twice in hashed, user-visible text.
   - Property - unbacked monotonicity: every passage carrying a 2.3-permitted or drifted cause is flagged and no passage is flagged without one (2.4, 8.5); a split entry marks only the passage carrying the cause; the 2.3 arm is exercised against a fixture rig, no live device being in that state.
@@ -135,7 +135,7 @@ references:
   - Stream: 1
   - Requirements: [1.5](requirements.md#1.5), [1.9](requirements.md#1.9), [2.3](requirements.md#2.3), [2.4](requirements.md#2.4), [3.2](requirements.md#3.2), [3.3](requirements.md#3.3), [3.4](requirements.md#3.4), [3.5](requirements.md#3.5), [3.6](requirements.md#3.6), [8.5](requirements.md#8.5)
 
-- [ ] 16. Implement TriageLoader.load emission <!-- id:f3stq0g -->
+- [x] 16. Implement TriageLoader.load emission <!-- id:f3stq0g -->
   - Regions in sorted path order; duplicate detection across the discovered set before emission; per-cause flags from the ledger and 2.3 decisions applied as UnitFlags.unbacked.
   - The overlap suppression for authored regions is a keyed change in dawmans/corpus/chunk.py - the one edit this spec makes to the corpus chunking pipeline, and manual-corpus's ledger does not carry it.
   - Blocked-by: f3stq0f (Write tests for unit emission, splitting and unbacked)

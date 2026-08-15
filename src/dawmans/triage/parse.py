@@ -184,6 +184,55 @@ def parse_entry(source_file: Path, data: bytes) -> ParseResult:
     return ParseResult(entry=entry, rejection=None, flags=flags)
 
 
+@dataclass(frozen=True)
+class Rendering:
+    """The canonical rendering, kept in the blocks the loader emits as units.
+
+    One rendering serves both readers of it. `render` joins the blocks for the
+    hash and for the reader; `triage.loader` emits each block as its own `Unit`,
+    so the emission table of design §Passage emission is applied to text that is
+    already canonical rather than to a second construction of it. Keeping the
+    causes aligned with `Entry.causes` is what lets the loader put a per-cause
+    `unbacked` flag on the right unit without indexing into a flat list.
+    """
+
+    head: str
+    """Symptom, `also:` phrasings and preamble — the `repeat_on_split` unit."""
+
+    causes: tuple[str, ...]
+    """One block per `Entry.cause`, in declared order (1.5)."""
+
+    closing: str | None
+
+    @property
+    def blocks(self) -> tuple[str, ...]:
+        """Every block in emission order."""
+        closing = (self.closing,) if self.closing else ()
+        return (self.head, *self.causes, *closing)
+
+
+def render_blocks(entry: Entry) -> Rendering:
+    """The canonical rendering's parts. See `render` for what is excluded and why."""
+    head = [entry.symptom]
+    if entry.phrasings:
+        head.append("also: " + "; ".join(entry.phrasings))
+    if entry.preamble:
+        head.append(entry.preamble)
+
+    causes = []
+    for cause in entry.causes:
+        block = [cause.statement, f"check: {cause.check}"]
+        if cause.notes:
+            block.append(cause.notes)
+        causes.append("\n".join(block))
+
+    return Rendering(
+        head="\n".join(head),
+        causes=tuple(causes),
+        closing=entry.closing or None,
+    )
+
+
 def render(entry: Entry) -> str:
     """The canonical rendering — the text that is hashed and the text the user sees.
 
@@ -192,26 +241,14 @@ def render(entry: Entry) -> str:
     entry's history; the fix pointers, so retargeting after a renumbering does
     not either; the file's name and path (1.8); and authoring cosmetics, which
     the parser has already normalised.
+
+    The blank line between blocks is for the reader alone. `corpus.passage_id`
+    collapses whitespace runs before hashing, so this rendering and the
+    `UNIT_JOIN`-joined text the chunker emits from the same blocks carry one
+    identifier — which is what makes the design's "the hashed text is
+    `passage_text` itself" true of an unsplit entry.
     """
-    blocks: list[str] = []
-
-    head = [entry.symptom]
-    if entry.phrasings:
-        head.append("also: " + "; ".join(entry.phrasings))
-    if entry.preamble:
-        head.append(entry.preamble)
-    blocks.append("\n".join(head))
-
-    for cause in entry.causes:
-        block = [cause.statement, f"check: {cause.check}"]
-        if cause.notes:
-            block.append(cause.notes)
-        blocks.append("\n".join(block))
-
-    if entry.closing:
-        blocks.append(entry.closing)
-
-    return "\n\n".join(blocks)
+    return "\n\n".join(render_blocks(entry).blocks)
 
 
 # --- Frontmatter ----------------------------------------------------------

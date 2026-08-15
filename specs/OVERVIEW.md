@@ -4,7 +4,7 @@
 [`PROCESS.md`](PROCESS.md) §9. On a merge conflict, regenerate rather than resolve. Everything
 below is derived from the files actually present; nothing is anticipated.
 
-**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 42 per-spec + 12 cross-cutting · **Task ledgers:** 1 of 4
+**Generated:** 2026-08-15 · **Specs:** 4 · **Anchored acceptance criteria:** 409 · **ADRs:** 48 per-spec + 12 cross-cutting · **Task ledgers:** 4 of 4
 
 ---
 
@@ -26,7 +26,7 @@ answers from the manual corpus only; session awareness sits behind a defined but
 |---|---|
 | [`PROCESS.md`](PROCESS.md) | The process source of truth: how specs are written, gated, and turned into code. Kept as shipped by the template. |
 | [`CONTRACTS.md`](CONTRACTS.md) | **Governing** for anything crossing a spec boundary — the four records, the turn's SSE event set, the `body` block types, the open-at-source mechanism, the closed outcome taxonomy and its reason vocabulary, the composed latency budget. Where a spec and CONTRACTS disagree, **CONTRACTS wins and the spec is the defect**. A spec may not invent a field on a shared record nor silently drop one. |
-| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — eleven ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
+| [`DECISIONS.md`](DECISIONS.md) | The cross-cutting meta log — twelve ADRs shaping the project as a whole. It is a synthesis: per-spec `decision_log.md` files remain **authoritative for detail**, and where the two disagree the per-spec log wins. |
 | `OVERVIEW.md` (this file) | Generated index. Regenerate; do not hand-merge. |
 
 ## Domains
@@ -49,17 +49,18 @@ amendment to that decision, not an ad-hoc `mkdir`.
 
 ## Specs
 
-All four are at **requirements and design complete**. Each design has been reviewed and repaired.
-One — `data/manual-corpus` — carries a `tasks.md` ledger and a `prerequisites.md`, and that ledger is
-now **fully implemented**: all 45 tasks across all 8 phases are done. The other three still have no
-ledger.
+All four are at **requirements and design complete**. Each design has been reviewed and repaired, and
+all four now carry a `tasks.md` ledger. Two are being built: `data/manual-corpus` is **fully
+implemented** — all 45 tasks across all 8 phases — and `data/symptom-triage` is through its first
+four phases, 16 of 29. `api/answer-engine` and `ui/ask-and-source-picker` have ledgers and no
+implementation yet.
 
 | Path | Domain | Capability | What it delivers | Phase | Criteria |
 |---|---|---|---|---|---|
 | [`data/manual-corpus/`](data/manual-corpus/requirements.md) | `data` | manual-corpus | Ingestion only: turns a folder of vendor PDFs and the authored triage source into a queryable, citable corpus — discovery, extraction fidelity, English selection, glyph repair, section-aware chunking with citation metadata, index build, inventory, and the rig-versus-corpus applicability report. | requirements ✅ · design ✅ · tasks ✅ (45 of 45 — phases 1–8) | 84 |
-| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks ⬜ | 60 |
-| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ | 111 |
-| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ | 154 |
+| [`data/symptom-triage/`](data/symptom-triage/requirements.md) | `data` | symptom-triage | The `authored-triage` source kind: symptom-to-cause entries the studio owner writes, each with ranked candidate causes, an observable check per cause, and a fix pointer into a vendor manual — plus the grounding rules, authoring loop, coverage reporting, starter set and drift handling. | requirements ✅ · design ✅ · tasks 🔶 (16 of 29 — phases 1–4) | 60 |
+| [`api/answer-engine/`](api/answer-engine/requirements.md) | `api` | answer-engine | The middle layer: retrieval over ingested chunks, grounding and honest refusal, citation assembly, source scoping, the pluggable provider abstraction and credential handling, the `StateSource` seam, and the localhost-only HTTP contract. Speed is the headline property. | requirements ✅ · design ✅ · tasks ⬜ (0 of 45 — 9 phases) | 111 |
+| [`ui/ask-and-source-picker/`](ui/ask-and-source-picker/requirements.md) | `ui` | ask-and-source-picker | The browser surface: the ask input and its one-key starters, the source picker and the corpus gaps it exposes, answer and narrowing rendering, citation inspection and open-at-page, waiting and error states across the whole outcome taxonomy, provider configuration, history, legibility and accessibility. | requirements ✅ · design ✅ · tasks ⬜ (0 of 47 — 9 phases) | 154 |
 
 Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
@@ -70,7 +71,7 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 ### `specs/data/manual-corpus/`
 
 - **Files present:** `requirements.md`, `design.md`, `decision_log.md` (19 ADRs), `tasks.md`,
-  `prerequisites.md`. The only spec with a complete file set.
+  `prerequisites.md`. A complete file set, as `api/answer-engine`'s now is.
 - 12 requirement sections, 84 anchored criteria. Owns `SourceRecord` and `Passage` from
   [`CONTRACTS.md`](CONTRACTS.md) §1–§2, and publishes the filename grammar two other specs now
   reconstruct (2.7). Reference corpus: roughly 1107 pages across four manuals.
@@ -92,17 +93,25 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/data/symptom-triage/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (6 ADRs).
-- **Missing:** `tasks.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (12 ADRs), `tasks.md`.
+- **Missing:** `prerequisites.md` — the two things no task here can do for itself are
+  `data/manual-corpus`'s, and its `prerequisites.md` records them.
 - 8 requirement sections, 60 anchored criteria. Header declares status *draft*.
+- **Ledger:** 29 tasks over 7 phases, test-then-implement, one work stream — **16 done, phases 1–4**.
+  Phase 1 — the entry model, the grammar and the canonical rendering — phase 2 — pointer resolution,
+  the section index cut from a real view, and the committed pointer ledger that separates 2.2's
+  rejection from 8.4's flag — phase 3 — device scope validation against the rig and the term
+  check — and phase 4 — authored identity, the `SourceRecord` CONTRACTS §1 fixes, and
+  `TriageLoader.load`'s region emission. Phase 5 (discovery, the sidecar and the run wiring) is next.
 - Exists because the manuals cannot answer diagnostic questions: "gain staging" appears **zero**
   times in the 1009-page Live 12 manual and "troubleshoot" appears twice (DECISIONS Decision 7).
-  §7 specifies a five-symptom starter set as the acceptance test for the source.
+  §7 specifies a five-symptom starter set as the acceptance test for the source, and it is task 23.
 
 ### `specs/api/answer-engine/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs).
-- **Missing:** `tasks.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (10 ADRs), `tasks.md`,
+  `prerequisites.md`.
+- **Ledger:** 45 tasks over 9 phases, none started.
 - 10 requirement sections, 111 anchored criteria. Header declares status *draft*.
 - Produces `Citation` and `AnswerEnvelope` ([`CONTRACTS.md`](CONTRACTS.md) §3–§4) and may emit only
   the outcomes in §6 of that file. Must define `StateSource` while shipping a null implementation
@@ -110,16 +119,16 @@ Criterion counts are the `<a name=` anchors in each `requirements.md`.
 
 ### `specs/ui/ask-and-source-picker/`
 
-- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs).
-- **Missing:** `tasks.md`.
+- **Files present:** `requirements.md`, `design.md`, `decision_log.md` (7 ADRs), `tasks.md`.
+- **Ledger:** 47 tasks over 9 phases, none started.
 - 13 requirement sections, 154 anchored criteria — **129 behavioural [B]** and **25 target-and-band
   [T]**, the latter run as the iterative loop of [`PROCESS.md`](PROCESS.md) §5.
 - Renders every outcome in the taxonomy and may invent none. Usage context (second screen, hands
   full, dim room) outranks feature richness in any trade-off.
 
-Every spec carries a `decision_log.md` — 42 per-spec ADRs against the 12 cross-cutting ones in
-[`DECISIONS.md`](DECISIONS.md). One spec carries a `tasks.md` and a `prerequisites.md`; the other
-three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
+Every spec carries a `decision_log.md` — 48 per-spec ADRs against the 12 cross-cutting ones in
+[`DECISIONS.md`](DECISIONS.md) — and a `tasks.md`. Two carry a `prerequisites.md`, naming what no
+task can do for itself. There are no `specs/bugfixes/` folders and no `smolspec.md` files.
 
 ---
 
@@ -131,9 +140,10 @@ three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md`
   four domains.
 - Four `design.md` documents, each reviewed and repaired against the review findings.
 - One governing shared-contract document covering the seams between them.
-- Twelve cross-cutting ADRs in `DECISIONS.md` and 42 per-spec ADRs, all *accepted*.
-- One `tasks.md` ledger, for `data/manual-corpus`, with the `prerequisites.md` naming what no task
-  can do for itself. **It is fully implemented — all 45 tasks, all 8 phases.** The package, the
+- Twelve cross-cutting ADRs in `DECISIONS.md` and 48 per-spec ADRs, all *accepted*.
+- **Four `tasks.md` ledgers, one per spec.** `data/manual-corpus` and `api/answer-engine` also carry
+  a `prerequisites.md` naming what no task can do for itself.
+- `data/manual-corpus` **fully implemented — all 45 tasks, all 8 phases.** The package, the
   shared records, both source stores, PDF extraction and the committed extraction fixtures, the
   text-conditioning stages — furniture marking, glyph repair and English content selection — the
   structural stages that turn a span model into `Region[]` (the section map and its three paths, TOC
@@ -150,6 +160,11 @@ three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md`
   1431 passages, a full cold rebuild in ~43 s against 8.1's 60 s budget, and the gap reports come out
   as the design predicts — owned-but-undocumented empty, indexed-but-not-owned empty, and
   documented-but-unconfirmed naming the APC and the Nitro Max (`data/manual-corpus` Decision 16).
+- `data/symptom-triage` **through phases 1–4, 16 of 29 tasks.** The entry model and its total
+  parser, the canonical rendering, pointer resolution against a section index cut from a real view,
+  the committed pointer ledger that separates a pointer that never worked from one that stopped,
+  device scope validation against the rig, the term check, and now authored identity and the region
+  emission behind `manual-corpus`'s loader seam.
 
 **What is next**
 
@@ -157,11 +172,13 @@ three carry neither. There are no `specs/bugfixes/` folders and no `smolspec.md`
   and §6a, and rewriting §4, §6 and §7 — and reconciled all four specs against it in the same pass.
   Six defects closed; the table below records what closed each. That was the precondition for the
   task phase, and it is met.
-- The **task phase** for the remaining three specs (`/starwave-tasks`), each behind its own approval
-  gate. `data/manual-corpus` is built; the other three have no ledger and are not implementable.
-  `data/symptom-triage` is the one that unblocks the rest: `manual-corpus` calls its `TriageLoader`
-  behind the loader seam and today runs with one store, and the end-to-end tests stand a stub in its
-  place.
+- **`data/symptom-triage` phases 5–7** — discovery and the unconditional load, the per-`passage_id`
+  sidecar, the validation messages, the coverage report, and the five starter entries §7 makes the
+  acceptance test for the source. It is the spec that unblocks the rest: `manual-corpus` calls its
+  `TriageLoader` behind the loader seam and today runs with one store, the end-to-end tests standing
+  a stub in its place. Phase 4 landing means the loader now exists to wire in.
+- **`api/answer-engine` and `ui/ask-and-source-picker` implementation.** Both have ledgers — 45 and
+  47 tasks — and neither is started.
 - **A closed gap made four mechanisms dormant** (Decision 12). Obtaining the Scarlett Solo 4th Gen
   guide documented the last undocumented device in the rig, so the owned-but-undocumented report is
   empty — and with it `required_manual`, the engine's device-scope union, triage's `unbacked` causes

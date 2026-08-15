@@ -658,3 +658,143 @@ control name, which is not a distinction anything in the design turns on.
 numeric class, to the flag vocabulary, or to Decision 5's rule that a miss never sets `unbacked`.
 
 ---
+
+## Decision 11: Canonical idempotence is stated over a parse–rebuild round trip
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Task 13 states a canonical-idempotence property as
+`render(parse(render(parse(f)))) == render(parse(f))`. It cannot hold as written. `render` is the
+canonical rendering of §Identity, and that section fixes what it excludes: the frontmatter, so a
+device added to `devices:` does not orphan the entry's history; the fix pointers, so retargeting
+after a renumbering does not either; and the file's name and path (1.8). Its output is therefore not
+an entry file. `parse_entry` applied to it rejects at the first check — `frontmatter-missing`, the
+`---` fence being required at byte 0 — so the inner `parse(render(...))` yields no entry and the
+outer `render` has nothing to render.
+
+The property the literal form was reaching for is real and worth holding: the canonical form of an
+entry must not move when the entry is written out and read back, or an author reformatting a file
+they did not otherwise change would orphan every citation the entry has issued.
+
+### Decision
+
+State the property as `render ∘ parse ∘ rebuild` being a fixed point, where `rebuild` renders a
+whole entry file from an `Entry` — frontmatter, `fix:` lines and all. `rebuild` lives in
+`tests/triage/rendering.py` beside the generators that already build entry files from the model.
+
+### Rationale
+
+`rebuild` re-supplies exactly what the rendering drops, which makes the round trip well-formed
+without weakening what is asserted: the composition still passes through the real parser and the
+real rendering, and it still fails if any cosmetic detail of the file survives into the canonical
+form or any content detail is lost from it. Putting the reconstruction in test support rather than
+in `parse.py` keeps the production module's surface at the one direction the design names — an entry
+file in, an `Entry` and a canonical rendering out — and avoids shipping a writer that would become a
+second definition of the entry format.
+
+### Alternatives Considered
+
+- **Make `render` emit a full entry file**: would restore the literal round trip - Rejected because
+  it contradicts §Identity outright. The rendering *is* the hashed text, so including the
+  frontmatter and the pointers would make a scope widening or a pointer retarget orphan the entry's
+  citation history, which is the specific outcome §Identity's exclusion table exists to prevent.
+- **Assert idempotence of `render` alone** — `render(e) == render(parse(rebuild(e)))` dropped in
+  favour of `render(render(...))` being ill-typed, so state only that `render` is a function -
+  Rejected because it asserts nothing: a pure function of one argument is trivially stable, and the
+  property would no longer exercise the parser at all, which is where a cosmetic leak would occur.
+- **Drop the property and keep only the example-based cosmetic-invariance cases** - Rejected because
+  the examples enumerate the perturbations someone thought of. The property drives entries through
+  the model and the file format together, and it is the half that would catch a rendering rule that
+  is stable for the five perturbations listed and unstable for a sixth.
+
+### Consequences
+
+**Positive:**
+- The property is well-formed and passes through both the parser and the rendering, so a leak in
+  either direction fails it.
+- `parse.py` ships no entry-file writer, so the entry format has exactly one definition.
+- `rebuild` is reusable: any later test needing "the same entry, written out again" has it.
+
+**Negative:**
+- `rebuild` is a second thing that must track the entry grammar. A grammar change that `rebuild`
+  does not follow shows up as a property failure rather than as a clear message, and the fix is in
+  test support rather than in the module under test.
+- The property no longer literally matches the task ledger's wording, so the ledger and this entry
+  have to be read together.
+
+### Impact
+
+`tests/triage/rendering.py` (`rebuild`), `tests/triage/test_identity.py`
+(`test_property_canonical_idempotence`). No change to `parse.render` or to what it excludes.
+
+---
+
+## Decision 12: The authored overlap suppression is `manual-corpus`'s rule, not an edit here
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+Design §Passage emission requires that chunk overlap be suppressed for authored regions. The symptom
+block is `repeat_on_split` rather than `atomic`, so without the suppression a split entry's second
+chunk carries the symptom twice — once as the repeat and once inside the ~50 words of overlap — in
+text that is hashed into `passage_id` and shown to the user when a citation is expanded. Task 16
+reserved a "keyed change in `dawmans/corpus/chunk.py`" for it, and called it the one edit this spec
+makes to the corpus chunking pipeline.
+
+That edit has since been made upstream and made more general. `manual-corpus` Decision 15 states the
+rule as "a repeat replaces overlap rather than joining it", implemented in `chunk._continuation`:
+where a continuation copies a `repeat_on_split` unit it carries no overlap at all. The rule reaches
+the authored case without the chunker knowing what kind of source it has, which is requirement 12.2.
+
+### Decision
+
+Make no edit to `dawmans/corpus/chunk.py`. Emit the symptom block as the region's first
+`repeat_on_split` unit and rely on the corpus rule, and assert the outcome here — `Chunk.carried`
+equals the symptom block's word count on every continuation, and the symptom appears exactly once in
+every passage.
+
+### Rationale
+
+The behaviour the design asks for is already delivered, so the reserved edit would be a second
+implementation of one rule in the same function. Two rules that must agree drift; one keyed on
+source kind would also breach 12.2, which is what keeps the chunker free of `if kind ==` branches.
+Asserting the outcome from this spec's own tests keeps the requirement verified here even though the
+mechanism lives there — if `manual-corpus` ever relaxes Decision 15, these tests fail rather than the
+symptom quietly doubling in hashed text.
+
+### Alternatives Considered
+
+- **Add a keyed suppression anyway**, as task 16 wrote it — a `source_id == "authored/triage"` branch
+  or an `overlap: bool` on `Region` - Rejected because it duplicates a rule that already fires, and
+  the keyed form breaches 12.2 while the flag form adds a field with exactly one caller.
+- **Take no position and leave the requirement untested here**, on the grounds that the chunker is
+  `manual-corpus`'s - Rejected because the requirement is this spec's. A test in the owning spec is
+  what turns an upstream behaviour into a dependency that cannot be withdrawn silently.
+
+### Consequences
+
+**Positive:**
+- One rule, one implementation, applied without the chunker knowing the source kind (12.2).
+- This spec makes no edit at all to the corpus chunking pipeline, so `manual-corpus`'s ledger
+  needing no row for it is now correct rather than an omission.
+- A regression upstream fails a test in the spec that depends on it.
+
+**Negative:**
+- The mechanism satisfying a §Passage emission requirement lives in another spec's module, so a
+  reader of `triage/loader.py` has to follow the module docstring to find it.
+- The suppression is conditional on the symptom block staying `repeat_on_split`. Making it `atomic`
+  for some later reason would silently reinstate overlap; the `Chunk.carried` assertion is what
+  catches that.
+
+### Impact
+
+`triage/loader.py` (module docstring and `emit`), `tests/triage/test_emission.py`
+(`test_a_split_carries_the_repeat_and_nothing_else`). Task 16's second bullet is superseded by this
+entry. No change to `dawmans/corpus/chunk.py`.
+
+---

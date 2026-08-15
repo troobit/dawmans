@@ -1,48 +1,43 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phases 1, 2 and 3 are implemented — the model, the grammar, the canonical
-rendering, pointer resolution, the ledger, device scope validation and the term
-check. Emission, identity and the loader are still outstanding.
+Phases 1–4 are implemented — the model, the grammar, the canonical rendering,
+pointer resolution, the ledger, device scope validation, the term check, and now
+identity, emission and `TriageLoader.load`. Discovery, the sidecar and the run
+integration (Phase 5 onwards) are outstanding.
 
-**Phase 2 is no longer blocked, and the block it was under is worth knowing how
-to clear.** It needed a locally built index, which needed both human
-prerequisites in `manual-corpus`'s `prerequisites.md`. Both are met: `rig.yaml`
-now exists in that spec's worktree carrying the Scarlett mapping, and
+**`data/manual-corpus` is merged into this branch** (`bd4625e`), which is what
+unblocked Phase 4. Two earlier runs recorded the block and costed the merge
+without taking it; what it was waiting on was a decision about whether another
+spec's work belongs on this branch, and the answer taken was yes — this spec
+builds on the corpus, CONTRACTS §1 forbids it redefining those types, and both
+branches were local and unpushed so the merge was reversible. The seven conflicts
+were all shared scaffolding the two branches grew independently; the merge commit
+records how each was resolved. The one resolution worth knowing: ruff's
+`extend-exclude` is now `["*.md"]` rather than the three directories this branch
+listed — `specs/`, `docs/` and `manuals/` hold no `.py`, so the pattern states the
+same rule over the files it actually means.
+
+**Phase 2's block was a different one and is also cleared.** It needed a locally
+built index, which needed both human prerequisites in `manual-corpus`'s
+`prerequisites.md`. Both are met: `rig.yaml` carries the Scarlett mapping and
 `make fetch-model` has been run once on this machine. See §Building the index for
 what remains a one-off by hand. Scope validation had been reachable before all
 this because it reads the rig and the corpus's identity vocabulary, neither of
 which needs an index.
 
-**Phase 4 is blocked too, and `rune` does not show it.** Its blocked-by names only
-task 3, so `rune streams --available` reports task 13 ready; in fact it needs
-`corpus.passage_id` and `manual-corpus` 12.5's `SourceRecord` constructor, which
-CONTRACTS §1 forbids this spec redefining. Cross-spec dependencies are not
-expressible in the ledger — every remaining task here has one. `corpus/passage_id.py`,
-`corpus/chunk.py`, `records.py` and the loader seam types do now exist, but on the
-unmerged `orbit-impl-1/manual-corpus` branch; Phase 4 becomes reachable when that
-merges, ahead of Phase 2 and without waiting for an index.
-
-That merge is available now and does not wait on the corpus agent. Everything Phase 4
-needs is already committed at `4f0ea7c` — `records.py` `SourceRecord` (its
-`authored/triage` arm enforcing 12.5) and `passage_id(source_id, text)`; the work still
-uncommitted in that worktree is all under `index/`, which Phase 4 never touches. The
-merge is not clean, but nothing in it is a semantic clash: `git merge-tree` reports seven
-files where the two branches independently grew the same shared scaffolding — `.gitignore`,
-`CHANGELOG.md`, `Makefile`, `pyproject.toml`, `specs/OVERVIEW.md`, `src/dawmans/__init__.py`,
-`uv.lock`. Both rewrote the Makefile's `$(error unconfigured)` stubs and both created
-`__init__.py` with a different docstring; PROCESS.md §9 already rules `OVERVIEW.md`
-(regenerate, never hand-merge) and `uv.lock` is `uv lock`. So the block on Phase 4 is a
-decision about what belongs on this branch, not a missing artefact — worth resolving once
-rather than re-checking each run. Phase 2 stays blocked either way: its two prerequisites
-are human-only.
+**Cross-spec dependencies are still not expressible in the ledger.** `rune`'s
+`blocked-by` names only tasks in this file, so a task can read ready while
+needing a module another spec owns. Every remaining task here has one; check the
+imports before trusting `rune streams --available`.
 
 ## Modules
 
 | Module | Holds |
 |---|---|
 | `model.py` | the five frozen dataclasses of design 'Components and Interfaces', plus `RejectionReason`, `FlagName`, `EntryRejection` and `Flag` |
-| `parse.py` | `parse_entry(source_file, data) -> ParseResult`, and `render(entry) -> str` |
+| `parse.py` | `parse_entry(source_file, data) -> ParseResult`, `render_blocks(entry) -> Rendering`, and `render(entry) -> str` |
+| `loader.py` | `TriageLoader`, `CorpusView`, `source_record`, `entry_location`, `normalised_symptom`, `emit`, and the `StoreOutcome`/`EntryOutcome`/`CauseOutcome` types |
 | `pointers.py` | `parse_pointer`, `normalise_title`, `SectionIndex`, `resolve`, `title_disagrees`, and the ledger — `pointer_key`, `Ledger`, `check_pointer` |
 | `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult` — design 'Device scope' |
 | `terms.py` | `terms`, `device_vocabulary`, `contains`, `Resolution`, `check_terms`, `TermMiss`, `term_flag` — design 'The term check (2.6)' |
@@ -95,9 +90,64 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
 
 - **`render()` is the passage text, not an entry file.** It excludes the
   frontmatter, the fix pointers and the filename by design (§Identity), so it
-  does not round-trip through `parse_entry`. Phase 4's canonical-idempotence
-  property will have to reconcile that; the design states there is no second
-  canonical form.
+  does not round-trip through `parse_entry` — feeding it back in rejects with
+  `frontmatter-missing`. The canonical-idempotence property is therefore stated
+  over `render ∘ parse ∘ rebuild`, `rebuild` being the test-support writer that
+  re-supplies exactly what the rendering drops. Decision 11.
+
+## Identity and emission (`loader.py`)
+
+- **The loader mints no `passage_id`.** `chunk_source` assigns every identifier
+  from the packed text, so an authored passage is identified by the same function
+  over the same canonical form as a manual passage (3.9). A second minting here
+  would be a second rule to keep in step with the chunker's packing.
+
+- **`render` and the emitted text hash alike.** `render` joins the blocks with a
+  blank line for the reader; the chunker joins the same blocks with `UNIT_JOIN`
+  (`"\n"`). `passage_id` canonicalises NFC and collapses whitespace runs before
+  hashing, so the two carry one identifier — which is what makes the design's
+  "the hashed text is `passage_text` itself" true of an unsplit entry.
+  `render_blocks` exists so both readers get the blocks from one construction.
+
+- **No edit was made to `corpus/chunk.py`, and task 16 asked for one.** The
+  overlap suppression §Passage emission needs is already `manual-corpus`
+  Decision 15 — "a repeat replaces overlap rather than joining it" in
+  `_continuation` — which reaches the authored case without the chunker knowing
+  the source kind (12.2). Decision 12. The dependency is asserted here rather than
+  assumed: `Chunk.carried` must equal the symptom block's word count on every
+  continuation, so a relaxation upstream fails a test in this spec.
+
+- **The `unbacked` mark has exactly two producers**, and they are per cause:
+  2.3's `undocumented:` and a drifted pointer (8.5). A term miss never sets it
+  (Decision 5). Because the flag is on the `Unit`, a split entry marks only the
+  passage carrying the cause and an unsplit one marks the whole thing — the
+  over-marking 2.4 chose.
+
+- **`normalised_symptom` is not `normalise_title`.** The title form strips a
+  leading section number, which a symptom may legitimately carry: "0 dB is never
+  reached" and "dB is never reached" are two symptoms. It is casefold plus
+  whitespace collapsing and nothing else.
+
+- **Duplicate detection compares device sets by intersection, not equality.**
+  `overlapping_scopes/` is the fixture that discriminates: `[live-12]` and
+  `[live-12, apc-key-25]` are unequal, and both are retrievable in any
+  Live-scoped turn. Both entries are rejected, because nothing says which the
+  author meant to keep.
+
+- **`UNCHUNKED = 0` is restated rather than imported.** The corpus's copy lives
+  in `corpus/pdf/loader.py`, which imports PyMuPDF; importing it here would pull
+  an AGPL dependency out of the `corpus/pdf/` confinement Decision 6 sets.
+
+- **`StoreOutcome` is separate from `LoadResult` on purpose.** The rejections and
+  flags outlive emission — the sidecar's report block and `dawmans validate` both
+  read them, and `validate` emits no passages at all. `evaluate()` is the whole
+  verdict; `load()` is `evaluate()` plus `emit()`.
+
+- **The term check is not wired in yet.** `check_terms` needs passage *text*, and
+  `CorpusView` carries only the `SectionIndex` and the indexed identity set —
+  the two things Phase 4 reads. The reader that builds a view from
+  `views/<hex>/passages.jsonl` is Phase 5's (task 17), and the term flags join
+  the run there.
 
 ## Pointer resolution and the ledger (`pointers.py`)
 

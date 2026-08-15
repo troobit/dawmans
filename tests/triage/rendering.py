@@ -72,6 +72,51 @@ def entry_file(
     return ("﻿" + text) if bom else text
 
 
+def rebuild(entry) -> str:
+    """An entry file that parses back to `entry` — the inverse `render` is not.
+
+    `render` is the canonical rendering, and it excludes the frontmatter, the fix pointers
+    and the filename by design (§Identity), so `parse_entry(render(e))` rejects with
+    `frontmatter-missing` and the literal `render(parse(render(parse(f))))` of task 13
+    cannot be stated. This is the reconciliation: rebuilding the file from the model
+    re-supplies exactly what the rendering drops, so `render ∘ parse ∘ rebuild` is a
+    round trip and idempotence is a property of the canonical form rather than of a
+    document format the design never claimed round-trips. See decision_log Decision 11.
+    """
+    sections = [
+        Section(
+            statement=cause.statement,
+            check=cause.check,
+            fixes=[_pointer_text(p) for p in cause.fixes],
+            undocumented=cause.undocumented_device,
+            notes=cause.notes.split("\n") if cause.notes else [],
+        )
+        for cause in entry.causes
+    ]
+    if entry.closing is not None:
+        # The parser folds a closing statement's own notes into the one string, so the
+        # heading is its first line and everything after it is prose beneath the heading.
+        statement, _, notes = entry.closing.partition("\n")
+        sections.append(Section(statement=statement, notes=notes.split("\n") if notes else []))
+
+    return entry_file(
+        devices=[d.id + (f"@{d.revision}" if d.revision else "") for d in entry.devices],
+        symptom=entry.symptom,
+        sections=sections,
+        phrasings=entry.phrasings,
+        preamble=entry.preamble.split("\n") if entry.preamble else None,
+    )
+
+
+def _pointer_text(pointer) -> str:
+    parts = [pointer.source_id]
+    if pointer.section_number is not None:
+        parts.append(f"§{pointer.section_number}")
+    if pointer.section_title is not None:
+        parts.append(f'"{pointer.section_title}"')
+    return " ".join(parts)
+
+
 # --- Strategies -----------------------------------------------------------
 
 _SAFE = string.ascii_letters + string.digits + " "

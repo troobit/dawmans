@@ -12,6 +12,37 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 4 — identity, emission and the loader.** `triage/loader.py` puts the
+  entry store behind `manual-corpus`'s `SourceLoader` seam. `source_record` is design §Identity's
+  table applied literally — the constant `authored/triage`, `My Triage Notes`, `assumed`
+  applicability that nothing in configuration can raise, and not one of the seven vendor-manual
+  fields, which 12.5's constructor refuses rather than defaults. `emit` turns one entry into one
+  `Region`: the symptom, its `also:` phrasings and its preamble first as a `repeat_on_split` unit,
+  then each cause `atomic` in declared order (1.5 — that order becomes CONTRACTS §4c's rank), then
+  the closing statement. `passage_id` is minted by the corpus chunker and nowhere else, so an
+  authored passage is identified by the same function over the same canonical form as a manual
+  passage (3.9); `parse.render_blocks` is the one construction of that form, joined with a blank
+  line for the reader and with `UNIT_JOIN` by the chunker, which hash alike because `passage_id`
+  collapses whitespace before hashing.
+
+- **`data/symptom-triage` Decision 12 — the authored overlap suppression is `manual-corpus`'s rule,
+  not an edit here.** Task 16 reserved a keyed change to `dawmans/corpus/chunk.py` as the one edit
+  this spec makes to the chunking pipeline. That edit has since been made upstream and made more
+  general: `manual-corpus` Decision 15 states it as "a repeat replaces overlap rather than joining
+  it", which reaches the authored case without the chunker knowing what kind of source it has
+  (12.2). Making it again would be two rules that must agree in one function. The outcome is
+  asserted from this spec instead — `Chunk.carried` equals the symptom block's word count on every
+  continuation — so a relaxation upstream fails a test here rather than quietly putting the symptom
+  into hashed, user-visible text twice.
+
+- **`data/symptom-triage` Decision 11 — canonical idempotence is stated over a parse–rebuild round
+  trip.** Task 13's literal `render(parse(render(parse(f)))) == render(parse(f))` cannot hold:
+  `render` excludes the frontmatter, the fix pointers and the filename by design, so its output is
+  not an entry file and the inner parse rejects with `frontmatter-missing`. `render ∘ parse ∘
+  rebuild` is asserted instead, `rebuild` being a test-support writer that re-supplies exactly what
+  the rendering drops — which keeps the property passing through the real parser and the real
+  rendering without shipping a second definition of the entry format.
+
 - **`data/symptom-triage` Phase 3 — the term check.** `triage/terms.py` implements design §The term
   check (2.6): extraction over the cause statement plus its `check:` value and nothing else — the
   deliberate narrowing that keeps 2.5's causal assertions out of a factual check — of capitalised
