@@ -37,7 +37,7 @@ references:
 
 ## Phase 2: Pointer resolution and the ledger
 
-- [ ] 4. Build the section fixtures from the real index <!-- id:f3stq04 -->
+- [x] 4. Build the section fixtures from the real index <!-- id:f3stq04 -->
   - Extract once and commit: live_sections.json (the ~15 sections the starter set points at, including the section printing `0 dB` that 7.3 depends on), scarlett_sections.json (the DIRECT MONITOR section), apc_sections.json (unnumbered regions, for the title form), split_section.json (one section chunked into three).
   - Requires a locally built index - manual-corpus implemented and its prerequisites met; CI never opens a PDF, exactly as the corpus's extraction snapshots work.
   - Also build the drift/ fixture pair (the same section with edited text plus a seeded ledger) and overlapping_scopes/ (the same symptom scoped [live-12] and [live-12, apc-key-25]).
@@ -45,7 +45,7 @@ references:
   - Requirements: [2.1](requirements.md#2.1)
   - References: specs/data/manual-corpus/prerequisites.md
 
-- [ ] 5. Write tests for the pointer grammar and section resolution <!-- id:f3stq05 -->
+- [x] 5. Write tests for the pointer grammar and section resolution <!-- id:f3stq05 -->
   - Three forms parse: `<source_id> §<number>`, `<source_id> "<title>"`, both together; no page form exists at all (8.1, Decision 3), and a version change alone breaks nothing because source_id carries no version (8.3).
   - Resolution runs against two maps built in one pass over the view's passages.jsonl - (source_id, section_number) and (source_id, normalised title) - each to the section's passage ids in section order; immutable once built, so two runs over one view resolve identically.
   - Title normalisation: casefold, collapse whitespace, strip a leading section number and trailing punctuation; else a unique prefix; two matches is Unresolved(ambiguous-title) with candidates named, never an arbitrary pick. apc_sections.json proves the title form reaches an unnumbered manual.
@@ -55,13 +55,13 @@ references:
   - Stream: 1
   - Requirements: [2.1](requirements.md#2.1), [2.7](requirements.md#2.7), [8.1](requirements.md#8.1), [8.3](requirements.md#8.3)
 
-- [ ] 6. Implement pointers.py grammar, SectionIndex and resolve <!-- id:f3stq06 -->
+- [x] 6. Implement pointers.py grammar, SectionIndex and resolve <!-- id:f3stq06 -->
   - Nearest-section candidates for the 5.3 message come from the same normalised title index, by edit distance.
   - Blocked-by: f3stq05 (Write tests for the pointer grammar and section resolution)
   - Stream: 1
   - Requirements: [2.1](requirements.md#2.1), [2.7](requirements.md#2.7), [8.1](requirements.md#8.1), [8.3](requirements.md#8.3)
 
-- [ ] 7. Write tests for the pointer ledger and reject-versus-flag <!-- id:f3stq07 -->
+- [x] 7. Write tests for the pointer ledger and reject-versus-flag <!-- id:f3stq07 -->
   - No ledger row and unresolved is a 2.2 rejection naming entry, cause and pointer; a row present and unresolved is an 8.4 flag plus unbacked on the cause, the entry stays ingested, and resolving again on a later run clears the flag (8.5). An unchanged passage keeps resolving with no edit to the entry (8.2, drift/ fixture).
   - The key is the pointer alone - (source_id, section number, or normalised title) - never the entry (Decision 4). Property - ledger key stability: editing an entry's devices: or symptom wording changes no key, so no previously resolving pointer becomes a rejection. Property - reject/flag state machine: over random (ingest, edit entry, edit manual, remove manual, restore) sequences, a pointer that resolved once is only ever a flag afterwards.
   - NDJSON, one row per pointer sorted by pointer; resolved_at written only on transition, so a no-change run leaves the file byte-identical; rows never pruned; entry_keys is annotation, not key.
@@ -71,7 +71,7 @@ references:
   - Stream: 1
   - Requirements: [2.2](requirements.md#2.2), [8.2](requirements.md#8.2), [8.4](requirements.md#8.4), [8.5](requirements.md#8.5)
 
-- [ ] 8. Implement the pointer ledger <!-- id:f3stq08 -->
+- [x] 8. Implement the pointer ledger <!-- id:f3stq08 -->
   - triage/.pointer-ledger.jsonl, machine-written and committed, with merge=union set in .gitattributes; append-and-update only under dawmans ingest.
   - Blocked-by: f3stq07 (Write tests for the pointer ledger and reject-versus-flag)
   - Stream: 1

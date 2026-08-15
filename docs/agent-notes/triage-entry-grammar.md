@@ -1,19 +1,18 @@
 # Triage entry grammar (`dawmans.triage`)
 
 How the `authored-triage` entry format is parsed. Spec: `specs/data/symptom-triage/`.
-Phase 1 of that ledger is implemented — the model, the grammar and the canonical
-rendering — plus device scope validation (tasks 11–12, stream 2). Pointer
-resolution, the ledger, the term check, emission and the loader are still
-outstanding.
+Phases 1 and 2 are implemented — the model, the grammar, the canonical rendering,
+pointer resolution and the ledger — plus device scope validation (tasks 11–12,
+stream 2). The term check, emission and the loader are still outstanding.
 
-**Phase 2 is blocked on `data/manual-corpus`**, not deferred: task 4 extracts the
-section fixtures from a locally built index, and 5–8 are blocked on 4. The gate
-is a committed `views/<hex>/passages.jsonl` — `manual-corpus` task 37, the atomic
-view commit — plus the human prerequisites in its `prerequisites.md` (the one-off
-`make fetch-model`, and the Scarlett mapping in `rig.yaml`). A task count is the
-wrong thing to check here; check for that file. Scope validation was reachable
-because it reads the rig and the corpus's identity vocabulary, neither of which
-needs a built index.
+**Phase 2 is no longer blocked, and the block it was under is worth knowing how
+to clear.** It needed a locally built index, which needed both human
+prerequisites in `manual-corpus`'s `prerequisites.md`. Both are met: `rig.yaml`
+now exists in that spec's worktree carrying the Scarlett mapping, and
+`make fetch-model` has been run once on this machine. See §Building the index for
+what remains a one-off by hand. Scope validation had been reachable before all
+this because it reads the rig and the corpus's identity vocabulary, neither of
+which needs an index.
 
 **Phase 4 is blocked too, and `rune` does not show it.** Its blocked-by names only
 task 3, so `rune streams --available` reports task 13 ready; in fact it needs
@@ -44,7 +43,7 @@ are human-only.
 |---|---|
 | `model.py` | the five frozen dataclasses of design 'Components and Interfaces', plus `RejectionReason`, `FlagName`, `EntryRejection` and `Flag` |
 | `parse.py` | `parse_entry(source_file, data) -> ParseResult`, and `render(entry) -> str` |
-| `pointers.py` | `parse_pointer(text, line) -> Pointer \| None`. `SectionIndex` and `resolve` are Phase 2 |
+| `pointers.py` | `parse_pointer`, `normalise_title`, `SectionIndex`, `resolve`, `title_disagrees`, and the ledger — `pointer_key`, `Ledger`, `check_pointer` |
 | `scope.py` | `validate_scope(entry, rig, indexed) -> ScopeResult` — design 'Device scope' |
 
 The design's 'Module placement' names only behaviour modules. `model.py` is an
@@ -99,6 +98,60 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   property will have to reconcile that; the design states there is no second
   canonical form.
 
+## Pointer resolution and the ledger (`pointers.py`)
+
+- **`resolve` reads passages and nothing else.** No shard, no vector file, no
+  PDF, and — the one that matters — no `SourceRecord`. That last exclusion *is*
+  8.3: `doc_version` lives on the record, so replacing Live 12 with Live 12.1
+  cannot move a pointer on its own. An implementation that consulted
+  `sources.json` would pass every example test and quietly break the requirement.
+
+- **The number selects; the title only corroborates.** Where both are given and
+  the number names no section, the pointer is unresolved — it does *not* fall
+  back to the title. Falling back would silently repair a renumbering, which is
+  the event `title-number-disagreement` exists to surface.
+
+- **`title_disagrees` is separate from `resolve` because the signature is
+  pinned.** The design fixes `resolve(p, idx) -> list[str] | Unresolved`, which
+  has no channel for a flag. The disagreement is a second, pure question over the
+  same index rather than a wider return type.
+
+- **Exact titles are looked up before the prefix rule.** Otherwise a title that
+  *is* a section reports itself ambiguous against every longer title it happens
+  to prefix. Two matches at either stage is `ambiguous-title` with the candidates
+  named — never an arbitrary pick, because 54 of Live's titles are duplicated
+  across its outline.
+
+- **`normalise_title` strips a leading section number.** Live prints its titles
+  with the number attached, so an author copying one out of the manual types
+  `18.1 The Live Mixer` and means the section the manual calls `The Live Mixer`.
+
+- **`AUTHORED_SOURCE` is checked before index membership.** The authored source is
+  not in any view, so an implementation that tested membership first would call
+  2.7's rejection `unknown-source` and hand the author the wrong message.
+
+- **The ledger key is the pointer, and the number wins where there is one.** So
+  adding a corroborating title — or letting one go stale — moves no row. Keying
+  on the entry would make a cosmetic `devices:` edit withdraw a drifted entry
+  under 2.2; that is Decision 4, and there is a property test for it.
+
+- **`check_pointer` never records.** Recording is the caller's move under
+  `dawmans ingest` alone, which is what lets `dawmans validate` run the same
+  check over the whole store without promoting a broken pointer to "previously
+  fine" (5.4).
+
+- **`record` writes only on transition, and transition is detected by the passage
+  ids.** The ledger has no "drifted" marker, so "resolved again after a drift" is
+  read as "resolves to passages other than the ones the row records". A pointer
+  resolving to exactly what it resolved to last time changes nothing, and the
+  file written back is byte-identical — which is the only reason a committed
+  machine-written file is tolerable.
+
+- **A missing ledger is not an empty one.** `Ledger.read` returns
+  `missing=True` on `FileNotFoundError` so the run can emit the one report line
+  the design requires; an existing but empty file is `missing=False`. Deleting
+  the file re-arms 2.2 for the whole store, and that must not be silent.
+
 ## Device scope (`scope.py`)
 
 - **`indexed` is not a set of source ids.** It is every identity the corpus
@@ -132,6 +185,51 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   `elektron/digitakt` and a `roland/tr-8s`. Tests against the real inventory
   would also break every time a manual is added.
 
+## Building the index, and the fixtures cut from it
+
+`tests/fixtures/sections/*.json` are slices of a **real** view, cut once by
+`tools/extract_section_fixtures.py` and committed, so the whole suite runs with
+`manuals/` absent, no PDF opened and no embedding model loaded — the same
+arrangement `manual-corpus` uses for its extraction snapshots.
+`tests/fixtures/README.md` says what each one asserts.
+
+Refreshing them needs an index, which today means the `manual-corpus` worktree,
+because that spec's `cli.py` — its task 44, the run orchestration — is still a
+bare docstring. There is no `dawmans ingest` to call. The stages are all finished
+and compose directly:
+
+```
+PdfLoader(root=manuals/).scan()      -> discovery, per source
+loader.load(discovered)              -> LoadResult(record, regions)
+chunk_source(record, regions)        -> chunks
+build_shard(index/, record=..., chunks=..., store=..., fingerprint=..., embedder=...)
+commit_view(index/, shards=read_shards(index/), embedding=embedder.descriptor)
+```
+
+Roughly forty lines, run once with `uv run python` from that worktree; a real
+build over the four manuals took about a minute and produced 1431 passages under
+`index/views/<hex>/`. Both `index/` and `models/` are gitignored, so nothing of
+this lands in a commit. Write the driver as a throwaway and delete it — it is
+task 44's job, and leaving a second orchestration behind is how two of them drift
+apart.
+
+Then, from this worktree:
+
+```
+uv run python tools/extract_section_fixtures.py <corpus>/index/views/<hex>
+```
+
+The extractor exits non-zero rather than writing a short fixture if any section
+it names is missing from the view, so a corpus rebuild that drops a section is
+caught at extraction rather than as a puzzling test failure later.
+
+**Passage ids survive a rebuild.** The fixtures were first cut from one view and
+re-cut from a later one the corpus agent built independently; every byte matched.
+`passage_id` is content-derived, so an unchanged manual re-extracts to the same
+identifiers — `manual-corpus`'s incremental-equivalence property, observed rather
+than assumed. Re-running the extractor against a fresh view is therefore a cheap
+way to confirm the corpus has not moved under the fixtures.
+
 ## Tooling
 
 - `make test` → `uv run pytest`; `make lint` → spelling, `ruff check`,
@@ -143,7 +241,11 @@ by `parse`, `pointers`, `scope` and `coverage` alike, and putting them in
   included — write `normalise`, never the `-ize` form. Its pattern is
   word-bounded, so an identifier burying a US spelling before an underscore
   slips through; do not rely on that. A line containing `spelling-ignore` is
-  exempt, for unavoidable external identifiers only.
+  exempt, for unavoidable external identifiers only. **`tests/fixtures/` is
+  skipped wholesale**: those files quote the vendor's own words verbatim, and
+  correcting a manual's spelling would make the fixture a document nobody
+  shipped. `orbit-impl-1/manual-corpus` carries the identical exclusion for the
+  identical reason, so the two copies of this script do not conflict on merge.
 - The full package scaffold (whole module tree, `fetch-model`, `bench`, PyMuPDF
   confinement) is `data/manual-corpus` task 1 and is still outstanding. What is
   here is only what Phase 1 needed.

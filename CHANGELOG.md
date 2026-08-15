@@ -10,6 +10,41 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **`data/symptom-triage` Phase 2 — pointer resolution and the ledger.** `SectionIndex` builds the
+  two maps of design §Fix pointers in one pass over a view's `passages.jsonl`, and `resolve` returns
+  a section's passage ids in section order or an `Unresolved` naming why, with nearest-section
+  candidates for the 5.3 message. Reading passages and nothing else is what makes 8.3 hold:
+  `doc_version` lives on the `SourceRecord`, so a new document version of the same passages cannot
+  move a pointer. `pointers.Ledger` is the committed NDJSON memory that separates 2.2's rejection
+  from 8.4's flag — keyed on the pointer alone (Decision 4), sorted, never pruned, and written only
+  on transition so an unchanged run leaves the file byte-identical. `.gitattributes` sets
+  `merge=union` on it.
+
+- **The section fixtures, cut from a real index.** `tests/fixtures/sections/` holds the 21 Live
+  sections the starter set points at (including §18.1.1, which prints the `0 dB` requirement 7.3
+  depends on), the Scarlett's Direct Monitor sections, the APC guide's unnumbered regions, §28.24
+  chunked into three, and the `drift/` before-and-after pair. They are slices of a view built once
+  locally by `tools/extract_section_fixtures.py` and committed, so the suite runs with `manuals/`
+  absent and no embedding model loaded — the arrangement `data/manual-corpus` already uses for its
+  extraction snapshots. `tests/fixtures/README.md` documents each; it sits above both fixture roots
+  because every `.md` file under an entry store is an entry, so a README beside one would be
+  discovered and rejected as a malformed entry.
+
+- **`tools/check_spelling.sh` skips `tests/fixtures/`.** Those files quote the vendor's own words
+  verbatim so a stage can be tested against what the manual actually says; correcting a manual's
+  spelling would make the fixture a document nobody shipped. `orbit-impl-1/manual-corpus` already
+  carries the identical exclusion for the identical reason, so the two copies agree rather than
+  conflicting on merge.
+
+- **`data/symptom-triage` Decision 9 — a ledger transition is detected by comparing passage ids.**
+  The design requires `resolved_at` move only on transition but does not say how a run recognises
+  "resolution after a drift", and the ledger deliberately carries no drifted marker. Comparing the
+  row's `passage_ids` against what the pointer resolves to now settles it from the row itself: a
+  renumbered, rewritten section produces different passages, while a manual restored to exactly its
+  previous state produces the previous ids and so writes nothing at all.
+
 ### Changed
 
 - **Costed the `data/manual-corpus` merge that unblocks `data/symptom-triage` Phase 4.**

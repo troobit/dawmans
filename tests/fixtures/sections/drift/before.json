@@ -1,0 +1,33 @@
+{
+ "schema": "dawmans.triage.sections/1",
+ "captured_from": "ableton/live-12 §18.6",
+ "asserts": "the pointer `ableton/live-12 §18.6` resolves, and the seeded ledger row records these passage ids",
+ "passages": [
+  {
+   "passage_id": "ableton/live-12#4d7339c32b29d043",
+   "source_id": "ableton/live-12",
+   "section_number": "18.6",
+   "section_title": "Soloing and Cueing",
+   "page_start": 401,
+   "page_end": 402,
+   "text": "18.6 Soloing and Cueing\nBy default, soloing a track simply mutes all other tracks (except in some cases where tracks are\nfeeding other tracks). The signal from the soloed tracks is heard through their respective outputs, with\nthe pan setting of each track preserved. Soloing a clip track leaves any return tracks audible,\nprovided that the Solo in Place option is enabled in the Solo button’s context menu. Solo in Place can\nalso be set as the default behavior by selecting the entry in the Options menu.\nSoloing a return track mutes the main output of all other tracks, but still allows you to hear any signals\nthat arrive at the return via track sends.\nLive allows you to replace the standard soloing operation with a cueing operation that lets you\npreview tracks as though you were cueing a record on a DJ mixer. This allows choosing clips and\nadjusting effects without the audience hearing, before bringing tracks into the mix.\nIn order to set Live up for cueing, you must be using an audio interface with at least four dedicated\noutputs (or two dedicated stereo outputs). The respective settings are accessible in the Main track.\nMake sure you have the mixer section and In/Out controls visible.\nThe Cueing-Related Session Mixer Controls.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#71a4b04199cf4570",
+   "source_id": "ableton/live-12",
+   "section_number": "18.6",
+   "section_title": "Soloing and Cueing",
+   "page_start": 402,
+   "page_end": 402,
+   "text": "The Cueing-Related Session Mixer Controls.\n1. The Main Out chooser selects the output on your interface to be used as the main output.\n2. The Cue Out chooser selects the output on your hardware interface to be used for cueing. This\nhas to be set to an output other than that selected for Main. If the desired outputs don’t show up\nin these choosers, please check the Audio Settings.\n3. Activate cueing by setting the Solo/Cue Mode switch to “Cue.“\n4. The tracks’ Solo switches are now replaced by Cue switches with headphone icons. When a\ntrack’s Cue switch is pressed, that track’s output signal will be heard through the output selected\nin the Cue Out chooser. Note that the Track Activator switch on the same track still controls\nwhether or not the track is heard at the Main output.\n5. The Cue Volume control adjusts the volume of the cueing output.\nNote that when cueing is set up and activated, the output of audio files that you are previewing in the\nbrowser is also heard through the Cue Out.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  }
+ ]
+}

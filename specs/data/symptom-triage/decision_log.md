@@ -500,3 +500,79 @@ Matching stays exact in both halves (4.2). The union is a wider vocabulary, neve
 rejection or flag vocabularies, and none to `rig.yaml` or `manual-corpus`.
 
 ---
+
+## Decision 9: A ledger transition is detected by comparing passage ids
+
+**Date**: 2026-08-15
+**Status**: accepted
+
+### Context
+
+The design requires `resolved_at` be written **only on transition** — "first resolution, or
+resolution after a drift" — so that a run changing nothing leaves `triage/.pointer-ledger.jsonl`
+byte-identical and the working tree clean. A machine-written file that is also committed is only
+tolerable on that condition.
+
+It does not say how a run recognises "resolution after a drift". The ledger deliberately carries no
+drifted marker: a row records that a pointer *did* resolve and nothing else, which is what makes
+rows safe never to prune and safe to merge as a union. A run meeting a resolving pointer with a row
+already present therefore cannot tell, from the row's existence alone, whether it is looking at an
+ordinary unchanged run or at a recovery from a drift a previous run flagged.
+
+### Decision
+
+A transition is a row whose `passage_ids` differ from what the pointer resolves to now — or the
+absence of a row at all. `Ledger.record` rewrites the row, moving `resolved_at`, in exactly those
+two cases, and reports whether it did.
+
+### Rationale
+
+The passage ids *are* the record of what was verified, and drift is by definition a change in what
+the pointer addresses. A section that was renumbered and rewritten produces different passages, so
+a pointer resolving again after the manual is revised resolves to ids the row does not hold — the
+transition, observable from the row itself without a second field to keep in step with it.
+
+The degenerate case comes out right rather than merely tolerable: a manual restored to exactly its
+previous state resolves to exactly the previous ids, so nothing transitioned, nothing is written,
+and the file stays byte-identical. The flag clears because the pointer resolves, which is what 8.5
+asks for — it never asked for a ledger write.
+
+### Alternatives Considered
+
+- **A `drifted` field on the row**: mark the row when a run flags it, clear it when the pointer
+  resolves again - rejected because it makes the ledger stateful about the *present* rather than a
+  record of the past. Two machines with union-merged ledgers would then hold rows disagreeing about
+  a current condition, and no merge rule resolves that; a union of "did resolve" rows is always
+  sound.
+- **Move `resolved_at` on every successful resolution**: the simplest possible rule - rejected
+  because it rewrites the file on every run, so an ingest that changed nothing dirties the working
+  tree and the author cannot tell a real ledger change from noise in `git diff`. That defeats the
+  reason the file is committed at all.
+- **Compare a hash of the resolved passages' text**: more directly "did the text change" - rejected
+  because a `passage_id` is already content-derived (`manual-corpus` 3.9), so the ids carry that
+  information, and reading passage text here would make resolution depend on more of the view than
+  the two maps it is specified to read.
+
+### Consequences
+
+**Positive:**
+- No field exists that a run could forget to clear, so the ledger cannot hold a stale drift mark.
+- A no-change run is byte-identical, which is what keeps the committed file honest in review.
+- Rows stay pure records of the past, so the `merge=union` rule in `.gitattributes` remains sound.
+- Recovery from drift needs no edit to the entry and no ledger surgery — restoring the manual is
+  the whole fix.
+
+**Negative:**
+- A re-chunk that changes passage ids without changing what the section says reads as a transition
+  and moves `resolved_at`. The row stays correct and nothing is flagged, but the timestamp
+  overstates what happened.
+- The ledger cannot report *when* a pointer drifted, only when it last resolved. Requirement 8.6
+  lists flagged entries in the coverage report from the current run's outcome, so nothing needs that
+  history today.
+
+### Impact
+
+`triage/pointers.py` — `Ledger.record` and its return value. No change to the row schema, to the key
+rule of Decision 4, or to the reject-versus-flag decision itself.
+
+---
