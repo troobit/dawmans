@@ -1,0 +1,46 @@
+{
+ "schema": "dawmans.triage.sections/1",
+ "captured_from": "focusrite/scarlett-solo-4g (Focusrite Scarlett Solo 4th Gen User Guide v4.0)",
+ "asserts": "the direct-monitoring cause of 7.4 resolves in the manual that closed the last corpus gap",
+ "passages": [
+  {
+   "passage_id": "focusrite/scarlett-solo-4g#7c09edf3b9e85740",
+   "source_id": "focusrite/scarlett-solo-4g",
+   "section_number": null,
+   "section_title": "Direct Monitor Button",
+   "page_start": 13,
+   "page_end": 13,
+   "text": "Direct Monitor Button\nAir Off Direct Monitor allows you to hear the signals connected to your interface's inputs\nwithout them going through your computer. This means you will hear the inputs without any\nlatency and without effects.\nYou might use Direct Monitoring if you're experiencing latency or a delay between making a\nsound and hearing it back from your software, or if you want to hear the signal going into your\nScarlett, instead of after software with effects and plugins changing the way it sounds.\nAir Presence selected Air Presence and Drive selected\nWhen Direct Monitor is off, the Direct icon lights white, to turn on direct monitoring, press the\nWhen you click Focusrite Control 2's Air button the last selected Air mode becomes activated. Direct button once and the Direct icon lights green.\nTo change the selected Air mode (Presence or Presence and Drive) click the arrow to show the\ndropdown menu.\nDirect monitor off. Direct monitor on.\nAir Presence selected Air Presence and Drive selected\nNote\nAir Presence & Drive is only available at up to 96kHz, you cannot use it at quad-band\n(176.4kHz and 192 kHz) sample rates.",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "focusrite/scarlett-solo-4g#b317b2d21f480e4c",
+   "source_id": "focusrite/scarlett-solo-4g",
+   "section_number": null,
+   "section_title": "Send Direct Monitor mix to Loopback",
+   "page_start": 30,
+   "page_end": 30,
+   "text": "Send Direct Monitor mix to Loopback\nYour Direct Monitor Mix is a combination of your Scarlett's inputs and the software playback\nchannels. You can set this mix in Focusrite Control 2 and record this mix via your Loopback\nchannels. For more information, see Loopback [32].",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "focusrite/scarlett-solo-4g#22c4a3f5de9556b5",
+   "source_id": "focusrite/scarlett-solo-4g",
+   "section_number": null,
+   "section_title": "Record your Direct Monitor Mix using Loopback",
+   "page_start": 32,
+   "page_end": 33,
+   "text": "Record your Direct Monitor Mix using Loopback\nYour Direct Monitor Mix is a combination of your Scarlett's inputs and the software playback\nchannels. You can set this mix in Focusrite Control 2. To record this mix via your Loopback\nchannels:\n1. Open Focusrite Control 2.\n2. Click the elipses in the top right corner.\n3. Click Preferences .\n4. Tick 'Send Direct Monitor mix to Loopback'.\n5. Close the Preferences window.\n6. Set up your Direct Monitor Mix in the Focusrite Control 2's Direct tab.\nNow, when you record the Loopback input you'll be recording the Direct Monitor mix which can\nbe a combination of the hardware inputs and software playback.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  }
+ ]
+}

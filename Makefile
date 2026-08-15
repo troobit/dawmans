@@ -2,7 +2,7 @@
 # and lint; the targets wrap `uv run …` and `pnpm …` rather than replacing them.
 
 .DEFAULT_GOAL := help
-.PHONY: help build build-py build-serve test test-py lint lint-py spelling clean \
+.PHONY: help build build-py build-serve test test-py lint lint-py format spelling clean \
 	fetch-model fixtures bench bench-ingest bench-answer serve \
 	web-install web-build web-test web-e2e web-lint dev dev-web dev-engine
 
@@ -27,6 +27,9 @@ lint: spelling lint-py web-lint ## Run every linter
 lint-py: ## Run ruff over the Python tree
 	uv run ruff check .
 	uv run ruff format --check .
+
+format: ## Apply ruff's formatting
+	uv run ruff format .
 
 spelling: ## Check spelling
 	bash tools/check_spelling.sh

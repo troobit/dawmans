@@ -67,8 +67,10 @@ markers = [
 [tool.ruff]
 line-length = 100
 src = ["src", "tests"]
-# Ruff formats Python blocks inside Markdown. The specs' samples are prose with
-# deliberate alignment, so they are not ruff's to rewrite.
+# Ruff formats Python blocks inside Markdown. The specs' and notes' samples are prose
+# with deliberate alignment, so they are not ruff's to rewrite. `*.md` subsumes the
+# per-directory exclusion this branch carried: `specs/`, `docs/` and `manuals/` hold no
+# `.py` at all, so the pattern is the same rule stated over the files it actually means.
 extend-exclude = ["*.md"]
 
 [tool.ruff.lint]

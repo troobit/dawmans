@@ -32,7 +32,7 @@ All of these are present in that design as it now stands.
 | `UnitFlags.unbacked` carried through untouched (12.6) | §Emission contract | 2.4, 8.5 | the flag cannot reach `Citation` |
 | `passage_id(source_id, text)` in `corpus/passage_id.py` | §Passage identity | 3.9 | authored IDs diverge from manual IDs |
 | `<slug>` = `source_id` with `/` replaced by `_`, giving `authored_triage` | §Source identity and discovery | the sidecar's filename | the sidecar's reader finds nothing |
-| `views/<hex>/passages.jsonl` + `sources.json`, located via `manifest.view_dir` | §Index layout | pointer resolution input | resolution needs a new read path |
+| `views/<hex>/passages.jsonl` + `sources.json`, located via `manifest.view_dir` | §Index layout | pointer resolution input **under `dawmans validate`**; under `dawmans ingest` the same rows are read from the committed shards through `read_shards`, `passage_to_dict` and `record_to_dict` ([Decision 13](decision_log.md)) | resolution needs a new read path |
 | `LoadResult.sidecar` published at `views/<hex>/reports/<slug>.json`, copied in from the shard by the merge | §Index layout, Decision 8 | the sidecar's location and its atomic swap | the sidecar pairs with an arbitrary view again (§The sidecar) |
 | the authored load runs **after every vendor shard has committed** | §Stages, orderings | 2.1 — resolution reads the passages this run produced | pointers resolve against a stale corpus |
 | per-`passage_id` vector reuse via the authored shard meta's `vectors` map | §Incremental behaviour | 5.6 | every run re-embeds every entry |
@@ -120,9 +120,13 @@ key and is admissible only for a rig device with no ingested source — a state 
 | closing statement | the final H2 carrying neither `check:` nor a fix line. Not a cause; excluded from the 2–6 count (1.4) |
 
 A keyed line is matched case-insensitively after stripping leading `-`, `*`, `>`, `#` and `**`, so
-`**Check:**`, `- check :` and `CHECK:` are one line; a value continues until a blank line, a heading
-or another keyed line. The emitted text carries the **normalised** marker (`check:`), not the
-author's, which is what makes marker style invisible to `passage_id` (§Identity).
+`**Check:**`, `- check :` and `CHECK:` are one line. A **free-text** value — `check:` and `why:` —
+continues until a blank line, a heading or another keyed line, because those wrap as the author
+types them. A **`fix:`, `undocumented:` or `also:`** value is complete on its own line and never
+continues ([Decision 7](decision_log.md)): each has its own grammar that ends at the line, so prose
+written underneath one is prose and is retained as such. The emitted text carries the **normalised**
+marker (`check:`), not the author's, which is what makes marker style invisible to `passage_id`
+(§Identity).
 
 Position, not vocabulary, identifies the closing statement, so there is no reserved title to
 remember ([Decision 6](decision_log.md)). The cost: a final section meant as a cause that lost
@@ -298,6 +302,13 @@ Frontmatter `devices` → validated → published per `passage_id` in the sideca
 | in neither, and the entry declares at least one device that *is* recognised | flag naming the declaration (4.5); the entry still ingests |
 | in neither, and **every** declared device is unrecognised | rejection (`all-devices-unrecognised`) |
 | `@revision` differing from the rig device's `revision` | flag (4.6) |
+
+"Indexed" in that table means **every identity the corpus documents** — each indexed `vendor-manual`
+`source_id` together with the device id it declares under `source_applicability` — not the source
+ids alone (Decision 8). The two differ wherever a filename carries a generation marker the rig id
+does not, which is `manual-corpus` §Rig inventory's worked Focusrite case, and matching source ids
+alone would put today's `focusrite/scarlett-solo` declaration on the second row while its guide sits
+in the corpus.
 
 The third row exists because 4.5's condition is "neither in the rig inventory **nor** an ingested
 source", and an ingested source absent from `rig.yaml` satisfies neither branch of the flag: it is a
@@ -479,7 +490,7 @@ Behavioural contracts the signatures do not carry:
 |---|---|
 | `SectionIndex` | built once per run from the view's `passages.jsonl`; two maps, `(source_id, section_number)` and `(source_id, normalised title)`, each to the section's passage ids **in section order**. Immutable once built; resolution is pure and order-stable, so two runs over one view resolve identically |
 | `Ledger` | append-and-update over the NDJSON rows of §Reject versus flag. `read()` under `dawmans validate` is **read-only** — no row is added, no `resolved_at` moved — so validating cannot promote a pointer to "previously fine". Only `dawmans ingest` writes, and only on transition. An unparseable file raises rather than returning an empty ledger |
-| `CorpusView` | **read-only** over `views/<hex>/passages.jsonl` and `sources.json`, located through `manifest.view_dir`. It never opens a shard, a vector file or a PDF (5.7, `manual-corpus` 12.4), so re-ingesting the authored source cannot re-extract, re-chunk or re-index a manual. One view is read for the whole run, so every pointer in a run resolves against one consistent corpus |
+| `CorpusView` | ~~**read-only** over `views/<hex>/passages.jsonl` and `sources.json`, located through `manifest.view_dir`. It never opens a shard, a vector file or a PDF~~ — **superseded by [Decision 13](decision_log.md)**, which keeps every clause but the source of the rows: under `dawmans ingest` they are read from the `vendor-manual` shards **this run has committed**, because the view this run will publish does not exist until the merge, which runs after every loader. `dawmans validate` runs outside a run and reads them from `views/<hex>/`. Read-only either way, and no vector file, PDF, extraction, chunking or embedding (5.7, `manual-corpus` 12.4), so re-ingesting the authored source cannot re-extract, re-chunk or re-index a manual. One corpus is read for the whole run, so every pointer in a run resolves against one consistent set of passages |
 
 ```python
 def resolve(p: Pointer, idx: SectionIndex) -> list[str] | Unresolved   # passage_ids, in section order
@@ -615,10 +626,17 @@ survives, since a source with no passages is not a source.
 Flags, all leaving the entry ingested: `pointer-drifted` (8.4, sets `unbacked`), `unbacked-cause`
 (2.3/2.4, sets `unbacked`), `term-not-in-passage` (2.6), `unknown-device` (4.5),
 `revision-mismatch` (4.6), `title-number-disagreement`, `undocumented-device-scope` (4.4),
-`orphaned-scope` (8.7), `closing-statement-inferred`, `unknown-frontmatter-key`.
+~~`orphaned-scope` (8.7)~~, `closing-statement-inferred`, `unknown-frontmatter-key`.
+
+`orphaned-scope` is **superseded by [Decision 15](decision_log.md)**: 8.7's orphaned entry is a
+**coverage row** (§Coverage without a taxonomy) rather than a flag, because §Device scope's third row
+forbids flagging the device it would be about. The constant stays in the closed vocabulary as that
+row's name, and nothing raises it as a `Flag`.
 
 **Failures**, which exit non-zero rather than rejecting an entry: an unparseable ledger (§Reject
-versus flag), and a term miss under `dawmans validate` only (§The term check).
+versus flag), and a term miss under `dawmans validate` only (§The term check). `dawmans validate`
+additionally exits non-zero on a **rejection** ([Decision 14](decision_log.md)); 5.2's "the run
+reports succeeded" governs `dawmans ingest`, which is the run that serves the other entries.
 
 **`authored-invalid` deletes the authored shard.** Without that, a rejected source produces no
 shard, the merge reads whatever shards exist, and re-ingestion replaces a shard only on success — so
@@ -684,7 +702,7 @@ text — the reverse direction cannot state what the expected parse is.
 | Property | Guarantee | Criteria |
 |---|---|---|
 | Order preservation | for any entry, the emitted causes are the declared causes, in order, unmerged and undeduplicated | 1.5 |
-| Cause conservation | the number of causes emitted plus the number of `closing-statement-inferred` flags equals the number of H2s that were not the author's closing statement | 1.5 |
+| Cause conservation | the number of causes emitted plus the number of `closing-statement-inferred` flags equals the **total** number of H2s, so no section ever leaves the parse unaccounted for. It is stated over the total rather than over the H2s that were not the author's closing statement because the parser cannot tell those apart — that is the whole of Decision 6, which is why it flags every inferred closing statement | 1.5 |
 | Total parsing | for **any** byte string, the parser returns an `Entry` or a rejection naming the file; it never raises and never returns a half-built entry | 5.2 |
 | Cosmetic invariance of `passage_id` | perturbing marker style, blank lines, key casing, line endings, frontmatter key order and pointer targets leaves the ID unchanged | 3.9, 8.2 |
 | `passage_id` sensitivity | any change to symptom, phrasings, preamble, cause statement, check or notes changes the ID | 3.9 |

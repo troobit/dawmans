@@ -1,0 +1,46 @@
+{
+ "schema": "dawmans.triage.sections/1",
+ "captured_from": "ableton/live-12 §28.24",
+ "asserts": "a pointer at a split section resolves to all of its chunks, in section order",
+ "passages": [
+  {
+   "passage_id": "ableton/live-12#1c02aa8079a33d1b",
+   "source_id": "ableton/live-12",
+   "section_number": "28.24",
+   "section_title": "Limiter",
+   "page_start": 597,
+   "page_end": 598,
+   "text": "28.24 Limiter\nThe Limiter Effect.\nThe Limiter effect is a mastering-quality dynamic range processor that ensures that the output does not\nexceed a specified level. Limiter is ideal for use on the Main track, to prevent clipping in digital-to-\nanalog converters. A limiter is essentially a compressor with an infinite ratio. For more information\nabout compression theory, refer to the Compressor section.\nLimiter’s display contains the Ceiling control and the Gain Reduction meter. The Ceiling control sets the\nabsolute maximum level that Limiter will output. If your incoming signal level has no peaks that are\nhigher than the ceiling, no limiting will be applied by the device.\nThe Gain Reduction meter shows the amount of gain reduction being applied when the signal reaches\nthe ceiling or threshold.\nThe Link control defines how much of the gain reduction applied by Limiter is shared across its two\nchannels. These can be the left/right channels or the mid/side channels, depending on which Routing\nMode is selected. When set to 100%, limiting is applied to both channels whenever either requires\ncompression, ensuring a stable stereo image. When set to 0%, the channels are processed\nindependently, with different gain reduction applied to each channel. This can be useful when\nworking with signals where the left and right channels are separate, or to achieve creative effects,\nsuch as a “wobble” in the stereo image.\nYou can use the Input Gain knob to the left of the display to boost or attenuate the incoming signal\nlevel before limiting is applied to it.\nSwitching on the Maximize toggle below the Input Gain knob changes the Ceiling control to\nThreshold, which allows you to adjust the signal’s dynamic range and loudness with a single control.\nLowering the Threshold amplifies the limiter stage output by the inverse of the Threshold value. Note\nthat the Input Gain knob becomes the Output control when Maximize is on, and sets the target output\nlevel for the device.",
+   "degraded": false,
+   "has_figures": true,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#8e7d7ca664b87f04",
+   "source_id": "ableton/live-12",
+   "section_number": "28.24",
+   "section_title": "Limiter",
+   "page_start": 598,
+   "page_end": 598,
+   "text": "Lowering the Threshold amplifies the limiter stage output by the inverse of the Threshold value. Note\nthat the Input Gain knob becomes the Output control when Maximize is on, and sets the target output\nlevel for the device.\nThe Release knob adjusts how long it takes for the device to stop applying limiting after the signal falls\nbelow the ceiling or threshold. Fast release times make the output sound louder and punchier, while\nslow release times add smoothness, though can also reduce the dynamic range. The Gain Reduction\nmeter helps to visualize the effect of the Release control: at faster release times you will see the meter\nreturn to zero more quickly, while at slower release times the meter recovers more gradually, and\nLimiter maintains compression for a longer time.\nYou can use the Auto toggle beneath the Release knob to activate auto-release. When on, Limiter\nanalyzes incoming audio and continuously updates its release time based on the signal’s\ncharacteristics. Note that when auto-release is enabled, the Release control is deactivated.\nThe Lookahead control to the right of the display allows you to adjust the setting that determines how\nquickly Limiter will respond to peaks that require compression. The lookahead time can be set to 1.5,\n3, or 6 milliseconds. Shorter lookahead times allow for more compression but can increase distortion,\nespecially when applied to bass sounds. As the lookahead time affects Limiter’s attack time, longer\nlookahead values are useful for catching very fast peaks. Note that lookahead introduces latency: the\nlonger the lookahead time, the higher the latency.\nThe Ceiling Mode toggles let you choose between three ceiling modes: Standard, Soft Clip, and True\nPeak. Standard is the device’s default mode. Soft Clip introduces soft clipping when signals approach\nthe device’s ceiling level, which can add subtle color and punch to transients. When Soft Clip is on, an\nLED appears above the mode toggles, and flashes to indicate that the signal is clipping. Finally, the\nTrue Peak mode prevents inter-sample peaks.",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  },
+  {
+   "passage_id": "ableton/live-12#2859dc9ae28205f9",
+   "source_id": "ableton/live-12",
+   "section_number": "28.24",
+   "section_title": "Limiter",
+   "page_start": 598,
+   "page_end": 598,
+   "text": "Soft Clip introduces soft clipping when signals approach\nthe device’s ceiling level, which can add subtle color and punch to transients. When Soft Clip is on, an\nLED appears above the mode toggles, and flashes to indicate that the signal is clipping. Finally, the\nTrue Peak mode prevents inter-sample peaks.\nYou can use the Routing Mode toggles to determine how Limiter treats peaks that occur on only one\nside of the stereo signal. In L/R mode, the left and right channels of the signal are compressed\nindependently. This allows the device to apply more compression, but with some distortion of the\nstereo image. In M/S mode, Limiter encodes the signal to mid/side before the limiting stage, then\ndecodes it to stereo at the output stage. This can be useful for preserving the signal’s stereo image, but\nresults in higher latency.\nNote that adding any further processing effects after Limiter may add gain. To ensure that your final\noutput will never clip, place Limiter as the last device in the Main track’s device chain and keep the\nMain track’s volume below 0 dB.",
+   "degraded": false,
+   "has_figures": false,
+   "unbacked": false,
+   "entry_location": null
+  }
+ ]
+}

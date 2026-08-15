@@ -16,6 +16,259 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 
+- **`data/symptom-triage` Phase 6 — validation messages, `dawmans validate` over the store and
+  `dawmans coverage`.** `triage/messages.py` renders a rejection or a flag as the design prints it:
+  a header naming the file and the symptom, then the prose saying what is wrong and what to change
+  in the entry's own words (5.3). A reason constant never reaches the author — `rejected:` against
+  `flagged:` is the whole difference on screen between an entry withdrawn and an entry served with a
+  remark. The counts line is 5.5, over entries rather than passages, and a missing ledger says so in
+  one line rather than letting a wall of 2.2 rejections arrive unexplained. One malformed fixture per
+  reason constant pins the taxonomy closed at the fifteen of design §Error Handling, with two
+  well-formed entries beside them proving a rejection costs one entry and not the run (5.2).
+
+- **`dawmans validate` now validates the entry store** (5.4). It parses, resolves and term-checks the
+  whole store against the committed view — read through `manifest.view_dir` by `CorpusView.read`, the
+  same reader the ingest path uses over shards — and **writes nothing**: no index write, no shard, no
+  ledger row, no embedding model loaded, asserted by snapshotting the whole tree either side of a
+  run. A term miss exits non-zero here and never under ingest (Decision 5): consequences where the
+  author is, none where the user is.
+
+- **`dawmans coverage` — the §6 report.** Six row sets over one evaluation of the store: every entry
+  with its scope, cause count and pointer health (6.1); every rejection and flag with its reason, so
+  the report covers 100% of the store (6.2); every rig device no entry declares scope for (6.3);
+  every cause 2.3 permits to carry no pointer, with the device it names (6.4); every drifted pointer
+  with the source that changed (8.6); and every entry scoped only to gear the rig no longer holds
+  (8.7), reported and never deleted. **No percentage anywhere** — there is no denominator over
+  symptoms. The same rows land in the sidecar's `report` block, so the report is obtainable without
+  asking a question (6.5) and published where a consumer can read it (6.6's publishing half).
+
+- **`data/symptom-triage` Decision 14 — `dawmans validate` exits non-zero on a rejection**, not only
+  on a term miss. 5.2's "the run reports succeeded" governs the *ingestion* run, which still serves
+  the other entries; `validate` serves nothing and is asked one question, and answering "yes" while
+  printing an entry that will not be served is the one answer it must not give. Flags do not fail it:
+  `pointer-drifted` and `unbacked-cause` are states the design chose over withdrawing working triage.
+
+- **`data/symptom-triage` Decision 15 — 8.7's orphaned scope is a coverage row, not a flag.** The
+  design listed `orphaned-scope` among the flags while its own §Device scope table forbids flagging
+  the device such an entry declares — a documented device absent from `rig.yaml` is gear removed under
+  8.7 *or* a manual added ahead of its rig entry. The entry-level fact is reported in the coverage
+  report instead, per entry rather than per device, and an empty rig inventory declares no removal at
+  all. The flag list is marked superseded in place.
+
+### Fixed
+
+- **`data/symptom-triage`: the flagged count now includes parse flags.** `report()`'s `flagged`
+  counted entries carrying evaluation flags, so an entry whose only remark was
+  `unknown-frontmatter-key` or `closing-statement-inferred` — both raised before any entry outcome
+  exists — was reported as unflagged while its row was printed beneath the count. Counted by file
+  over the store's flags, which also keeps an entry with three remarks one entry to look at.
+
+- **`data/symptom-triage`: `undocumented-claim-invalid` names its cause in the message.** The record
+  carried the cause and the prose did not, so the one rejection an author meets while taking 2.3's
+  carve-out named the file and the symptom but never the cause concerned (5.3).
+
+- **`data/symptom-triage` Phase 5 — discovery, the sidecar and the run integration.** `dawmans
+  ingest` now runs both stores with the real `TriageLoader`. Discovery is a recursive scan of
+  `triage/**/*.md` (1.6): a subdirectory entry is found, a non-`.md` file beside one gets a report
+  line — the opposite of `manuals/`, where the skip is silent — and dotfiles are exempt so the
+  machine's own `.pointer-ledger.jsonl` never warns about itself. The store is one source however
+  many files it holds, and its fingerprint is sha256 over the sorted (store-relative path, file
+  digest) pairs. `load()` runs on **every** ingest regardless of that fingerprint, because 2.1 asks
+  for every fix pointer to be re-checked on every run and a digest of the store's own bytes cannot
+  answer a question about the manuals. An absent or unreadable store is an unknown discovery set
+  that removes nothing; an existing empty one removes its shard; a store in which no entry survives
+  is `authored-invalid`, which deletes the shard rather than letting the previous run's passages
+  keep being served.
+
+- **The per-`passage_id` sidecar (`triage/scope.py`).** `LoadResult.sidecar` lands at
+  `views/<hex>/reports/authored_triage.json` — the corpus's slug rule, underscore and not hyphen,
+  inside the view so it swaps atomically with the passages it keys. Each row carries the entry's
+  declared devices (4.3, the input to `api/answer-engine` 5.13's per-passage predicate), the
+  `source_file` and `line` halves of CONTRACTS §2 `entry_location`, an `entry_key` annotation, and
+  the causes in declared order with their checks, resolved fix passage ids and flags — the source of
+  CONTRACTS §4c's `Cause` records. Every passage of a split entry carries the whole cause list,
+  because which passage holds which cause is an artefact of the 350-word cap. The report block
+  carries 2.8's pointer counts and one row per rejection and per flag with its reason (5.5), and is
+  written to `index/audits/authored_triage.json` as well so a rejected store's reasons survive.
+
+- **The term check and `title-number-disagreement` joined the run.** `CorpusView` now carries
+  passage text, so `check_terms` runs during evaluation and a factual claim no cited section prints
+  is flagged (2.6) — never setting `unbacked`, which keeps 2.4 and 8.5 its only two producers
+  (Decision 5). A view read without passage text checks nothing rather than flagging everything.
+
+- **The pointer ledger is written by the run.** `load()` records every pointer that resolved and
+  writes only on transition, so a second run over an unchanged store leaves
+  `triage/.pointer-ledger.jsonl` byte-identical and the working tree clean. Recording happens in
+  `load()` alone, which is what will let `dawmans validate` run the same checks without promoting a
+  broken pointer to "previously fine" (5.4). An unparseable ledger reaches the run as a failure:
+  non-zero exit, previous shard intact.
+
+- **`data/symptom-triage` Decision 13 — the run's `CorpusView` is read from the committed shards,
+  not the committed view.** The design required both "the authored load runs after every vendor
+  shard has committed" and "`CorpusView` never opens a shard", and `manual-corpus` merges shards
+  into a view only at the end of a run — so at authored-load time the view named by
+  `manifest.view_dir` is the *previous* run's. Reading it would reject a new entry pointing into a
+  manual the same run ingested, and would detect drift one run late. The shards hold the passages
+  the merge concatenates, so 5.7 is untouched: no PDF, no vector file, no extraction, chunking or
+  embedding. `CorpusView.of` takes the published JSON shapes, so `dawmans validate` will read the
+  same rows out of `views/<hex>/` with no second reader. The design's `CorpusView` row is marked
+  superseded in place.
+
+- **`data/symptom-triage` Phase 4 — identity, emission and the loader.** `triage/loader.py` puts the
+  entry store behind `manual-corpus`'s `SourceLoader` seam. `source_record` is design §Identity's
+  table applied literally — the constant `authored/triage`, `My Triage Notes`, `assumed`
+  applicability that nothing in configuration can raise, and not one of the seven vendor-manual
+  fields, which 12.5's constructor refuses rather than defaults. `emit` turns one entry into one
+  `Region`: the symptom, its `also:` phrasings and its preamble first as a `repeat_on_split` unit,
+  then each cause `atomic` in declared order (1.5 — that order becomes CONTRACTS §4c's rank), then
+  the closing statement. `passage_id` is minted by the corpus chunker and nowhere else, so an
+  authored passage is identified by the same function over the same canonical form as a manual
+  passage (3.9); `parse.render_blocks` is the one construction of that form, joined with a blank
+  line for the reader and with `UNIT_JOIN` by the chunker, which hash alike because `passage_id`
+  collapses whitespace before hashing.
+
+- **`data/symptom-triage` Decision 12 — the authored overlap suppression is `manual-corpus`'s rule,
+  not an edit here.** Task 16 reserved a keyed change to `dawmans/corpus/chunk.py` as the one edit
+  this spec makes to the chunking pipeline. That edit has since been made upstream and made more
+  general: `manual-corpus` Decision 15 states it as "a repeat replaces overlap rather than joining
+  it", which reaches the authored case without the chunker knowing what kind of source it has
+  (12.2). Making it again would be two rules that must agree in one function. The outcome is
+  asserted from this spec instead — `Chunk.carried` equals the symptom block's word count on every
+  continuation — so a relaxation upstream fails a test here rather than quietly putting the symptom
+  into hashed, user-visible text twice.
+
+- **`data/symptom-triage` Decision 11 — canonical idempotence is stated over a parse–rebuild round
+  trip.** Task 13's literal `render(parse(render(parse(f)))) == render(parse(f))` cannot hold:
+  `render` excludes the frontmatter, the fix pointers and the filename by design, so its output is
+  not an entry file and the inner parse rejects with `frontmatter-missing`. `render ∘ parse ∘
+  rebuild` is asserted instead, `rebuild` being a test-support writer that re-supplies exactly what
+  the rendering drops — which keeps the property passing through the real parser and the real
+  rendering without shipping a second definition of the entry format.
+
+- **`data/symptom-triage` Phase 3 — the term check.** `triage/terms.py` implements design §The term
+  check (2.6): extraction over the cause statement plus its `check:` value and nothing else — the
+  deliberate narrowing that keeps 2.5's causal assertions out of a factual check — of capitalised
+  runs and numeric literals, and containment against the passages the cause's pointers resolve to.
+  Containment is case-sensitive at word boundaries for the capitalised class, because casefolding
+  would make `Off`, `Monitor` and `MIDI` match almost any prose, and casefolded for numerics,
+  because unit case varies between manuals; `0` never satisfies `10`. Any one pointer's resolution
+  set satisfies a term, and a split section is seen as its concatenation. A miss is a
+  `term-not-in-passage` flag naming the term and the section and never sets `unbacked` (Decision 5)
+  — 2.4 and 8.5 stay the only two producers of that mark. Phase 3 is now complete: scope validation
+  landed with tasks 11–12.
+
+- **`data/symptom-triage` Decision 10 — a sentence-initial capital is discounted per token, not per
+  run.** The design states the rule for a single-token run at a sentence start. Applied literally,
+  an author writing the design's own worked example — "The Track Activator is off" — yields the term
+  `The Track Activator`, which is in no manual, so the example flags and §Testing Strategy's
+  term-check soundness property breaks for any statement opening with an article. Discounting the
+  token before runs are formed yields `Track Activator`, leaves every case the design names
+  unchanged (`Live` alone still drops; `DIRECT MONITOR` still stands, ALL-CAPS being evidence a
+  sentence start does not explain), and keeps one justification covering both cases.
+
+- **`data/symptom-triage` Phase 2 — pointer resolution and the ledger.** `SectionIndex` builds the
+  two maps of design §Fix pointers in one pass over a view's `passages.jsonl`, and `resolve` returns
+  a section's passage ids in section order or an `Unresolved` naming why, with nearest-section
+  candidates for the 5.3 message. Reading passages and nothing else is what makes 8.3 hold:
+  `doc_version` lives on the `SourceRecord`, so a new document version of the same passages cannot
+  move a pointer. `pointers.Ledger` is the committed NDJSON memory that separates 2.2's rejection
+  from 8.4's flag — keyed on the pointer alone (Decision 4), sorted, never pruned, and written only
+  on transition so an unchanged run leaves the file byte-identical. `.gitattributes` sets
+  `merge=union` on it.
+
+- **The section fixtures, cut from a real index.** `tests/fixtures/sections/` holds the 21 Live
+  sections the starter set points at (including §18.1.1, which prints the `0 dB` requirement 7.3
+  depends on), the Scarlett's Direct Monitor sections, the APC guide's unnumbered regions, §28.24
+  chunked into three, and the `drift/` before-and-after pair. They are slices of a view built once
+  locally by `tools/extract_section_fixtures.py` and committed, so the suite runs with `manuals/`
+  absent and no embedding model loaded — the arrangement `data/manual-corpus` already uses for its
+  extraction snapshots. `tests/fixtures/README.md` documents each; it sits above both fixture roots
+  because every `.md` file under an entry store is an entry, so a README beside one would be
+  discovered and rejected as a malformed entry.
+
+- **`tools/check_spelling.sh` skips `tests/fixtures/`.** Those files quote the vendor's own words
+  verbatim so a stage can be tested against what the manual actually says; correcting a manual's
+  spelling would make the fixture a document nobody shipped. `orbit-impl-1/manual-corpus` already
+  carries the identical exclusion for the identical reason, so the two copies agree rather than
+  conflicting on merge.
+
+- **`data/symptom-triage` Decision 9 — a ledger transition is detected by comparing passage ids.**
+  The design requires `resolved_at` move only on transition but does not say how a run recognises
+  "resolution after a drift", and the ledger deliberately carries no drifted marker. Comparing the
+  row's `passage_ids` against what the pointer resolves to now settles it from the row itself: a
+  renumbered, rewritten section produces different passages, while a manual restored to exactly its
+  previous state produces the previous ids and so writes nothing at all.
+
+### Changed
+
+- **`normalised_symptom` and a new `entry_key` moved to `triage/model.py`.** Both are functions of
+  the model's own fields, and `loader` needs the first for 1.9's duplicate test while `scope` needs
+  the second for the sidecar — with `loader` importing `scope`, `model` is the only home that is not
+  a cycle. `loader` still re-exports `normalised_symptom`. `scope.RigDevice` gained `display_name`,
+  which the term check reads, so the protocol states what this spec reads of a rig device rather
+  than what one module does.
+
+- **A rejected entry's flags no longer appear in the run's flag list.** Parse flags are collected
+  before anything can reject an entry, so an entry excluded for being malformed was contributing
+  remarks beside the reason it went. They are dropped, which also keeps the report's `flagged` count
+  and its `flags` rows describing the same entries.
+
+- **The triage tests share one store builder.** `tests/triage/stores.py` holds the on-disk store,
+  the `CorpusView` over the committed section fixtures and the loader that reads them, extracted
+  from `test_emission.py` when the discovery and sidecar tests needed the same fixtures.
+  `tests/triage/test_ingest_wiring.py` runs the real loader through `cli.ingest` with a stub vendor
+  store rebuilt from those same fixtures; `tests/test_run.py` deliberately keeps a *stub* authored
+  store, because a run that only ever saw the real one would prove nothing about 12.2.
+
+- **Costed the `data/manual-corpus` merge that unblocks `data/symptom-triage` Phase 4.**
+  `docs/agent-notes/triage-entry-grammar.md` said Phase 4 becomes reachable when that branch merges,
+  but not that the merge is already available: everything Phase 4 needs — `SourceRecord` and
+  `passage_id` — is committed at `4f0ea7c`, and the work still uncommitted in that worktree is all
+  under `index/`, which Phase 4 never touches. The note now records that `git merge-tree` reports
+  seven conflicting files, all of them the shared scaffolding the two branches grew independently
+  (`.gitignore`, `CHANGELOG.md`, `Makefile`, `pyproject.toml`, `specs/OVERVIEW.md`,
+  `src/dawmans/__init__.py`, `uv.lock`) with no semantic clash among them, and two already ruled by
+  PROCESS.md §9. Phase 4 is therefore blocked on a decision about what belongs on this branch, not
+  on a missing artefact — worth settling once instead of re-deriving each run. Phase 2 is unaffected:
+  its two prerequisites are human-only.
+
+- **Corrected the `data/symptom-triage` blocked-work note.** `docs/agent-notes/triage-entry-grammar.md`
+  claimed `data/manual-corpus` was complete only through its task 17 and that no chunker or
+  passage-id scheme existed; both now exist. The note names the real gate for Phase 2 — a committed
+  `views/<hex>/passages.jsonl` from that spec's task 37, plus its human prerequisites — rather than a
+  task count that goes stale, and records that Phase 4 is blocked too even though `rune` reports its
+  first task ready: cross-spec dependencies are not expressible in the ledger, and every remaining
+  task in this spec has one.
+
+### Added
+
+- **`data/symptom-triage` device scope validation (tasks 11–12).** `dawmans.triage.scope` applies the
+  six rows of the design's Device scope table: a declared device in the rig inventory with no
+  ingested manual scopes and reports `undocumented-device-scope` (4.4); one the corpus documents but
+  the rig does not scopes silently, because 4.5's condition is "neither"; an unrecognised identity
+  flags `unknown-device` and still ingests, unless *every* declared device is unrecognised, which is
+  the `all-devices-unrecognised` rejection — the recorded deviation from 4.5, since a flag would
+  leave the entry embedded and reachable by no turn. Identities are matched exactly (4.2), and
+  `@revision` is compared after casefolding and stripping non-alphanumerics, quoting the rig's value
+  verbatim on a mismatch (4.6). The 2.3 `undocumented:` claim rejects where it names a device absent
+  from the rig, or one the corpus documents. Recorded as Decision 8: "indexed" means every identity
+  the corpus documents — source ids **and** the device ids they declare under
+  `source_applicability` — not source ids alone, or today's `focusrite/scarlett-solo` declaration
+  would be reported as undocumented while its guide sits in the corpus.
+- **`data/symptom-triage` Phase 1 — the entry model and the entry grammar.** `dawmans.triage.model`
+  holds the frozen `Entry`, `Cause`, `DeviceRef`, `Pointer` and `Unresolved` records of the design's
+  Components and Interfaces, together with the closed rejection and flag vocabularies of its Error
+  Handling section. `dawmans.triage.parse` reads an entry file into an `Entry` and produces the
+  canonical rendering: strict about the frontmatter, forgiving in the body, and **total** — every
+  byte string yields an entry or a rejection naming the file, and never a half-built entry.
+  `dawmans.triage.pointers` carries the fix-pointer grammar the parser needs; its `SectionIndex` and
+  resolution are Phase 2.
+- **The Python package, cut to what Phase 1 needs.** `pyproject.toml` with a `src/` layout, uv for
+  dependencies, and pytest + hypothesis + ruff for development; `make test`, `make lint` and
+  `make format` replace three of the unconfigured targets. The full scaffold — the whole module
+  tree, `fetch-model`, `bench`, and the PyMuPDF confinement rule — remains `data/manual-corpus`
+  task 1.
+
 - **The rig inventory and the two gap reports** (`dawmans/corpus/rig.py`, `rig.yaml`,
   `data/manual-corpus` phase 8, requirements 11.1-11.7). `rig.yaml` is hand-maintained and
   committed — it says what the owner **holds**, while `manuals/` says what is **documented**, and
@@ -778,6 +1031,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- **Keyed-line continuation now splits by value kind** (`data/symptom-triage` Decision 7). `check:`
+  and `why:` are free text and continue until a blank line, a heading or another keyed line;
+  `fix:`, `undocumented:` and `also:` are complete on their own line. Under the single rule the
+  grammar previously carried, an ordinary note written under a fix pointer was folded into the
+  pointer, which then addressed nothing and rejected the cause with a message naming a line the
+  author had written correctly. Found by the cause-conservation property, not by an example.
+- **Cause conservation is stated over the total H2 count**, not over the H2s that were not the
+  author's closing statement. Decision 6 turns on the parser being unable to tell a genuine closing
+  statement from a demoted cause, which is why it flags every inferred one — so the identity that
+  actually holds, and the one that makes 1.5 auditable, is causes plus flags equals sections.
+  Corrected in the design's Testing Strategy and in the task ledger.
 - **`Region` carries `entry_location`** (`data/manual-corpus` Decision 14, design §The loader
   protocol). CONTRACTS §2 requires the field on every authored passage and `records.py` refuses to
   construct one without it, but the seam had nowhere for it to travel. The sidecar cannot supply it:

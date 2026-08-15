@@ -1,4 +1,5 @@
-"""`dawmans ingest`, `validate`, `inventory` and `serve` — and the run orchestration.
+"""`dawmans ingest`, `validate`, `inventory`, `coverage` and `serve` — and the run
+orchestration.
 
 The run is the design's §Stages in order, and three of those orderings are load-bearing
 rather than incidental:
@@ -44,16 +45,18 @@ from dawmans.corpus.discover import (
 )
 from dawmans.corpus.loader import LoadResult
 from dawmans.corpus.pdf.loader import PdfLoader
-from dawmans.corpus.rig import RIG_FILE, GapReports, Rig, gap_reports, load_rig
+from dawmans.corpus.rig import RIG_FILE, GapReports, Rig, RigError, gap_reports, load_rig
 from dawmans.index.build import (
     CacheKey,
     Shard,
     build_shard,
     collect_views,
     commit_view,
+    passage_to_dict,
     read_shard,
     read_shards,
     read_view_sources,
+    record_to_dict,
     shard_paths,
 )
 from dawmans.index.embed import Embedder, load_embedder
@@ -68,11 +71,19 @@ from dawmans.report import (
     read_audit,
     write_audit,
 )
+from dawmans.triage import messages
+from dawmans.triage.coverage import coverage
+from dawmans.triage.loader import CorpusView, TriageLoader, scan_store
+from dawmans.triage.pointers import LEDGER_NAME, Ledger, LedgerUnparseable
 
 #: `index/` beside `manuals/` at the repository root. Gitignored and derived: 8.6 rebuilds
 #: all of it from the two stores with no other input.
 INDEX_DIR = "index"
 MANUALS_DIR = "manuals"
+#: The authored entry store, sibling to `manuals/` and committed (`data/symptom-triage`
+#: 1.6). Its layout and contents are that spec's; the name is here because the run has to
+#: find it.
+TRIAGE_DIR = "triage"
 
 DEFAULT_HOST = "127.0.0.1"
 DEFAULT_PORT = 8722
@@ -332,26 +343,78 @@ def _anomalies(scans: Sequence[StoreScan], index_root: Path) -> tuple[StoreAnoma
 # --- the commands -------------------------------------------------------------------------
 
 
-def run_ingest(root: Path, *, index_root: Path | None = None) -> RunResult:
-    """`dawmans ingest` over the real stores.
+@dataclass(frozen=True)
+class TriageStore:
+    """`triage/` behind the run's `Store` protocol — `data/symptom-triage`'s loader,
+    plus the corpus it resolves fix pointers against.
 
-    The authored store is `data/symptom-triage`'s to supply; until that spec's loader
-    exists there is one store, and the run is the same code either way (12.2).
+    The view is assembled **when `load()` is called**, not when the store is
+    constructed, and that is the whole of the pass ordering: by then every vendor shard
+    of this run has committed, so a pointer resolves against the passages this run
+    produced rather than the previous run's. It is read from the shards because the view
+    this run will publish does not exist until the merge, which happens after every
+    loader has run — `data/symptom-triage` decision_log Decision 13. A shard's
+    `passages.jsonl` holds the passages the merge concatenates, so no manual is
+    re-extracted, re-chunked or re-indexed to produce it (its 5.7).
     """
+
+    root: Path
+    index_root: Path
+    rig: Rig
+
+    @property
+    def store(self) -> Path:
+        return self.root / TRIAGE_DIR
+
+    def scan(self) -> StoreScan:
+        """Discovery reads the store's own directory: no corpus, no rig, no ledger."""
+        return scan_store(self.store)
+
+    def load(self, d: Discovered) -> LoadResult:
+        return TriageLoader(
+            store=self.store,
+            view=self._view(),
+            rig=self.rig.devices,
+            # An unparseable ledger raises here and is caught as a **failure** (1.7):
+            # no entry is at fault, and continuing would silently re-arm 2.2 for the
+            # whole store and reject entries 8.4 requires be served with a mark.
+            ledger=Ledger.read(self.store / LEDGER_NAME),
+            root=self.root,
+        ).load(d)
+
+    def _view(self) -> CorpusView:
+        shards = [
+            shard for shard in read_shards(self.index_root) if shard.record.kind == "vendor-manual"
+        ]
+        return CorpusView.of(
+            [passage_to_dict(passage) for shard in shards for passage in shard.passages()],
+            [record_to_dict(shard.record) for shard in shards],
+        )
+
+
+def run_ingest(root: Path, *, index_root: Path | None = None) -> RunResult:
+    """`dawmans ingest` over the real stores, in the one order the design allows."""
     index_root = index_root or root / INDEX_DIR
+    rig = load_rig(root / RIG_FILE)
     return ingest(
         index_root,
         vendor=PdfLoader(root=root / MANUALS_DIR),
+        authored=TriageStore(root=root, index_root=index_root, rig=rig),
         embedder=load_embedder(),
-        rig=load_rig(root / RIG_FILE),
+        rig=rig,
     )
 
 
-def run_validate(index_root: Path) -> tuple[int, list[str]]:
+def run_validate(index_root: Path, *, root: Path | None = None) -> tuple[int, list[str]]:
     """Read the committed index back the way `api/answer-engine` would, and say what breaks.
 
     A version mismatch is reported rather than interpreted: 8.11 requires a reader whose
     expected version differs to refuse to load, and the fix is a rebuild.
+
+    The entry store is validated on the same path (`data/symptom-triage` 5.4), against the
+    view this index actually publishes. The index comes first and short-circuits: with no
+    readable view every pointer would report as unresolved, which says nothing about the
+    entries and would bury the one message that matters.
     """
     try:
         manifest = read_manifest(index_root)
@@ -372,11 +435,88 @@ def run_validate(index_root: Path) -> tuple[int, list[str]]:
         ]
 
     rows = sum(source.row_count for source in manifest.sources)
-    return 0, [
+    lines = [
         f"{manifest.view_dir}  {len(manifest.sources)} sources, {rows} passages",
         f"corpus_revision {manifest.corpus_revision}",
         f"embedding {manifest.embedding.model} ({manifest.embedding.dim})",
     ]
+
+    code, store_lines = _validate_store(root if root is not None else index_root.parent, view)
+    return code, lines + store_lines
+
+
+def _validate_store(root: Path, view: Path) -> tuple[int, list[str]]:
+    """The entry store, parsed, resolved and term-checked against `view` — and untouched.
+
+    Nothing on this path writes: `evaluate()` is the whole verdict without emission, the
+    ledger is read and never recorded to, and no embedder is loaded — so validating cannot
+    promote a broken pointer to "previously fine" (`data/symptom-triage` 5.4) and costs no
+    model load either way.
+
+    Non-zero for a **rejection** as well as for a term miss. 5.2's "the run reports
+    succeeded" is about the ingestion run, where excluding one entry still leaves the
+    corpus servable; this command is asked whether the store is right, and answering yes
+    while naming an entry that will not be served is the one answer it must not give.
+    """
+    try:
+        loader = _triage_loader(root, view)
+    except (LedgerUnparseable, RigError) as error:
+        return 1, [f"failed: {error}"]
+    if loader is None:
+        return 0, [f"{TRIAGE_DIR}: store unavailable — nothing to validate"]
+
+    outcome = loader.evaluate()
+    lines = messages.store_lines(outcome, ledger_missing=loader.ledger.missing)
+    missed = any(flag.name == "term-not-in-passage" for flag in outcome.flags)
+    return (1 if outcome.rejections or missed else 0), lines
+
+
+def _triage_loader(root: Path, view: Path) -> TriageLoader | None:
+    """The store's loader over a committed view, or None where there is no store.
+
+    An absent or unreadable `triage/` is an unknown discovery set (`manual-corpus` 1.4),
+    not an empty one: there is nothing to report about entries nobody can read.
+    """
+    store = root / TRIAGE_DIR
+    if not store.is_dir():
+        return None
+    return TriageLoader(
+        store=store,
+        view=CorpusView.read(view),
+        rig=load_rig(root / RIG_FILE).devices,
+        ledger=Ledger.read(store / LEDGER_NAME),
+        root=root,
+    )
+
+
+def run_coverage(index_root: Path, *, root: Path | None = None) -> tuple[int, list[str]]:
+    """`dawmans coverage` — the §6 report over the entry store, rendered to stdout.
+
+    Obtainable without asking a question (6.5), so coverage can be reviewed outside a
+    session. It **reports**: unlike `validate` it passes judgement on nothing and exits
+    zero over a store full of rejections, because a rejection is one of the rows it
+    exists to show. Only an unreadable index or an unparseable ledger fails it.
+
+    Nothing here writes. The rows are the same ones the last ingestion published in the
+    sidecar; recomputing them from the store as it now stands is what makes the report
+    current rather than a copy of a run that may be hours old.
+    """
+    root = root if root is not None else index_root.parent
+    try:
+        manifest = read_manifest(index_root)
+    except IndexVersionMismatch as error:
+        return 1, [f"{index_root}: {error}"]
+    if manifest is None:
+        return 1, [f"{index_root}: no manifest — nothing has been committed here"]
+
+    try:
+        loader = _triage_loader(root, index_root / manifest.view_dir)
+    except (LedgerUnparseable, RigError) as error:
+        return 1, [f"failed: {error}"]
+    if loader is None:
+        return 0, [f"{TRIAGE_DIR}: store unavailable — nothing to report"]
+
+    return 0, coverage(loader.evaluate(), loader.rig).lines()
 
 
 def run_inventory(index_root: Path) -> tuple[int, list[str]]:
@@ -525,6 +665,7 @@ def main(argv: Sequence[str] | None = None) -> int:
     commands.add_parser("ingest", help="ingest both stores and commit a view")
     commands.add_parser("validate", help="read the committed index back and report what breaks")
     commands.add_parser("inventory", help="report every indexed source (9.1)")
+    commands.add_parser("coverage", help="report what the entry store covers (§6)")
     serve = commands.add_parser("serve", help="run the loopback answer-engine API")
     serve.add_argument("--index-dir", type=Path, default=None)
     serve.add_argument("--manuals-root", type=Path, default=None)
@@ -564,7 +705,15 @@ def main(argv: Sequence[str] | None = None) -> int:
         )
         return 0
 
-    code, lines = (run_validate if args.command == "validate" else run_inventory)(index_root)
+    # `--root` and not `index_root.parent` for both store commands: `triage/` and
+    # `rig.yaml` are the author's files and sit beside `index/`, which is derived. A
+    # validate that read the index alone would exit zero over a store it never opened.
+    if args.command == "validate":
+        code, lines = run_validate(index_root, root=args.root)
+    elif args.command == "coverage":
+        code, lines = run_coverage(index_root, root=args.root)
+    else:
+        code, lines = run_inventory(index_root)
     _print(lines)
     return code
 
@@ -577,10 +726,13 @@ def _print(lines: Iterable[str]) -> None:
 __all__ = [
     "INDEX_DIR",
     "MANUALS_DIR",
+    "TRIAGE_DIR",
     "RunResult",
     "Store",
+    "TriageStore",
     "ingest",
     "main",
+    "run_coverage",
     "run_ingest",
     "run_inventory",
     "run_serve",

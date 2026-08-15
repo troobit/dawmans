@@ -158,11 +158,17 @@ wiring and timing).
 
 ## Grounding (`ground.py`, `dawmans/triage/terms.py`)
 
-- `dawmans/triage/terms.py` was created here (symptom-triage has landed no code) holding only the
-  2.6 extraction primitives — `capitalised_runs`, `numeric_literals`. Policy (device discards,
-  sentence-start rule, containment) stays with the future triage loader. `ground.terms is terms`
-  is asserted so the reuse can't silently become a reimplementation. `test_no_pymupdf` picks the
-  package up automatically.
+- `dawmans/triage/terms.py` was created here as a preview, then **replaced wholesale** by
+  symptom-triage's own implementation when that branch merged. The two bare primitives this side
+  reads — `capitalised_runs`, `numeric_literals` — survive as thin wrappers over that module's
+  extractors, so there is one extraction and no drift. Everything else there is triage policy
+  (device discards, the entry-scoped sentence-start rule, containment, the miss flag).
+- The wrapper detail worth knowing: `_runs(span, corroborated)` takes `None` for "no entry to read
+  the sentence-start rule against", which is what `capitalised_runs` passes. Passing an empty
+  frozenset instead would silently drop every term a sentence happens to open with, and ground's
+  arm (a) would go quiet on real prose.
+- `ground.terms is terms` is asserted so the reuse can't silently become a reimplementation.
+  `test_no_pymupdf` picks the package up automatically.
 - `ground_turn` scans **only** output text (direct_answer + blocks) against `supplied` — history
   and state non-citability are structural, not filtered. Unknown markers are stripped and counted;
   resolved ones stay inline. Citations dedupe in first-appearance order.
