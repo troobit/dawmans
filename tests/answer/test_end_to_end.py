@@ -93,7 +93,9 @@ Q_TRIAGE_ONLY = np.array([0.0, 0.0, 0.0, 0.9], dtype=np.float32)
 Q_LIVE = np.array([0.9, 0.0, 0.0, 0.0], dtype=np.float32)
 
 
-def write_index(root, sources, passages, *, vectors, gaps=GAPS, sidecar=(), view="views/r1", revision="rev-1"):
+def write_index(
+    root, sources, passages, *, vectors, gaps=GAPS, sidecar=(), view="views/r1", revision="rev-1"
+):
     """Write one complete index revision the way the corpus commits it:
     the view directory in full first, the manifest rename last."""
     index_dir = root / "index"

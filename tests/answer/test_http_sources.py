@@ -77,9 +77,7 @@ class TestFetchPassage:
         # what makes the removal immediate.
         app, watcher = sources_app()
         assert get(app, passage_path(f"{APC}#p1")).status_code == 200
-        shrunk = make_view(
-            [SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2]
-        )
+        shrunk = make_view([SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2])
         watcher.swap(shrunk)
         assert get(app, passage_path(f"{APC}#p1")).status_code == 404
 
@@ -126,9 +124,7 @@ class TestListSources:
     def test_an_empty_owned_but_undocumented_report_is_a_list_not_an_omission(self):
         # It is the sole resolver of a canonical device id and refills the
         # day a device is declared ahead of its manual (9.6).
-        view = default_view(
-            gaps={"owned_but_undocumented": [], "documented_but_unconfirmed": []}
-        )
+        view = default_view(gaps={"owned_but_undocumented": [], "documented_but_unconfirmed": []})
         app = make_app(StubWatcher(view))
         body = get(app, "/sources").json()
         assert body["owned_but_undocumented"] == []

@@ -53,8 +53,7 @@ def collect(provider):
 
 def _sse_body(deltas):
     lines = [
-        "data: " + json.dumps({"choices": [{"delta": {"content": delta}}]})
-        for delta in deltas
+        "data: " + json.dumps({"choices": [{"delta": {"content": delta}}]}) for delta in deltas
     ]
     lines.append("data: [DONE]")
     return ("\n\n".join(lines) + "\n\n").encode()
@@ -96,8 +95,10 @@ def test_local_requires_no_key_and_is_fully_configured():
     assert status.configured is True
     assert status.masked is None
     gate = GateState(
-        passage_count=100, selected_count=1,
-        provider_kind=str(provider.kind), requires_key=requires_key(provider.kind),
+        passage_count=100,
+        selected_count=1,
+        provider_kind=str(provider.kind),
+        requires_key=requires_key(provider.kind),
         credential_stored=False,
     )
     assert pre_flight(gate) is None
@@ -200,9 +201,7 @@ def test_local_429_with_no_stated_interval_does_not_retry_or_invent_one():
 
 def test_local_429_with_interval_over_the_ceiling_surfaces_immediately():
     sleeps = []
-    provider = _rate_limited_provider(
-        [httpx.Response(429, headers={"retry-after": "3.4"})], sleeps
-    )
+    provider = _rate_limited_provider([httpx.Response(429, headers={"retry-after": "3.4"})], sleeps)
     with pytest.raises(ProviderFailure) as exc:
         collect(provider)
     assert exc.value.kind == "rate-limited"
@@ -236,9 +235,12 @@ def test_selecting_the_shared_backend_records_nothing():
 def test_turn_before_acknowledgement_fails_as_unconfigured():
     provider = SharedBackendProvider()
     gate = GateState(
-        passage_count=100, selected_count=1,
-        provider_kind=str(provider.kind), requires_key=requires_key(provider.kind),
-        requires_ack=provider.requires_ack, acknowledged=provider.acknowledged,
+        passage_count=100,
+        selected_count=1,
+        provider_kind=str(provider.kind),
+        requires_key=requires_key(provider.kind),
+        requires_ack=provider.requires_ack,
+        acknowledged=provider.acknowledged,
     )
     classified = pre_flight(gate)
     assert classified is not None

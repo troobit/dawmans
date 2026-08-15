@@ -67,16 +67,31 @@ def cause(statement, check, *fixes, flags=()):
 
 
 FIVE_CAUSES = [
-    cause("The Track Activator is off", "the track's number is dimmed in the mixer",
-          fix(LIVE, "16.4", f"{LIVE}#f1", f"{LIVE}#f2")),
-    cause("Direct monitoring is on at the interface", "the DIRECT MONITOR switch is pushed in",
-          fix(SCARLETT, "3.1", f"{SCARLETT}#d1")),
-    cause("The cue mix is fully dry", "the cue knob sits at its left stop",
-          fix(LIVE, "16.5", f"{LIVE}#g1")),
-    cause("The MIDI channel does not match", "the channel selector shows a different channel",
-          fix(LIVE, "17.1", f"{LIVE}#f3")),
-    cause("A fifth cause past the band", "a check that must never appear",
-          fix(LIVE, "18.0", f"{LIVE}#f1")),
+    cause(
+        "The Track Activator is off",
+        "the track's number is dimmed in the mixer",
+        fix(LIVE, "16.4", f"{LIVE}#f1", f"{LIVE}#f2"),
+    ),
+    cause(
+        "Direct monitoring is on at the interface",
+        "the DIRECT MONITOR switch is pushed in",
+        fix(SCARLETT, "3.1", f"{SCARLETT}#d1"),
+    ),
+    cause(
+        "The cue mix is fully dry",
+        "the cue knob sits at its left stop",
+        fix(LIVE, "16.5", f"{LIVE}#g1"),
+    ),
+    cause(
+        "The MIDI channel does not match",
+        "the channel selector shows a different channel",
+        fix(LIVE, "17.1", f"{LIVE}#f3"),
+    ),
+    cause(
+        "A fifth cause past the band",
+        "a check that must never appear",
+        fix(LIVE, "18.0", f"{LIVE}#f1"),
+    ),
 ]
 
 
@@ -234,9 +249,7 @@ def test_a_supplied_state_value_removes_its_candidate():
     view = entry_view()
     expansion = expand_entry(view, f"{TRIAGE}#t1", ALL_SELECTED)
     supplied_value = FIVE_CAUSES[1]["statement"]
-    narrowing = build_narrowing(
-        expansion, state_supplies=lambda c: c.value == supplied_value
-    )
+    narrowing = build_narrowing(expansion, state_supplies=lambda c: c.value == supplied_value)
     assert [c.value for c in narrowing.candidates] == [
         member["statement"] for member in (FIVE_CAUSES[0], FIVE_CAUSES[2], FIVE_CAUSES[3])
     ]
@@ -297,8 +310,7 @@ def test_causes_construct_a_ranked_causes_envelope():
 
 def test_an_authored_unbacked_cause_is_carried_not_dropped_and_never_mutated():
     causes = [
-        cause("A cause with no ingested fix", "an observable check",
-              flags=("unbacked-cause",)),
+        cause("A cause with no ingested fix", "an observable check", flags=("unbacked-cause",)),
         cause("A backed cause", "another check", fix(LIVE, "16.4", f"{LIVE}#f1")),
     ]
     view = entry_view(causes=causes)

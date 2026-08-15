@@ -120,13 +120,13 @@ class TestStartupOrder:
             run_server=harness.run_server,
         )
         assert harness.events[-1] == "bind"
-        response = request(harness.bound["app"], "GET", "/sources", base_url="http://127.0.0.1:8722")
+        response = request(
+            harness.bound["app"], "GET", "/sources", base_url="http://127.0.0.1:8722"
+        )
         assert response.status_code == 200
         assert response.json()["sources"] == []
 
-    def test_a_non_loopback_bind_exits_naming_the_address(
-        self, tmp_path, monkeypatch, keychain
-    ):
+    def test_a_non_loopback_bind_exits_naming_the_address(self, tmp_path, monkeypatch, keychain):
         harness = Harness(monkeypatch)
         with pytest.raises(SystemExit) as fault:
             run_serve(
@@ -163,9 +163,7 @@ class TestWiredSurface:
     def test_every_operation_group_is_routed(self, surface):
         app, base = surface
         assert request(app, "GET", "/sources", base_url=base).status_code == 200
-        assert (
-            request(app, "GET", f"/passages/{LIVE}%23p1", base_url=base).status_code == 200
-        )
+        assert request(app, "GET", f"/passages/{LIVE}%23p1", base_url=base).status_code == 200
         assert request(app, "GET", "/provider", base_url=base).status_code == 200
         # The document route is wired: a JSON not-found body, not a
         # route-less plain 404 — the file itself is absent here.
@@ -188,9 +186,7 @@ class TestWiredSurface:
 
     def test_selecting_the_local_provider_applies_without_restart(self, surface):
         app, base = surface
-        response = request(
-            app, "PUT", "/provider", json_body={"kind": "local"}, base_url=base
-        )
+        response = request(app, "PUT", "/provider", json_body={"kind": "local"}, base_url=base)
         assert response.status_code == 200
         body = response.json()
         assert body["recorded"] is True
@@ -199,9 +195,7 @@ class TestWiredSurface:
 
     def test_a_keyed_kind_without_a_stored_key_gates_as_missing_credential(self, surface):
         app, base = surface
-        put = request(
-            app, "PUT", "/provider", json_body={"kind": "keyed-hosted"}, base_url=base
-        )
+        put = request(app, "PUT", "/provider", json_body={"kind": "keyed-hosted"}, base_url=base)
         assert put.status_code == 200
         response = request(
             app,
@@ -222,9 +216,7 @@ class TestWiredSurface:
             json_body={"key": "sk-ant-e2e-1234"},
             base_url=base,
         )
-        put = request(
-            app, "PUT", "/provider", json_body={"kind": "keyed-hosted"}, base_url=base
-        )
+        put = request(app, "PUT", "/provider", json_body={"kind": "keyed-hosted"}, base_url=base)
         body = put.json()
         assert body["configured"] is True
         assert body["masked"] == "…1234"

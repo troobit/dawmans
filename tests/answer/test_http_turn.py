@@ -192,9 +192,7 @@ def drive(app, body, sent, disconnect):
 
 def sent_bytes(sent):
     return b"".join(
-        message.get("body", b"")
-        for message in sent
-        if message["type"] == "http.response.body"
+        message.get("body", b"") for message in sent if message["type"] == "http.response.body"
     )
 
 
@@ -225,9 +223,7 @@ class TestStreamShape:
         async def collect():
             return [
                 event.name
-                async for event in direct_pipeline.turn(
-                    "why is track 3 silent", sources=ALL
-                )
+                async for event in direct_pipeline.turn("why is track 3 silent", sources=ALL)
             ]
 
         direct_names = asyncio.run(collect())
@@ -263,9 +259,7 @@ class TestStreamShape:
         # The lexical arm supplies the triage entry too ("track" overlaps),
         # so all three sources contribute.
         assert payloads["contributing_sources"]["sources"] == sorted({LIVE, APC, TRIAGE})
-        assert payloads["uncovered_parts"]["parts"] == [
-            "whether direct monitoring is also muted"
-        ]
+        assert payloads["uncovered_parts"]["parts"] == ["whether direct monitoring is also muted"]
         assert payloads["ungrounded"] == {"ungrounded": True}
         assert payloads["framing"] == {"framing": "parsed"}
         assert payloads["timings"]["retrieval_ms"] is not None
@@ -313,13 +307,9 @@ class TestOrdering:
             },
         )
         watcher = pipeline._watcher
-        shrunk = make_view(
-            [SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2]
-        )
+        shrunk = make_view([SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2])
         watcher.swap(shrunk)
-        _, events = stream_turn(
-            app, {"question": "and now?", "conversation_id": conversation.id}
-        )
+        _, events = stream_turn(app, {"question": "and now?", "conversation_id": conversation.id})
         names = [name for name, _ in events]
         assert "scope_dropped" in names
         assert names.index("scope_dropped") < names.index("outcome")
@@ -387,9 +377,7 @@ class TestIncrementalDelivery:
 class TestQuestionLimit:
     def test_a_1001_character_question_is_rejected_before_a_turn_exists(self):
         app, _, provider = turn_app()
-        response = post_turn(
-            app, {"question": "a" * 1001, "sources": list(ALL)}
-        )
+        response = post_turn(app, {"question": "a" * 1001, "sources": list(ALL)})
         assert response.status_code == 422
         body = response.json()
         assert body == {

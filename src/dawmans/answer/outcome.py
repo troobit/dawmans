@@ -75,9 +75,7 @@ def pre_flight(gate: GateState) -> Classified | None:
     if gate.requires_key and not gate.credential_stored:
         return Classified(Outcome.PROVIDER_UNCONFIGURED, reason=Reason.MISSING_CREDENTIAL)
     if gate.requires_ack and not gate.acknowledged:
-        return Classified(
-            Outcome.PROVIDER_UNCONFIGURED, reason=Reason.DISCLOSURE_UNACKNOWLEDGED
-        )
+        return Classified(Outcome.PROVIDER_UNCONFIGURED, reason=Reason.DISCLOSURE_UNACKNOWLEDGED)
     return None
 
 
@@ -127,14 +125,10 @@ def in_flight(flight: Flight) -> Classified | None:
         return Classified(
             Outcome.PROVIDER_ERROR, reason=Reason.AUTHENTICATION_FAILED, detail=flight.detail
         )
-    return Classified(
-        Outcome.PROVIDER_ERROR, reason=Reason.PROVIDER_REJECTED, detail=flight.detail
-    )
+    return Classified(Outcome.PROVIDER_ERROR, reason=Reason.PROVIDER_REJECTED, detail=flight.detail)
 
 
-def classify(
-    gate: GateState, flight: Flight, line_one: str | None, *, covered: bool
-) -> Classified:
+def classify(gate: GateState, flight: Flight, line_one: str | None, *, covered: bool) -> Classified:
     """Total over any gate state, any transcript and any line: exactly
     one §6 member, never raised. Content outcomes come only from a valid
     line 1; the framing-unparsed fallback is restricted to the coverage
@@ -176,9 +170,7 @@ def resolve_device(name: str, gaps: Mapping[str, Any]) -> RequiredDevice:
     return RequiredDevice(device=name, display_name=None)
 
 
-def required_manual_for(
-    device: RequiredDevice, gaps: Mapping[str, Any]
-) -> RequiredManual | None:
+def required_manual_for(device: RequiredDevice, gaps: Mapping[str, Any]) -> RequiredManual | None:
     """CONTRACTS §4e: present exactly where the device resolved through
     the report to a canonical <vendor>/<product> id, absent otherwise —
     vendor and product are the two fields no placeholder can stand in

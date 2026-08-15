@@ -35,15 +35,17 @@ from dawmans.answer.envelope import (
 
 # The model-chosen half of CONTRACTS §6 — seven members, validated on
 # line 1. outcome.py reuses this set for the same validation.
-CONTENT_OUTCOMES = frozenset({
-    "answered",
-    "partially-answered",
-    "needs-narrowing",
-    "ranked-causes",
-    "refused-not-covered",
-    "out-of-domain",
-    "no-manual-for-device",
-})
+CONTENT_OUTCOMES = frozenset(
+    {
+        "answered",
+        "partially-answered",
+        "needs-narrowing",
+        "ranked-causes",
+        "refused-not-covered",
+        "out-of-domain",
+        "no-manual-for-device",
+    }
+)
 
 SUGGESTIONS_MAX = 3  # 2.3: at most 3, ordered by likelihood
 
@@ -247,7 +249,7 @@ class FramingParser:
             self._narrow_candidates.append(line[2:].strip())
             return
         if self._pending_cause is not None and line.startswith("check: "):
-            self._close_cause(check=line[len("check: "):])
+            self._close_cause(check=line[len("check: ") :])
             return
         if self._caveat is not None and line.startswith("  "):
             self._caveat.append(line.strip())
@@ -280,12 +282,12 @@ class FramingParser:
             return
         if line.startswith("!caveat "):
             self._flush_open()
-            self._caveat = [line[len("!caveat "):].strip()]
+            self._caveat = [line[len("!caveat ") :].strip()]
             self._emit_body(line)
             return
         if line.startswith("!conflict "):
             self._flush_open()
-            self._conflict = (line[len("!conflict "):].strip(), [])
+            self._conflict = (line[len("!conflict ") :].strip(), [])
             self._emit_body(line)
             return
         if self._hoisting and self._sigil_line(line):
@@ -302,26 +304,26 @@ class FramingParser:
     def _sigil_line(self, line: str) -> bool:
         if line.startswith("~uncovered "):
             self._flush_open()
-            self._uncovered.append(line[len("~uncovered "):].strip())
+            self._uncovered.append(line[len("~uncovered ") :].strip())
             return True
         if line.startswith("?narrow "):
             self._flush_open()
             if self._narrow_question is None:
-                self._narrow_question = line[len("?narrow "):].strip()
+                self._narrow_question = line[len("?narrow ") :].strip()
                 self._collecting_narrow = True
             return True
         if line.startswith("?cause "):
             self._flush_open()
-            self._pending_cause = line[len("?cause "):]
+            self._pending_cause = line[len("?cause ") :]
             return True
         if line.startswith("@device "):
             self._flush_open()
             if self._device is None:
-                self._device = line[len("@device "):].strip()
+                self._device = line[len("@device ") :].strip()
             return True
         if line.startswith("!suggest "):
             self._flush_open()
-            self._suggest_ids.setdefault(line[len("!suggest "):].strip())
+            self._suggest_ids.setdefault(line[len("!suggest ") :].strip())
             return True
         return False
 
@@ -341,9 +343,7 @@ class FramingParser:
             all_markers = markers_in(lead) + tuple(
                 marker for reading in readings for marker in reading.markers
             )
-            self._blocks.append(
-                Conflict(text=lead, readings=tuple(readings), markers=all_markers)
-            )
+            self._blocks.append(Conflict(text=lead, readings=tuple(readings), markers=all_markers))
             self._conflict = None
         if self._pending_cause is not None:
             self._close_cause(check="")
@@ -401,8 +401,7 @@ class FramingParser:
         return Narrowing(
             question=self._narrow_question,
             candidates=tuple(
-                NarrowingCandidate(label=text, value=text)
-                for text in self._narrow_candidates
+                NarrowingCandidate(label=text, value=text) for text in self._narrow_candidates
             ),
         )
 

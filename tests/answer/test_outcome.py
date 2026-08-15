@@ -25,16 +25,26 @@ from dawmans.answer.outcome import (
 from dawmans.answer.parse import CONTENT_OUTCOMES
 
 ENGINE_OUTCOMES = {
-    Outcome.NO_SOURCES_SELECTED, Outcome.UNKNOWN_SOURCE_ID, Outcome.CORPUS_EMPTY,
-    Outcome.PROVIDER_UNCONFIGURED, Outcome.PROVIDER_UNREACHABLE,
-    Outcome.PROVIDER_RATE_LIMITED, Outcome.PROVIDER_ERROR, Outcome.TIMEOUT,
-    Outcome.INCOMPLETE, Outcome.CANCELLED,
+    Outcome.NO_SOURCES_SELECTED,
+    Outcome.UNKNOWN_SOURCE_ID,
+    Outcome.CORPUS_EMPTY,
+    Outcome.PROVIDER_UNCONFIGURED,
+    Outcome.PROVIDER_UNREACHABLE,
+    Outcome.PROVIDER_RATE_LIMITED,
+    Outcome.PROVIDER_ERROR,
+    Outcome.TIMEOUT,
+    Outcome.INCOMPLETE,
+    Outcome.CANCELLED,
 }
 
 READY = GateState(
-    passage_count=100, selected_count=2, provider_kind="local",
-    requires_key=False, credential_stored=False,
-    requires_ack=False, acknowledged=False,
+    passage_count=100,
+    selected_count=2,
+    provider_kind="local",
+    requires_key=False,
+    credential_stored=False,
+    requires_ack=False,
+    acknowledged=False,
 )
 
 gate_states = st.builds(
@@ -82,9 +92,7 @@ class TestTotalityAndDisjointness:
         assert result.outcome.value in CONTENT_OUTCOMES
 
     @given(gate=gate_states, flight=flights, covered=st.booleans())
-    def test_no_content_outcome_from_a_gate_except_the_unparsed_pair(
-        self, gate, flight, covered
-    ):
+    def test_no_content_outcome_from_a_gate_except_the_unparsed_pair(self, gate, flight, covered):
         gated = pre_flight(gate) or in_flight(flight)
         if gated is not None:
             assert gated.outcome in ENGINE_OUTCOMES
@@ -122,14 +130,16 @@ class TestPreFlightOrder:
         no_kind = GateState(**base, provider_kind=None)
         assert pre_flight(no_kind).reason is Reason.NO_PROVIDER_KIND
 
-        keyless = GateState(**base, provider_kind="keyed-hosted",
-                            requires_key=True, credential_stored=False)
+        keyless = GateState(
+            **base, provider_kind="keyed-hosted", requires_key=True, credential_stored=False
+        )
         result = pre_flight(keyless)
         assert result.outcome is Outcome.PROVIDER_UNCONFIGURED
         assert result.reason is Reason.MISSING_CREDENTIAL
 
-        unacknowledged = GateState(**base, provider_kind="shared-backend",
-                                   requires_ack=True, acknowledged=False)
+        unacknowledged = GateState(
+            **base, provider_kind="shared-backend", requires_ack=True, acknowledged=False
+        )
         assert pre_flight(unacknowledged).reason is Reason.DISCLOSURE_UNACKNOWLEDGED
 
     def test_a_configured_keyless_provider_passes_the_gate(self):
@@ -184,8 +194,11 @@ class TestInFlightOrder:
         # 6.6: missing-credential (pre-flight) versus authentication-failed
         # (in-flight) differ in outcome and reason — the enumerated codes —
         # never by the wording in detail, which no caller may parse.
-        missing = pre_flight(GateState(passage_count=1, selected_count=1,
-                                       provider_kind="keyed-hosted", requires_key=True))
+        missing = pre_flight(
+            GateState(
+                passage_count=1, selected_count=1, provider_kind="keyed-hosted", requires_key=True
+            )
+        )
         rejected = in_flight(Flight(failure="auth"))
         assert (missing.outcome, missing.reason) != (rejected.outcome, rejected.reason)
 

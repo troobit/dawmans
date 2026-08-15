@@ -53,7 +53,9 @@ class HostOriginGuard:
         }
         host = headers.get("host")
         if host not in self._hosts:
-            await self._reject(scope, receive, send, {"rejected": "host-not-loopback", "host": host})
+            await self._reject(
+                scope, receive, send, {"rejected": "host-not-loopback", "host": host}
+            )
             return
         origin = headers.get("origin")
         # Absent is fine (curl, same-origin GET); "null" — a file:// page —

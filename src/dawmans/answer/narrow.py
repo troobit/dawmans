@@ -34,9 +34,7 @@ NARROWING_MIN = 2
 CAUSES_MAX = 4
 
 
-def matched_entry(
-    view: CorpusView, supplied_ids: Iterable[str]
-) -> Mapping[str, Any] | None:
+def matched_entry(view: CorpusView, supplied_ids: Iterable[str]) -> Mapping[str, Any] | None:
     """The first supplied passage that keys the sidecar, in supplied order.
 
     `supplied` arrives in fused rank order, so where several triage entries

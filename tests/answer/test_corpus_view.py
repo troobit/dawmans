@@ -150,17 +150,13 @@ def build_index(
     passages = [p for p in PASSAGES if p["source_id"] in keep]
 
     (view_dir / "sources.json").write_text(json.dumps(sources))
-    (view_dir / "passages.jsonl").write_text(
-        "".join(json.dumps(p) + "\n" for p in passages)
-    )
+    (view_dir / "passages.jsonl").write_text("".join(json.dumps(p) + "\n" for p in passages))
 
     rows = len(passages) if vector_rows is None else vector_rows
     vectors = np.arange(rows * VECTOR_DIM, dtype=np.float32).reshape(rows, VECTOR_DIM)
     np.save(view_dir / "vectors.npy", vectors)
 
-    tokens = bm25s.tokenize(
-        [p["text"] for p in passages], stopwords=None, show_progress=False
-    )
+    tokens = bm25s.tokenize([p["text"] for p in passages], stopwords=None, show_progress=False)
     lexical = bm25s.BM25()
     lexical.index(tokens, show_progress=False)
     lexical.save(str(view_dir / "lexical"))

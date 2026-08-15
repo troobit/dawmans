@@ -114,7 +114,9 @@ class ProviderRegistry:
         self.provider: Provider | None = None
         self.acknowledged = False
 
-    def select(self, kind: ProviderKind, model: str | None = None, *, disclosure_ack: bool = False) -> bool:
+    def select(
+        self, kind: ProviderKind, model: str | None = None, *, disclosure_ack: bool = False
+    ) -> bool:
         """Record a selection. Returns False — recording nothing — where
         the shared backend is selected before its disclosure is
         acknowledged (6.15)."""
@@ -232,16 +234,10 @@ def create_app(
         gaps = view.gaps if view is not None else {}
         return JSONResponse(
             {
-                "sources": [
-                    dict(record) for record in (view.sources if view is not None else ())
-                ],
+                "sources": [dict(record) for record in (view.sources if view is not None else ())],
                 "owned_but_undocumented": list(gaps.get("owned_but_undocumented", ())),
-                "documented_but_unconfirmed": list(
-                    gaps.get("documented_but_unconfirmed", ())
-                ),
-                "manifest_fault": (
-                    MANIFEST_FAULT_NOTICE if watcher.manifest_fault else None
-                ),
+                "documented_but_unconfirmed": list(gaps.get("documented_but_unconfirmed", ())),
+                "manifest_fault": (MANIFEST_FAULT_NOTICE if watcher.manifest_fault else None),
             }
         )
 
@@ -294,8 +290,7 @@ def create_app(
             )
         sources = body.get("sources")
         if sources is not None and not (
-            isinstance(sources, list)
-            and all(isinstance(member, str) for member in sources)
+            isinstance(sources, list) and all(isinstance(member, str) for member in sources)
         ):
             return JSONResponse({"rejected": "sources-invalid"}, status_code=422)
         logger.debug("turn question: %s", question)  # 9.11: DEBUG only
@@ -303,9 +298,7 @@ def create_app(
         # needs for a follow-up; pipeline.turn() sends the 9.13 supersede
         # signal at call time, before the stream is first read.
         conversation = pipeline.conversations.get(body.get("conversation_id"))
-        events = pipeline.turn(
-            question, sources=sources, conversation_id=conversation.id
-        )
+        events = pipeline.turn(question, sources=sources, conversation_id=conversation.id)
         return _TurnStreamResponse(
             _sse(events),
             media_type="text/event-stream",

@@ -24,9 +24,7 @@ class SharedBackendProvider:
     kind = ProviderKind.SHARED_BACKEND
     requires_ack = True
 
-    def __init__(
-        self, *, acknowledged: bool = False, script: Sequence[str] = ()
-    ) -> None:
+    def __init__(self, *, acknowledged: bool = False, script: Sequence[str] = ()) -> None:
         self.acknowledged = acknowledged
         self._script = tuple(script)
 

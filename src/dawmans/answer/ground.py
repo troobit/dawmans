@@ -175,8 +175,7 @@ def ground_turn(
         cleaned_blocks.append(cleaned)
 
     citations = tuple(
-        build_citation(supplied[pid], sources_by_id[supplied[pid]["source_id"]])
-        for pid in cited
+        build_citation(supplied[pid], sources_by_id[supplied[pid]["source_id"]]) for pid in cited
     )
     return Grounding(
         direct_answer=cleaned_answer,

@@ -80,9 +80,7 @@ class TestNotFound:
     def test_an_unknown_id_is_404(self, app):
         assert get(app, document_path("nonexistent/source")).status_code == 404
 
-    def test_a_renamed_file_is_404_so_the_caller_degrades_the_citation(
-        self, app, manuals_root
-    ):
+    def test_a_renamed_file_is_404_so_the_caller_degrades_the_citation(self, app, manuals_root):
         (manuals_root / FILES[APC]).rename(manuals_root / "renamed.pdf")
         response = get(app, document_path(APC))
         assert response.status_code == 404

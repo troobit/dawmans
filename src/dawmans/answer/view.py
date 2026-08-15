@@ -98,9 +98,7 @@ class CorpusView:
             raise ViewLoadError(f"view {view_dir} is unreadable: {fault}") from fault
 
         row_slices = {
-            entry["source_id"]: slice(
-                entry["row_start"], entry["row_start"] + entry["row_count"]
-            )
+            entry["source_id"]: slice(entry["row_start"], entry["row_start"] + entry["row_count"])
             for entry in manifest["sources"]
         }
         total = sum(entry["row_count"] for entry in manifest["sources"])

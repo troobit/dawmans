@@ -67,9 +67,7 @@ def embed_query(embedder: Embedder, question: str) -> np.ndarray:
 def tokenize_query(question: str) -> tuple[str, ...]:
     """The index build's tokenisation applied to the question — same
     pattern, no stopword list — so query terms land in the index vocabulary."""
-    [tokens] = bm25s.tokenize(
-        question, stopwords=None, return_ids=False, show_progress=False
-    )
+    [tokens] = bm25s.tokenize(question, stopwords=None, return_ids=False, show_progress=False)
     return tuple(tokens)
 
 
@@ -177,9 +175,7 @@ def candidate_pool(
     dense_ids = tuple(str(pid) for pid in pids[dense_rows])
     lexical_ids = tuple(str(pid) for pid in pids[lexical_rows])
     fused_scores = rrf_scores([dense_ids, lexical_ids], config.rrf_k)
-    fused = tuple(
-        sorted(fused_scores, key=lambda candidate: (-fused_scores[candidate], candidate))
-    )
+    fused = tuple(sorted(fused_scores, key=lambda candidate: (-fused_scores[candidate], candidate)))
     return CandidatePool(
         scope, mask, cosines, bm25, tokens, dense_ids, lexical_ids, fused, fused_scores
     )

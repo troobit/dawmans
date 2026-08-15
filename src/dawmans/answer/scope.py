@@ -44,8 +44,7 @@ def device_scope(view: CorpusView, selected_source_ids: Iterable[str]) -> frozen
         # sources.json and gaps.json alone, without ever reading rig.yaml.
         records = [record for record in view.sources if record["kind"] == VENDOR_MANUAL]
     return frozenset(
-        {record["hardware_applicability"]["device"] for record in records}
-        | _gap_devices(view.gaps)
+        {record["hardware_applicability"]["device"] for record in records} | _gap_devices(view.gaps)
     )
 
 

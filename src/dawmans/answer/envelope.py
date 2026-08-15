@@ -72,7 +72,9 @@ class Citation:
 
     def __post_init__(self) -> None:
         if self.kind not in (VENDOR_MANUAL, AUTHORED_TRIAGE):
-            raise ValueError(f"kind must be {VENDOR_MANUAL!r} or {AUTHORED_TRIAGE!r}: {self.kind!r}")
+            raise ValueError(
+                f"kind must be {VENDOR_MANUAL!r} or {AUTHORED_TRIAGE!r}: {self.kind!r}"
+            )
         for name in _OPTIONAL_STR_FIELDS:
             if getattr(self, name) == "":
                 raise ValueError(f"{name} is absent as None, never an empty string")

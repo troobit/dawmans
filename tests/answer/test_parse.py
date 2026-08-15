@@ -32,11 +32,13 @@ SOURCES = {
     APC: {"source_id": APC, "display_name": "APC Key 25 guide", "kind": "vendor-manual"},
     LIVE: {"source_id": LIVE, "display_name": "Live 12 manual", "kind": "vendor-manual"},
     "alesis/nitro-max": {
-        "source_id": "alesis/nitro-max", "display_name": "Nitro Max guide",
+        "source_id": "alesis/nitro-max",
+        "display_name": "Nitro Max guide",
         "kind": "vendor-manual",
     },
     "focusrite/scarlett-solo-4g": {
-        "source_id": "focusrite/scarlett-solo-4g", "display_name": "Scarlett Solo guide",
+        "source_id": "focusrite/scarlett-solo-4g",
+        "display_name": "Scarlett Solo guide",
         "kind": "vendor-manual",
     },
 }
@@ -82,8 +84,13 @@ class TestLineOne:
     def test_the_enum_has_seven_members(self):
         assert len(CONTENT_OUTCOMES) == 7
         assert CONTENT_OUTCOMES == {
-            "answered", "partially-answered", "needs-narrowing", "ranked-causes",
-            "refused-not-covered", "out-of-domain", "no-manual-for-device",
+            "answered",
+            "partially-answered",
+            "needs-narrowing",
+            "ranked-causes",
+            "refused-not-covered",
+            "out-of-domain",
+            "no-manual-for-device",
         }
 
     def test_a_valid_first_line_is_the_outcome(self):
@@ -206,7 +213,8 @@ class TestConflictArity:
         # Markers stay inline — like any block's text — and each reading
         # carries its own, so both citations render separately.
         assert [reading.text for reading in conflict.readings] == [
-            f"a [[p:{LIVE}#a1]]", f"b [[p:{APC}#x1]]",
+            f"a [[p:{LIVE}#a1]]",
+            f"b [[p:{APC}#x1]]",
         ]
         assert conflict.readings[0].markers == (f"{LIVE}#a1",)
         assert conflict.readings[1].markers == (f"{APC}#x1",)
@@ -241,7 +249,8 @@ class TestSigilHoists:
         result = parse(stream, covered=True)
         assert result.narrowing.question == "Which do you observe?"
         assert [c.label for c in result.narrowing.candidates] == [
-            "the meters move", "the meters are dead",
+            "the meters move",
+            "the meters are dead",
         ]
 
     def test_cause_blocks_hoist_with_rank_from_emitted_order(self):

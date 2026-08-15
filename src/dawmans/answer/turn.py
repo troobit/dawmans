@@ -104,9 +104,7 @@ def _clean_delta(text: str, supplied: dict[str, Any]) -> str:
     # Unresolvable markers are stripped from the streamed text — the user
     # is never shown a dangling reference (3.6). Whitespace is left alone:
     # a caveat continuation's indent is block structure on the consumer side.
-    return MARKER.sub(
-        lambda match: match.group(0) if match.group(1) in supplied else "", text
-    )
+    return MARKER.sub(lambda match: match.group(0) if match.group(1) in supplied else "", text)
 
 
 @dataclass
@@ -279,9 +277,7 @@ class TurnPipeline:
             question,
             tuple(supplied.values()),
             view.sources_by_id,
-            roster=tuple(
-                record for record in view.sources if record["source_id"] not in selected
-            ),
+            roster=tuple(record for record in view.sources if record["source_id"] not in selected),
             history=conversation.history_lines(),
             state=snapshot,
             narrowing_count=conversation.narrowing_count,
@@ -376,17 +372,16 @@ class TurnPipeline:
             )
             classified = in_flight(flight)
             yield TurnEvent("outcome", classified)
-            yield self._timings(started, gather_ms, retrieval_ms, state_ms,
-                                first_token_ms, None, provider_ms)
+            yield self._timings(
+                started, gather_ms, retrieval_ms, state_ms, first_token_ms, None, provider_ms
+            )
             yield TurnEvent("done", {"complete": True})
             return
 
         # -- parse result, grounding, envelope tail (§4b ordering) -------
 
         parser.close()
-        for event in self._drain(
-            parser, supplied, body_queue, stream_state, terminal_answer
-        ):
+        for event in self._drain(parser, supplied, body_queue, stream_state, terminal_answer):
             yield event
         result = parser.result(covered=covered, sources=view.sources_by_id)
         if result.outcome is Outcome.RANKED_CAUSES and terminal_answer is not None:
@@ -419,19 +414,20 @@ class TurnPipeline:
             else:
                 # Fallback ?cause hoists: a model marker that does not
                 # resolve is not an addressable value and is dropped.
-                causes = tuple(
-                    replace(cause, cites=tuple(pid for pid in cause.cites if pid in supplied))
-                    for cause in result.causes or ()
-                ) or None
+                causes = (
+                    tuple(
+                        replace(cause, cites=tuple(pid for pid in cause.cites if pid in supplied))
+                        for cause in result.causes or ()
+                    )
+                    or None
+                )
 
         citations = {citation.passage_id: citation for citation in ground.citations}
         if causes:
             # 7.6: every id in cites[]/fix_cites[] resolves into the turn's
             # citations[]; a cause with no fix carries unbacked on its own
             # citation, as a per-turn reading (Decision 10).
-            unbacked_ids = {
-                pid for cause in causes if not cause.fix_cites for pid in cause.cites
-            }
+            unbacked_ids = {pid for cause in causes if not cause.fix_cites for pid in cause.cites}
             for cause in causes:
                 for pid in (*cause.cites, *cause.fix_cites):
                     if pid in supplied and pid not in citations:
@@ -491,8 +487,9 @@ class TurnPipeline:
         if ground.ungrounded:
             yield TurnEvent("ungrounded", True)
         yield TurnEvent("framing", result.framing)
-        yield self._timings(started, gather_ms, retrieval_ms, state_ms,
-                            first_token_ms, completion_ms, provider_ms)
+        yield self._timings(
+            started, gather_ms, retrieval_ms, state_ms, first_token_ms, completion_ms, provider_ms
+        )
         conversation.record_turn(question, result.outcome, ground.direct_answer or "")
         yield TurnEvent("done", {"complete": True})
 
@@ -504,9 +501,7 @@ class TurnPipeline:
         never fails it."""
         t0 = time.perf_counter()
         try:
-            snapshot = await asyncio.wait_for(
-                self._state_source.snapshot(), self._state_timeout
-            )
+            snapshot = await asyncio.wait_for(self._state_source.snapshot(), self._state_timeout)
             for value in tuple(snapshot.values):
                 for field in _STATE_VALUE_FIELDS:
                     getattr(value, field)

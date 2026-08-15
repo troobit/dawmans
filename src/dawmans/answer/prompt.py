@@ -127,9 +127,7 @@ class AssembledPrompt:
     user: str
 
 
-def bounded_history(
-    history: Sequence[str], count_tokens: Callable[[str], int]
-) -> tuple[str, ...]:
+def bounded_history(history: Sequence[str], count_tokens: Callable[[str], int]) -> tuple[str, ...]:
     """10.8: oldest turns drop first until the newest fit the budget.
 
     The budget is enforced at 800 × (1 − 10%): the resident tokeniser is
@@ -242,8 +240,7 @@ def assemble(
         blocks.append(
             "## History (context only — not citable)\n"
             "Earlier turns, oldest first. Use them to interpret the question. "
-            "No statement here is a citable fact and none carries a marker.\n\n"
-            + "\n\n".join(kept)
+            "No statement here is a citable fact and none carries a marker.\n\n" + "\n\n".join(kept)
         )
     if narrowing_count >= NARROWING_LIMIT:
         blocks.append(_TERMINAL_DIRECTION)

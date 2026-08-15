@@ -27,10 +27,16 @@ SOURCES = {
 }
 
 PASSAGES = [
-    {"passage_id": f"{LIVE}#a1", "source_id": LIVE,
-     "text": "The Track Activator mutes the track output"},
-    {"passage_id": f"{TRIAGE}#t1", "source_id": TRIAGE,
-     "text": "No sound from a track although the meters move"},
+    {
+        "passage_id": f"{LIVE}#a1",
+        "source_id": LIVE,
+        "text": "The Track Activator mutes the track output",
+    },
+    {
+        "passage_id": f"{TRIAGE}#t1",
+        "source_id": TRIAGE,
+        "text": "No sound from a track although the meters move",
+    },
 ]
 
 NOW = datetime(2026, 8, 15, 12, 0, 0, tzinfo=UTC)
@@ -68,8 +74,13 @@ class TestSystemPrompt:
     def test_declares_the_framing_and_the_seven_content_outcomes(self):
         assert "dawmans/answer-framing/1" in SYSTEM_PROMPT
         for outcome in (
-            "answered", "partially-answered", "needs-narrowing", "ranked-causes",
-            "refused-not-covered", "out-of-domain", "no-manual-for-device",
+            "answered",
+            "partially-answered",
+            "needs-narrowing",
+            "ranked-causes",
+            "refused-not-covered",
+            "out-of-domain",
+            "no-manual-for-device",
         ):
             assert outcome in SYSTEM_PROMPT
 
@@ -86,8 +97,16 @@ class TestSystemPrompt:
         assert "ordered steps" in SYSTEM_PROMPT  # 1.5
 
     def test_carries_every_sigil_and_both_inline_forms(self):
-        for token in ("~uncovered", "?narrow", "?cause", "@device",
-                      "!suggest", "!caveat", "!conflict", "[[p:"):
+        for token in (
+            "~uncovered",
+            "?narrow",
+            "?cause",
+            "@device",
+            "!suggest",
+            "!caveat",
+            "!conflict",
+            "[[p:",
+        ):
             assert token in SYSTEM_PROMPT
         assert "backtick" in SYSTEM_PROMPT
 
@@ -152,12 +171,14 @@ class TestRoster:
     holds by construction — no passage content exists to be quoted."""
 
     def test_roster_carries_the_four_fields(self):
-        roster = [{
-            "source_id": "akai/apc-key-25",
-            "display_name": "APC Key 25 guide",
-            "product": "apc-key-25",
-            "kind": "vendor-manual",
-        }]
+        roster = [
+            {
+                "source_id": "akai/apc-key-25",
+                "display_name": "APC Key 25 guide",
+                "product": "apc-key-25",
+                "kind": "vendor-manual",
+            }
+        ]
         prompt = assembled(roster=roster)
         for value in ("akai/apc-key-25", "APC Key 25 guide", "apc-key-25", "vendor-manual"):
             assert value in prompt.user
@@ -165,14 +186,16 @@ class TestRoster:
     def test_roster_is_metadata_only(self):
         # A record arriving with content-bearing fields sheds them: the
         # roster is source_id, display_name, product, kind and nothing else.
-        roster = [{
-            "source_id": "akai/apc-key-25",
-            "display_name": "APC Key 25 guide",
-            "product": "apc-key-25",
-            "kind": "vendor-manual",
-            "text": "SENTINEL-PASSAGE-CONTENT",
-            "page_count": 5,
-        }]
+        roster = [
+            {
+                "source_id": "akai/apc-key-25",
+                "display_name": "APC Key 25 guide",
+                "product": "apc-key-25",
+                "kind": "vendor-manual",
+                "text": "SENTINEL-PASSAGE-CONTENT",
+                "page_count": 5,
+            }
+        ]
         prompt = assembled(roster=roster)
         assert "SENTINEL-PASSAGE-CONTENT" not in prompt.user
 
@@ -185,7 +208,7 @@ class TestHistory:
 
     def test_history_enters_in_a_block_marked_uncitable(self):
         prompt = assembled(history=("Q: earlier question\nA: earlier answer",))
-        history_block = prompt.user[prompt.user.index("History"):]
+        history_block = prompt.user[prompt.user.index("History") :]
         assert "not citable" in history_block
 
     def test_no_history_block_without_history(self):
@@ -221,46 +244,56 @@ class TestStateBlock:
     """8.5–8.7, 8.10: a separate labelled block with origin and age."""
 
     def test_values_carry_origin_and_age(self):
-        prompt = assembled(state=SimpleNamespace(
-            values=(state_value("track.3.monitor", "off", age_s=2.0),), acquired_at=NOW
-        ))
+        prompt = assembled(
+            state=SimpleNamespace(
+                values=(state_value("track.3.monitor", "off", age_s=2.0),), acquired_at=NOW
+            )
+        )
         assert "track.3.monitor" in prompt.user
         assert "test-source" in prompt.user
-        assert "2" in prompt.user[prompt.user.index("track.3.monitor"):]
+        assert "2" in prompt.user[prompt.user.index("track.3.monitor") :]
 
     def test_state_is_separate_from_history(self):
         prompt = assembled(
             history=("Q: earlier question\nA: earlier answer",),
-            state=SimpleNamespace(values=(state_value("audio.device", "Scarlett"),), acquired_at=NOW),
+            state=SimpleNamespace(
+                values=(state_value("audio.device", "Scarlett"),), acquired_at=NOW
+            ),
         )
         assert prompt.user.index("Session state") != prompt.user.index("History")
 
     def test_staleness_direction_for_saved_file_origin(self):
-        prompt = assembled(state=SimpleNamespace(
-            values=(state_value("track.3.monitor", "off", origin_kind="saved-file"),),
-            acquired_at=NOW,
-        ))
+        prompt = assembled(
+            state=SimpleNamespace(
+                values=(state_value("track.3.monitor", "off", origin_kind="saved-file"),),
+                acquired_at=NOW,
+            )
+        )
         assert "may not reflect the current project" in prompt.user
 
     def test_staleness_direction_for_values_older_than_60s(self):
-        prompt = assembled(state=SimpleNamespace(
-            values=(state_value("track.3.monitor", "off", age_s=61.0),), acquired_at=NOW
-        ))
+        prompt = assembled(
+            state=SimpleNamespace(
+                values=(state_value("track.3.monitor", "off", age_s=61.0),), acquired_at=NOW
+            )
+        )
         assert "may not reflect the current project" in prompt.user
 
     def test_no_staleness_direction_for_fresh_live_values(self):
-        prompt = assembled(state=SimpleNamespace(
-            values=(state_value("track.3.monitor", "off", age_s=2.0),), acquired_at=NOW
-        ))
+        prompt = assembled(
+            state=SimpleNamespace(
+                values=(state_value("track.3.monitor", "off", age_s=2.0),), acquired_at=NOW
+            )
+        )
         assert "may not reflect the current project" not in prompt.user
 
     def test_conflict_direction_marks_the_state_side_uncited(self):
         # 8.10: state versus manual is a !conflict with the state side
         # attributed to session state and carrying no citation marker.
-        prompt = assembled(state=SimpleNamespace(
-            values=(state_value("track.3.monitor", "off"),), acquired_at=NOW
-        ))
-        state_block = prompt.user[prompt.user.index("Session state"):]
+        prompt = assembled(
+            state=SimpleNamespace(values=(state_value("track.3.monitor", "off"),), acquired_at=NOW)
+        )
+        state_block = prompt.user[prompt.user.index("Session state") :]
         assert "!conflict" in state_block
         assert "no citation" in state_block
 

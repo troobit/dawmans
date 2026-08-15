@@ -48,9 +48,7 @@ PASSAGES = (
     + [passage(f"{TRIAGE}#t{i}", f"warp warp warp warp console bus {i}") for i in range(2)]
 )
 
-SIDECAR = [
-    sidecar_entry(f"{TRIAGE}#t{i}", ["behringer/x32"]) for i in range(2)
-]
+SIDECAR = [sidecar_entry(f"{TRIAGE}#t{i}", ["behringer/x32"]) for i in range(2)]
 
 ROWS = {record["passage_id"]: row for row, record in enumerate(PASSAGES)}
 
@@ -136,9 +134,7 @@ class TestMaskPrecedesTopK:
         view = build_view()
         q = query_vector(view, {})
 
-        pool = candidate_pool(
-            view, "warp", q, [LIVE, TRIAGE], config=RetrievalConfig(depth=2)
-        )
+        pool = candidate_pool(view, "warp", q, [LIVE, TRIAGE], config=RetrievalConfig(depth=2))
 
         # The tf-4 triage rows would take both slots were the device filter
         # applied after retrieval.
@@ -219,8 +215,14 @@ class TestRelevanceAlone:
     def test_ranking_never_weights_a_source_by_its_size(self):
         # Identical corpora except page_count swapped: the fused order must
         # not move (5.5) — ranking is on relevance alone.
-        small_apc = [vendor_source(LIVE, LIVE, page_count=1009), vendor_source(APC, APC, page_count=5)]
-        big_apc = [vendor_source(LIVE, LIVE, page_count=5), vendor_source(APC, APC, page_count=1009)]
+        small_apc = [
+            vendor_source(LIVE, LIVE, page_count=1009),
+            vendor_source(APC, APC, page_count=5),
+        ]
+        big_apc = [
+            vendor_source(LIVE, LIVE, page_count=5),
+            vendor_source(APC, APC, page_count=1009),
+        ]
         cosines = {f"{LIVE}#l{i:02d}": 0.4 + 0.01 * i for i in range(12)}
         cosines |= {f"{APC}#a{i}": 0.45 + 0.01 * i for i in range(3)}
 
@@ -237,14 +239,10 @@ class TestScopeSoundness:
     @settings(max_examples=60, deadline=None)
     @given(
         selected=st.sets(st.sampled_from([LIVE, APC, TRIAGE]), min_size=1),
-        components=st.lists(
-            st.floats(0.0, 1.0, allow_nan=False), min_size=17, max_size=17
-        ),
+        components=st.lists(st.floats(0.0, 1.0, allow_nan=False), min_size=17, max_size=17),
         question=st.sampled_from(["warp", "pad grid", "console bus", "zzzz"]),
     )
-    def test_no_candidate_leaves_the_selected_or_device_scope(
-        self, selected, components, question
-    ):
+    def test_no_candidate_leaves_the_selected_or_device_scope(self, selected, components, question):
         view = build_view()
         selected = sorted(selected)
         scope = device_scope(view, selected)

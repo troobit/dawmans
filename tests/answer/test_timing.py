@@ -136,9 +136,7 @@ class StubEmbedder:
 
 
 class TestEngineOverheadBudget:
-    def test_p95_at_most_150_ms_with_each_excluded_stage_inside_its_own_budget(
-        self, synthetic
-    ):
+    def test_p95_at_most_150_ms_with_each_excluded_stage_inside_its_own_budget(self, synthetic):
         view, query = synthetic
         provider = ScriptedProvider()
         pipeline = TurnPipeline(

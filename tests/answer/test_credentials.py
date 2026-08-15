@@ -106,7 +106,11 @@ def test_masked_key_is_the_last_four_form_or_none(keychain):
 def test_provider_status_has_no_field_that_can_hold_a_full_key():
     fields = {field.name for field in dataclasses.fields(ProviderStatus)}
     assert fields == {
-        "kind", "configured", "masked", "model", "prompt_cache",
+        "kind",
+        "configured",
+        "masked",
+        "model",
+        "prompt_cache",
         "requires_disclosure_ack",
     }
     # The masked field is the only credential-shaped one, and a status
@@ -166,15 +170,15 @@ def test_filter_passes_records_without_credential_material():
         (logging.INFO, "turn complete in 1200 ms", ()),
         (logging.DEBUG, "masked credential …8765 configured", ()),
     ]
-    assert emitted(records, [KEY]) == ["turn complete in 1200 ms",
-                                       "masked credential …8765 configured"]
+    assert emitted(records, [KEY]) == [
+        "turn complete in 1200 ms",
+        "masked credential …8765 configured",
+    ]
 
 
 def test_the_same_predicate_filters_detail():
     # detail carries engine wording only — never credential material, and
     # the same predicate that drops a log record drops a tainted detail.
     assert scrub_detail(f"auth failed for {KEY}", [KEY]) is None
-    assert scrub_detail("authentication failed (401)", [KEY]) == (
-        "authentication failed (401)"
-    )
+    assert scrub_detail("authentication failed (401)", [KEY]) == ("authentication failed (401)")
     assert scrub_detail(None, [KEY]) is None

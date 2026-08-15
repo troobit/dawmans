@@ -52,9 +52,7 @@ class Conversation:
         """Replace the carried set wholesale — 10.5 retains nothing from a
         now-deselected source, and there is nothing here to retain."""
         self._scope = {
-            source_id: str(
-                view.sources_by_id.get(source_id, {}).get("display_name", source_id)
-            )
+            source_id: str(view.sources_by_id.get(source_id, {}).get("display_name", source_id))
             for source_id in source_ids
         }
 

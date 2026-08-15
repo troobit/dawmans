@@ -101,9 +101,7 @@ def provider_app(*, probe_detail=None):
         return provider
 
     registry = ProviderRegistry(factory)
-    app = make_app(
-        StubWatcher(default_view()), registry=registry, secrets=lambda: [KEY]
-    )
+    app = make_app(StubWatcher(default_view()), registry=registry, secrets=lambda: [KEY])
     return app, registry, created
 
 
@@ -127,9 +125,7 @@ class TestGetProvider:
 class TestSetProvider:
     def test_selecting_a_kind_records_it(self, keychain):
         app, registry, created = provider_app()
-        response = request(
-            app, "PUT", "/provider", json_body={"kind": "local", "model": "llama-3"}
-        )
+        response = request(app, "PUT", "/provider", json_body={"kind": "local", "model": "llama-3"})
         assert response.status_code == 200
         assert registry.kind is ProviderKind.LOCAL
         assert registry.model == "llama-3"
@@ -145,9 +141,7 @@ class TestSetProvider:
         assert response.json()["rejected"] == "unknown-provider-kind"
         assert registry.kind is None
 
-    def test_shared_backend_without_ack_returns_the_gate_and_records_nothing(
-        self, keychain
-    ):
+    def test_shared_backend_without_ack_returns_the_gate_and_records_nothing(self, keychain):
         # 6.15: the disclosure comes before the selection, so an unacked
         # PUT changes nothing — not the kind, not the provider.
         app, registry, created = provider_app()
@@ -184,9 +178,7 @@ class TestCredentialRoutes:
         assert keychain.passwords[("dawmans", "anthropic")] == KEY
 
     def test_a_missing_key_is_422(self, keychain):
-        response = request(
-            provider_app()[0], "PUT", "/provider/credential", json_body={}
-        )
+        response = request(provider_app()[0], "PUT", "/provider/credential", json_body={})
         assert response.status_code == 422
 
     def test_clear_credential_removes_the_stored_key(self, keychain):
@@ -197,25 +189,19 @@ class TestCredentialRoutes:
         assert response.json()["masked"] is None
         assert ("dawmans", "anthropic") not in keychain.passwords
 
-    def test_a_credential_change_rebuilds_the_keyed_provider_for_the_next_turn(
-        self, keychain
-    ):
+    def test_a_credential_change_rebuilds_the_keyed_provider_for_the_next_turn(self, keychain):
         # 6.3: the change applies from the next turn without restart —
         # the registry re-constructs, and binding() reads the new state.
         keychain.set_password("dawmans", "anthropic", KEY)
         app, registry, created = provider_app()
         request(app, "PUT", "/provider", json_body={"kind": "keyed-hosted"})
         assert len(created) == 1
-        request(
-            app, "PUT", "/provider/credential", json_body={"key": "sk-ant-other-4321"}
-        )
+        request(app, "PUT", "/provider/credential", json_body={"key": "sk-ant-other-4321"})
         assert len(created) == 2
         assert created[-1].masked == "…4321"
         assert registry.binding().credential_stored is True
 
-    def test_a_keyed_kind_with_no_stored_key_is_selectable_but_unconfigured(
-        self, keychain
-    ):
+    def test_a_keyed_kind_with_no_stored_key_is_selectable_but_unconfigured(self, keychain):
         # The pre-flight gate turns this into provider-unconfigured /
         # missing-credential; selection itself is not refused.
         app, registry, created = provider_app()

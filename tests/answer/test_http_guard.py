@@ -28,9 +28,7 @@ def request(headers, *, app=None):
 
     async def go():
         transport = httpx.ASGITransport(app=guarded)
-        async with httpx.AsyncClient(
-            transport=transport, base_url="http://testserver"
-        ) as client:
+        async with httpx.AsyncClient(transport=transport, base_url="http://testserver") as client:
             return await client.get("/", headers=headers)
 
     return asyncio.run(go())
@@ -108,15 +106,11 @@ class TestOriginCheck:
         # The dev server's own origin: loopback, wrong port. This is what
         # the Vite proxy's Origin rewrite exists to avoid, and what a
         # same-port-only test would never see fail.
-        response = request(
-            {"host": f"127.0.0.1:{PORT}", "origin": "http://localhost:5173"}
-        )
+        response = request({"host": f"127.0.0.1:{PORT}", "origin": "http://localhost:5173"})
         assert response.status_code == 403
 
     def test_a_foreign_origin_is_403(self):
-        response = request(
-            {"host": f"127.0.0.1:{PORT}", "origin": "https://evil.example"}
-        )
+        response = request({"host": f"127.0.0.1:{PORT}", "origin": "https://evil.example"})
         assert response.status_code == 403
 
 
@@ -135,10 +129,7 @@ class TestRejectionShape:
 
     def test_the_rejection_names_the_offending_header(self):
         assert request({"host": "evil.example"}).json()["host"] == "evil.example"
-        assert (
-            request({"host": f"127.0.0.1:{PORT}", "origin": "null"}).json()["origin"]
-            == "null"
-        )
+        assert request({"host": f"127.0.0.1:{PORT}", "origin": "null"}).json()["origin"] == "null"
 
     def test_a_rejected_request_never_reaches_the_app(self):
         reached = []

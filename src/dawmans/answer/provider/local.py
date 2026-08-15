@@ -47,23 +47,17 @@ class LocalProvider:
     ) -> None:
         host = httpx.URL(base_url).host
         if host not in LOOPBACK_HOSTS:
-            raise ValueError(
-                f"local provider base URL must be loopback (6.14): {base_url!r}"
-            )
+            raise ValueError(f"local provider base URL must be loopback (6.14): {base_url!r}")
         self._model = model
         self._sleep = sleep if sleep is not None else asyncio.sleep
         self._client = (
-            client
-            if client is not None
-            else httpx.AsyncClient(base_url=base_url, timeout=_TIMEOUT)
+            client if client is not None else httpx.AsyncClient(base_url=base_url, timeout=_TIMEOUT)
         )
 
     def status(self) -> ProviderStatus:
         # Keyless and fully configured: credential is None, and nothing
         # reports it as unconfigured or missing a credential (6.4).
-        return ProviderStatus(
-            kind=self.kind, configured=True, masked=None, model=self._model
-        )
+        return ProviderStatus(kind=self.kind, configured=True, masked=None, model=self._model)
 
     async def probe(self) -> ProbeResult:
         try:

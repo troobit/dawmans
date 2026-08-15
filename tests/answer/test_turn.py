@@ -126,8 +126,9 @@ class StubEmbedder:
 class ScriptedProvider:
     kind = ProviderKind.LOCAL
 
-    def __init__(self, script=ANSWERED_SCRIPT, *, delay_s=0.0, fail=None, stall=False,
-                 endless=False):
+    def __init__(
+        self, script=ANSWERED_SCRIPT, *, delay_s=0.0, fail=None, stall=False, endless=False
+    ):
         self.script = script
         self.delay_s = delay_s
         self.fail = fail  # ProviderFailure raised after the script
@@ -166,8 +167,18 @@ def binding_for(provider, *, name="stub-local"):
     return ProviderBinding(provider=provider, kind=str(provider.kind), name=name)
 
 
-def make_pipeline(provider=None, *, view=None, watcher=None, query=Q_BOTH, state=None,
-                  binding=None, block_s=0.0, first_token_timeout=10.0, state_timeout=0.100):
+def make_pipeline(
+    provider=None,
+    *,
+    view=None,
+    watcher=None,
+    query=Q_BOTH,
+    state=None,
+    binding=None,
+    block_s=0.0,
+    first_token_timeout=10.0,
+    state_timeout=0.100,
+):
     if view is None:
         view = make_view(SOURCES, PASSAGES, sidecar=[ENTRY])
     watcher = watcher or make_watcher(view)
@@ -283,7 +294,8 @@ class TestWatchdogAndCancellation:
     def test_no_first_token_within_the_window_abandons_naming_the_provider(self):
         provider = ScriptedProvider(stall=True)
         pipeline, _, _ = make_pipeline(
-            provider, binding=lambda: binding_for(provider, name="stub-local"),
+            provider,
+            binding=lambda: binding_for(provider, name="stub-local"),
             first_token_timeout=0.02,
         )
         events = run_turn(pipeline, sources=ALL)
@@ -347,16 +359,17 @@ class TestWatchdogAndCancellation:
                     log.append((label, event.name))
 
             first = asyncio.create_task(
-                consume("old", pipeline.turn(
-                    "why is track 3 silent", sources=ALL, conversation_id=conversation.id
-                ))
+                consume(
+                    "old",
+                    pipeline.turn(
+                        "why is track 3 silent", sources=ALL, conversation_id=conversation.id
+                    ),
+                )
             )
             while len(log) < 3:
                 await asyncio.sleep(0.005)
             current["provider"] = ScriptedProvider()  # the new turn must finish
-            await consume("new", pipeline.turn(
-                "a new question", conversation_id=conversation.id
-            ))
+            await consume("new", pipeline.turn("a new question", conversation_id=conversation.id))
             await first
             return log
 
@@ -439,9 +452,7 @@ class TestProviderSeam:
         # next turn's answer comes from its own provider stream.
         failing = ScriptedProvider(script=(), fail=ProviderFailure("error", detail="boom"))
         current = {"provider": failing}
-        pipeline, _, _ = make_pipeline(
-            failing, binding=lambda: binding_for(current["provider"])
-        )
+        pipeline, _, _ = make_pipeline(failing, binding=lambda: binding_for(current["provider"]))
         failed = run_turn(pipeline, sources=ALL)
         classified = only(failed, "outcome")
         assert classified.outcome is Outcome.PROVIDER_ERROR
@@ -521,8 +532,13 @@ class TestEnvelopeAssembly:
         events = run_turn(pipeline, sources=ALL)
         timings = only(events, "timings")
         assert isinstance(timings, Timings)
-        for stage in ("retrieval_ms", "state_acquisition_ms", "engine_overhead_ms",
-                      "first_token_ms", "completion_ms"):
+        for stage in (
+            "retrieval_ms",
+            "state_acquisition_ms",
+            "engine_overhead_ms",
+            "first_token_ms",
+            "completion_ms",
+        ):
             value = getattr(timings, stage)
             assert isinstance(value, float) and value >= 0.0
         assert names(events)[0] == "outcome"
@@ -546,9 +562,7 @@ class TestNarrowingPath:
             "---\n",
             f"The entry ranks two causes. [[p:{TRIAGE}#t1]]\n",
         )
-        pipeline, provider, _ = make_pipeline(
-            ScriptedProvider(script=script), query=Q_TRIAGE
-        )
+        pipeline, provider, _ = make_pipeline(ScriptedProvider(script=script), query=Q_TRIAGE)
         events = run_turn(pipeline, "no sound from track 3", sources=ALL)
         narrowing = only(events, "narrowing")
         assert isinstance(narrowing, Narrowing)
@@ -567,9 +581,7 @@ class TestNarrowingPath:
             "---\n",
             f"Two candidates remain. [[p:{TRIAGE}#t1]]\n",
         )
-        pipeline, provider, watcher = make_pipeline(
-            ScriptedProvider(script=script), query=Q_TRIAGE
-        )
+        pipeline, provider, watcher = make_pipeline(ScriptedProvider(script=script), query=Q_TRIAGE)
         conversation = pipeline.conversations.get(None)
         conversation.set_scope(ALL, watcher.view)
         conversation.record_turn("no sound from track 3", Outcome.NEEDS_NARROWING, "Which?")
@@ -610,9 +622,7 @@ class TestSuggestionScope:
         )
         pipeline, _, _ = make_pipeline(ScriptedProvider(script=script))
         events = run_turn(pipeline, sources=(LIVE,))
-        assert only(events, "suggested_sources") == (
-            SourceRef(source_id=APC, display_name=APC),
-        )
+        assert only(events, "suggested_sources") == (SourceRef(source_id=APC, display_name=APC),)
 
 
 class TestUncoveredRetrieval:
@@ -653,9 +663,7 @@ class TestScopeAtTurnTime:
         first = run_turn(pipeline, sources=ALL, conversation_id=conversation.id)
         assert each(first, "scope_dropped") == []
 
-        shrunk = make_view(
-            [SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2]
-        )
+        shrunk = make_view([SOURCES[0]], PASSAGES[:2], vectors=np.eye(4, dtype=np.float32)[:2])
         watcher.swap(shrunk)
         second = run_turn(pipeline, "and now?", conversation_id=conversation.id)
         dropped = only(second, "scope_dropped")
@@ -669,9 +677,7 @@ class TestScopeAtTurnTime:
 
     def test_pruning_the_last_source_yields_no_sources_selected(self):
         view = make_view([SOURCES[2]], [PASSAGES[3]], sidecar=[ENTRY])
-        pipeline, _, watcher = make_pipeline(
-            view=view, query=np.array([1.0], dtype=np.float32)
-        )
+        pipeline, _, watcher = make_pipeline(view=view, query=np.array([1.0], dtype=np.float32))
         conversation = pipeline.conversations.get(None)
         run_turn(pipeline, sources=(TRIAGE,), conversation_id=conversation.id)
         watcher.swap(make_view([SOURCES[0]], PASSAGES[:2]))

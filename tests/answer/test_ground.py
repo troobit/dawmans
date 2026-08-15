@@ -69,9 +69,7 @@ class TestCitationRoundTrip:
     and unknown: every Citation resolves to a supplied passage, every
     unknown marker is stripped from the streamed text and counted."""
 
-    supplied_ids = st.sets(
-        st.sampled_from([f"{LIVE}#a1", f"{TRIAGE}#t1"]), max_size=2
-    )
+    supplied_ids = st.sets(st.sampled_from([f"{LIVE}#a1", f"{TRIAGE}#t1"]), max_size=2)
     marker_ids = st.lists(
         st.sampled_from([f"{LIVE}#a1", f"{TRIAGE}#t1", "made/up#x9", f"{LIVE}#gone"]),
         max_size=8,
@@ -227,9 +225,7 @@ class TestHistoryNonCitability:
         history = f"Q: earlier\nA: see [[p:{LIVE}#gone]] {history_text}"
         stream = f"answered\nDirect answer here.\n---\nProse echoing [[p:{LIVE}#gone]]."
         parsed = parse(stream, covered=True)
-        result = ground.ground_turn(
-            parsed.direct_answer, parsed.body, SUPPLIED, SOURCES
-        )
+        result = ground.ground_turn(parsed.direct_answer, parsed.body, SUPPLIED, SOURCES)
         assert f"{LIVE}#gone" not in {c.passage_id for c in result.citations}
         assert "gone" not in result.body[0].text
         assert history  # history exists and contributed nothing

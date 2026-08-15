@@ -100,9 +100,7 @@ def bench_provider(label, binding, watcher, embedder, count_tokens, targets, com
         # figure comes from a synthetic index with the embed stubbed.
         median = statistics.median(retrieval)
         tail = p95(retrieval)
-        ok = (
-            median <= RETRIEVAL_TARGETS_MS["median"] and tail <= RETRIEVAL_TARGETS_MS["p95"]
-        )
+        ok = median <= RETRIEVAL_TARGETS_MS["median"] and tail <= RETRIEVAL_TARGETS_MS["p95"]
         failed |= not ok
         print(
             f"  retrieval median {median:.1f}ms vs {RETRIEVAL_TARGETS_MS['median']:.0f}ms, "
@@ -197,29 +195,45 @@ def main(argv=None):
         from dawmans.answer.provider.anthropic import DEFAULT_MODEL, AnthropicProvider
 
         provider = AnthropicProvider(api_key)
-        binding = lambda: ProviderBinding(
-            provider=provider,
-            kind=str(ProviderKind.KEYED_HOSTED),
-            requires_key=True,
-            credential_stored=True,
-            name="anthropic",
-        )
+
+        def binding() -> ProviderBinding:
+            return ProviderBinding(
+                provider=provider,
+                kind=str(ProviderKind.KEYED_HOSTED),
+                requires_key=True,
+                credential_stored=True,
+                name="anthropic",
+            )
+
         all_ok &= bench_provider(
-            "hosted (anthropic)", binding, watcher, embedder, count_tokens,
-            HOSTED_TARGETS, COMPOSED_TARGETS_MS["hosted"],
+            "hosted (anthropic)",
+            binding,
+            watcher,
+            embedder,
+            count_tokens,
+            HOSTED_TARGETS,
+            COMPOSED_TARGETS_MS["hosted"],
         )
         all_ok &= calibrate_margin(api_key, DEFAULT_MODEL, watcher.view, count_tokens)
 
     if args.local_url is not None:
         from dawmans.answer.provider.local import LocalProvider
 
-        provider = LocalProvider(args.local_url)
-        binding = lambda: ProviderBinding(
-            provider=provider, kind=str(ProviderKind.LOCAL), name="local"
-        )
+        local_provider = LocalProvider(args.local_url)
+
+        def binding() -> ProviderBinding:  # noqa: F811 — one binding per provider branch
+            return ProviderBinding(
+                provider=local_provider, kind=str(ProviderKind.LOCAL), name="local"
+            )
+
         all_ok &= bench_provider(
-            "local", binding, watcher, embedder, count_tokens,
-            LOCAL_TARGETS, COMPOSED_TARGETS_MS["local"],
+            "local",
+            binding,
+            watcher,
+            embedder,
+            count_tokens,
+            LOCAL_TARGETS,
+            COMPOSED_TARGETS_MS["local"],
         )
 
     print("\nbench:", "all budgets met" if all_ok else "budgets MISSED — see above")

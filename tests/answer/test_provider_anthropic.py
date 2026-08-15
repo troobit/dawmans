@@ -50,9 +50,7 @@ def _response(status, headers=None, text=""):
 
 def rate_limit(retry_after=None):
     headers = {} if retry_after is None else {"retry-after": str(retry_after)}
-    return anthropic.RateLimitError(
-        "rate limited", response=_response(429, headers), body=None
-    )
+    return anthropic.RateLimitError("rate limited", response=_response(429, headers), body=None)
 
 
 class FakeStream:
@@ -105,9 +103,7 @@ def provider_for(attempts, **kwargs):
     async def sleep(seconds):
         sleeps.append(seconds)
 
-    provider = AnthropicProvider(
-        api_key=KEY, client=FakeClient(attempts), sleep=sleep, **kwargs
-    )
+    provider = AnthropicProvider(api_key=KEY, client=FakeClient(attempts), sleep=sleep, **kwargs)
     return provider, sleeps
 
 
