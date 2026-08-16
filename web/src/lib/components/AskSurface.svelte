@@ -26,6 +26,8 @@
 		thread as defaultThread,
 		type ThreadStore
 	} from '../state/thread.svelte';
+	import Pictogram from './Pictogram.svelte';
+	import { SHORTCUT_PICTOGRAMS } from './pictograms';
 
 	let {
 		thread = defaultThread,
@@ -136,12 +138,19 @@
 	{/if}
 
 	{#if shortcutsVisible}
+		<!-- 1.10/11.7: the four commonest symptoms as pictures first. The digit
+		     and the words are unchanged — the pictogram is aria-hidden, so the
+		     accessible name is still "1 no sound" (13.4). -->
 		<ul class="shortcuts">
 			{#each SYMPTOM_SHORTCUTS as question, index (question)}
 				<li>
-					<button type="button" onclick={() => thread.submit(question)}>
+					<button type="button" class="shortcut" onclick={() => thread.submit(question)}>
 						<kbd>{index + 1}</kbd>
-						{question}
+						<Pictogram
+							name={SHORTCUT_PICTOGRAMS[question] ?? 'book'}
+							size="var(--tile-pictogram-inline)"
+						/>
+						<span class="label">{question}</span>
 					</button>
 				</li>
 			{/each}
@@ -178,10 +187,12 @@
 		margin: 0;
 	}
 
+	/* 2.13's sibling problem on the ask side: four targets that reflow to one
+	   column at 640 px rather than overflowing (13.7). */
 	.shortcuts {
-		display: flex;
-		flex-wrap: wrap;
-		gap: var(--space-s, 0.5rem);
+		display: grid;
+		grid-template-columns: repeat(auto-fit, minmax(min(100%, var(--tile-min-width)), 1fr));
+		gap: var(--space-s);
 		list-style: none;
 		margin: 0;
 		padding: 0;
@@ -192,8 +203,9 @@
 		color: var(--colour-text); /* spelling-ignore */
 		font-size: var(--font-size-control);
 		border: 1px solid var(--colour-text-secondary);
-		border-radius: 4px;
+		border-radius: var(--radius);
 		padding: 0.25em 0.75em;
+		cursor: pointer;
 	}
 
 	button:focus-visible {
@@ -201,11 +213,51 @@
 		outline-offset: 1px;
 	}
 
+	/*
+		A symptom is a picture with its digit and its words beside it —
+		recognised before it is read (11.7) and hit without aiming, while
+		staying a single row tall: the shortcuts share the viewport with the
+		answer, and 11.8 measures what is left for the answer.
+	*/
+	.shortcut {
+		display: flex;
+		align-items: center; /* spelling-ignore */
+		gap: var(--space-s);
+		width: 100%;
+		height: 100%;
+		box-sizing: border-box;
+		padding: var(--space-xs) var(--space-s);
+		border-radius: var(--radius-tile);
+		box-shadow: var(--shadow-tile);
+		text-align: start;
+		transition: border-color 120ms ease; /* spelling-ignore */
+	}
+
+	.shortcut:hover {
+		border-color: var(--colour-accent-hover); /* spelling-ignore */
+	}
+
+	.shortcut .label {
+		font-size: var(--font-size-body);
+		overflow-wrap: anywhere;
+	}
+
 	kbd {
 		/* 1.11's on-screen indication and 11.6's greyscale-safe channel: the digit itself. */
 		border: 1px solid var(--colour-text-secondary);
 		border-radius: 3px;
 		padding: 0 0.35em;
-		margin-inline-end: 0.35em;
+		font-size: var(--font-size-secondary);
+		color: var(--colour-text-secondary); /* spelling-ignore */
+	}
+
+	.shortcut kbd {
+		flex: none;
+	}
+
+	@media (prefers-reduced-motion: reduce) {
+		.shortcut {
+			transition: none;
+		}
 	}
 </style>

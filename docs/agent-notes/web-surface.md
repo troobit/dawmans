@@ -32,7 +32,16 @@ per-kind "not applicable" fields are structurally absent rather than optional-ev
 
 - `src/lib/tokens.css` holds every colour and size as custom properties; imported once in
   `+layout.svelte`. Components must not declare colours of their own (Decision 6 — the contrast
-  floors are only checkable because the token set is enumerable).
+  floors are only checkable because the token set is enumerable). It also sets the CSS
+  `color-scheme` to dark on `:root` <!-- spelling-ignore -->
+  — without it the browser paints native checkbox fills and input interiors light.
+- **There is no headroom for a lighter surface token.** `--colour-surface` (#46464b) clears 11.3's
+  7:1 body floor by 0.37; anything lighter fails it. A "raised/selected" surface must therefore be
+  carried by border, shadow and a *darker* recessed variant (`--colour-bg`), not by a new lighter
+  colour — which is what the picker tiles do.
+- Spacing (`--space-*`), tile sizes (`--tile-*`), radii and the two shadow tokens live here too.
+  The token test's regex only captures `#hex` values, so non-colour tokens are invisible to it; a
+  new **hex** token is captured but asserted only if it is added to `textFloors` / `backgrounds`.
 - `src/lib/tokens.test.ts` computes WCAG contrast/luminance from the declared values: body ≥7:1,
   other text ≥4.5:1 (incl. hover/active/disabled variants, 13.8), indicators/focus ring ≥3:1,
   background luminance in [0.03, 0.08] and body text ≤0.9 luminance (the recorded 11.3-vs-11.5
@@ -141,11 +150,20 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
 
 ## Components (`src/lib/components/`)
 
+- `pictograms.ts` / `Pictogram.svelte` — the pictogram set (Decision 10). Path data in a 24-unit
+  box keyed by name, plus `pictogramFor(record)` (a keyword table over vendor/product words, book
+  as fallback) and `SHORTCUT_PICTOGRAMS` (keyed on the shortcut text). Every pictogram renders
+  `aria-hidden` with `stroke: currentColor` — it is never an accessible name, never a colour of its
+  own, and never the only channel for a state.
 - `AskSurface.svelte` — textarea bound to `thread.draft`; Enter submits, Shift+Enter passes
   through; shortcut row (`SYMPTOM_SHORTCUTS`, module export) renders and arms only while
   `draft === '' && !busy && !awaitingNarrowing` — the gating that keeps the one-armed-set
   invariant when Phase 6's narrowing candidates arm. Zero-scope and over-limit notices render from
-  store state (not submit attempts). Stop restores the question into the draft.
+  store state (not submit attempts). Stop restores the question into the draft. Each shortcut is a
+  tile: `<kbd>` digit, pictogram, label. **DOM order is digit → pictogram → label** because
+  `ask.test.ts` matches the accessible name against `/${index + 1}.*${label}/`, and the tile is a
+  *single row* because the shortcuts share the viewport with the answer that 11.8 measures — a
+  column layout cost 50 px and put 11.8 under its band.
 - `ThreadView.svelte` — the thread shell. The question is a button that re-edits (sets
   `thread.draft`); the state line is text **plus a static glyph** (`.state-shape`: ● working,
   ✓ finished, ✕ broken, ◗ incomplete, ■ stopped, □ abandoned) — 8.4's two channels; the glyph is
@@ -231,7 +249,8 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   (`#page=N` exactly); authored = the expansion + copyable `entry_location`
   (`navigator.clipboard.writeText`). No third branch, no `file://`.
 
-- `SourcePicker.svelte` — the one expand/collapse control is the indicator line itself
+- `SourcePicker.svelte` (Decision 10 reshaped its presentation; every rule below still holds) — the
+  one expand/collapse control is the indicator line itself
   (`button[aria-expanded]`, `data-scope="all|narrowed|none"`): "All N sources in scope" (2.7),
   names at ≤3 in scope (2.6/3.3), else "n of m sources" (2.5), with a `.scope-glyph` (● / ◐ / ○)
   as the non-colour channel beside the wording (3.10/11.6). Expanded: per-source checkbox rows
@@ -244,6 +263,22 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   (2.9). While expanded it registers on the router's Escape stack with the indicator as opener.
   The 2.4 "new" mark is **not** rendered yet — the store side (`seen`/`known`) exists; marking is
   open for a later pass.
+  Presentation gotchas, all of them load-bearing for a suite:
+  - **Collapsed renders no checkbox at all** (`picker.test.ts` asserts `queryAllByRole('checkbox')`
+    is empty at rest), so the collapsed bar cannot become the toggle surface.
+  - **The indicator must be the first `button[aria-expanded]` in the document** — both the unit
+    helper and the e2e locators take the first one, and the page's History/Provider buttons carry
+    the attribute too. The header is a *grid* whose areas place the picker on the title's row at
+    ≥ 60rem and on its own row below that, precisely so DOM order can stay picker-before-nav.
+  - **The bar is `flex-wrap: nowrap` with an ellipsised `.indicator-text`.** A second flex line
+    costs 26 px and puts 11.8 under target; the trade-off is Decision 10's recorded negative.
+  - **`.body` is `position: absolute`** under the bar. That is what keeps 11.8 a collapsed-state
+    measurement while the tiles are large. It needs `.picker { position: relative }` — do not move
+    the positioning context to the page.
+  - `.scope-marker` must exist once per source, in source order, with no earlier element of that
+    class anywhere (the greyscale e2e test reads `.first()` / `.nth(1)`).
+  - The checkbox stays a **visible** native control: Playwright's `uncheck()` in the greyscale test
+    needs a real, hittable box. It is absolutely positioned in the tile's corner, not hidden.
 - `ProviderConfig.svelte` — kind-first (10.1): three radios; the credential input exists only in
   the keyed-hosted branch (masked `type="password"` by default with a hold-to-reveal button,
   10.5); local is an "Endpoint or model" text input and Save is gated on it being non-empty

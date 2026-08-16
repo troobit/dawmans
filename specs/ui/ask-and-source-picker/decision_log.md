@@ -557,3 +557,88 @@ classes, which is this scoping stated as a test.
 **Negative:**
 - Already-painted citation entries move down while the body grows; a user reading the list during
   a long stream sees it shift. 5.8's restore covers the expansion path only.
+
+---
+
+## Decision 10: Sources and symptoms are pictogram tiles; the expanded picker is a panel
+
+**Date**: 2026-08-16
+**Status**: accepted
+
+### Context
+
+The surface was legible but uniformly typographic: choosing a source meant reading a line of
+16 px text per entry inside a list, and the four symptom shortcuts were text buttons the size of
+their words. Sitting back from the second screen, nothing on the page said *what to click* — every
+control had to be read before it could be aimed at. That is the gap [2.14](requirements.md#2.14)
+(in/out of scope readable at 1.5 m without reading body text) and [11.7](requirements.md#11.7)
+(reading budget before action) already name as targets, and neither was being met by the list.
+
+Making the targets large enough to satisfy them costs viewport height, and
+[11.8](requirements.md#11.8) budgets that height: at rest, with the picker collapsed, question and
+answer must hold ≥ 70% of a 1280×800 window. A first pass that put the tiles in the layout — a
+two-row header and a column of large shortcut tiles — measured 0.59, below even 11.8's band.
+
+### Decision
+
+Sources and symptom shortcuts are **tiles carrying a pictogram**, and the expanded picker is an
+**absolutely positioned panel** under the scope bar rather than a block in the page layout. Every
+pictogram is `aria-hidden` and sits beside the words it illustrates. The pictogram set and the
+source-to-pictogram rule live in `web/src/lib/components/pictograms.ts`, rendered by
+`Pictogram.svelte`; nothing else in the surface may declare a picture.
+
+### Rationale
+
+Floating the expanded picker is what makes the tiles affordable: 11.8 measures the *collapsed*
+state ([2.11](requirements.md#2.11)), so a panel that overlays the thread costs the answer nothing
+while giving the tiles the full width of the scope bar. With the panel floated, the chrome that
+remains in the layout is one bar and one row of shortcuts, and the measured ratio is 0.73.
+
+The picture is an *additional* channel, never a replacement. In/out of scope is still carried by
+the filled-versus-hollow marker, the words "in scope" / "out of scope", and the solid-versus-dashed
+tile edge — three channels that all survive greyscale ([11.6](requirements.md#11.6)) — and the
+accessible name of every control is unchanged, which is why the existing suites pass untouched.
+
+Pictograms are line art in a 24-unit box, not photographs of gear: a photograph would need per-device
+assets the repository does not have and could not fetch (the surface is served from loopback and
+must work offline), and it would not read at all in greyscale at 1.5 m. Which pictogram a manual
+gets is a keyword table over the vendor and product words the engine already reports, with a
+neutral book as the fallback — presentation only, deciding no behaviour.
+
+### Alternatives Considered
+
+- **Photographs or vendor logos per device**: The most recognisable picture possible - Rejected:
+  needs binary assets per device, cannot be fetched at run time from a loopback-only surface, and
+  fails 11.6's greyscale reading and 11.4's indicator contrast at small sizes.
+- **Keep the picker expanded at rest so the checkboxes are always on screen**: Removes the click
+  that opens it - Rejected: 2.11 requires collapsed-at-rest and 11.8 measures the chrome budget
+  there; the tiles in the layout measured 0.59, outside 11.8's band entirely.
+- **Tiles in the layout, with the shortcuts shrunk to compensate**: No overlay machinery -
+  Rejected: it trades one target's legibility for another's, and the measurement showed it does not
+  buy back enough height to reach 11.8's target anyway.
+- **Leave the picker as a text list and raise only the type size**: Simplest change - Rejected:
+  2.14's "without reading any body text" is a criterion about *not reading*; larger text is still
+  text.
+
+### Consequences
+
+**Positive:**
+- In/out of scope is readable from across the room from the tile's shape and weight alone, with the
+  pictogram naming the device before its label is read (2.14, 11.7).
+- The expanded picker gained room: source tiles reflow into a grid that holds twelve sources
+  without scrolling (2.13) and collapses to one column at 640 px without horizontal scroll (13.7).
+- 11.8 improved against the pre-change surface (0.73 measured, target ≥ 0.70), because the panel
+  left the layout.
+- Native controls now render dark (`color-scheme: dark` on `:root`), <!-- spelling-ignore -->
+  so an unchecked checkbox is no longer a white square on a dark tile.
+
+**Negative:**
+- The collapsed scope bar clips its source names with an ellipsis when three long names plus the
+  affordance exceed the bar's width. 2.6's names remain complete in the button's accessible name
+  and in the panel, but a sighted user on a narrow window sees them truncated — the alternative was
+  a second flex line costing 26 px, which puts 11.8 under its target.
+- The picker's expanded panel overlays the thread rather than pushing it down, so the first lines
+  of an answer are covered while the picker is open.
+- A keyword table decides which pictogram a manual wears; a device whose name matches no term gets
+  the neutral book. The table is presentation-only, but it is a place where adding a manual can
+  produce a mildly wrong picture until a term is added.

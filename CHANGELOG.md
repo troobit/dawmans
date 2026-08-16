@@ -10,6 +10,29 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Changed
+
+- **The browser surface is now aimed at rather than read.** Sources are chosen from a grid of
+  tiles, each carrying a pictogram of what the source is (a DAW's faders, a keyboard, a drum, an
+  interface, a ruled notebook for your own triage notes), the display name at body size, and the
+  in/out-of-scope marker and word. In scope is a solid, raised tile; out of scope is a dashed,
+  recessed one — a distinction that survives greyscale, as 11.6 requires. The four symptom
+  shortcuts became the same kind of target: digit, picture, label, across the full width. Nothing
+  about the accessible reading changed — every pictogram is `aria-hidden` beside its own words, and
+  all 425 unit tests and 11 browser tests pass untouched.
+
+  The expanded picker is now a **panel floated under the scope bar** instead of a block in the
+  page. That is what pays for the larger targets: 11.8 budgets the chrome with the picker
+  collapsed, and a first pass that put the tiles in the layout measured 0.59 of the viewport for
+  question-and-answer, below the criterion's band. Floated, the measurement is 0.73 against a
+  target of 0.70. Recorded as `specs/ui/ask-and-source-picker/decision_log.md` Decision 10, with
+  the trade-off it cost: the collapsed bar ellipsises three long source names rather than wrapping
+  to a second line, which would put 11.8 back under target.
+
+  Also: `color-scheme: dark` on `:root`, <!-- spelling-ignore -->
+  so native checkboxes and inputs stop painting light chrome on the dark surface; spacing, tile
+  and shadow tokens joined `tokens.css` rather than living as per-component fallbacks.
+
 ### Added
 
 - **A harness-neutral workflow for authoring triage entries from forum reading.**

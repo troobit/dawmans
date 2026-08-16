@@ -11,6 +11,7 @@
 	import { onMount } from 'svelte';
 	import AskSurface from '$lib/components/AskSurface.svelte';
 	import HistoryPanel from '$lib/components/HistoryPanel.svelte';
+	import Pictogram from '$lib/components/Pictogram.svelte';
 	import ProviderConfig from '$lib/components/ProviderConfig.svelte';
 	import SourcePicker from '$lib/components/SourcePicker.svelte';
 	import ThreadView from '$lib/components/ThreadView.svelte';
@@ -92,9 +93,19 @@
 />
 
 <main>
+	<!--
+		Laid out by grid area rather than by source order: the scope bar shares
+		the title's row on a wide window (11.8's chrome budget is measured here)
+		and drops to a full row of its own when the window is too narrow to hold
+		three things — while staying **before** the region buttons in the DOM,
+		because the picker's indicator is the first `button[aria-expanded]` on
+		the page and that is how both suites find it.
+	-->
 	<header class="chrome">
 		<h1>DAWMans</h1>
-		<SourcePicker {sources} {scope} {router} />
+		<div class="picker-slot">
+			<SourcePicker {sources} {scope} {router} />
+		</div>
 		<nav class="regions" aria-label="Regions">
 			<button
 				bind:this={historyButton}
@@ -104,6 +115,7 @@
 					historyOpen = !historyOpen;
 				}}
 			>
+				<Pictogram name="history" size="var(--tile-pictogram-small)" />
 				History
 			</button>
 			<button
@@ -114,6 +126,7 @@
 					providerOpen = !providerOpen;
 				}}
 			>
+				<Pictogram name="settings" size="var(--tile-pictogram-small)" />
 				Provider configuration
 			</button>
 		</nav>
@@ -221,23 +234,50 @@
 
 	.chrome {
 		flex: none;
-		display: flex;
-		align-items: baseline;
-		gap: var(--space-m, 1rem);
-		flex-wrap: wrap;
+		display: grid;
+		grid-template-columns: auto 1fr;
+		grid-template-areas:
+			'title regions'
+			'picker picker';
+		align-items: center; /* spelling-ignore */
+		gap: var(--space-s) var(--space-m);
 	}
 
 	h1 {
+		grid-area: title;
 		margin: 0;
 		font-size: var(--font-size-control);
 		font-weight: 600;
 		color: var(--colour-text-secondary); /* spelling-ignore */
 	}
 
+	.picker-slot {
+		grid-area: picker;
+		min-width: 0;
+	}
+
 	.regions {
-		margin-inline-start: auto;
+		grid-area: regions;
+		justify-self: end;
 		display: flex;
-		gap: var(--space-s, 0.5rem);
+		flex-wrap: wrap;
+		justify-content: flex-end;
+		gap: var(--space-s);
+	}
+
+	.regions button {
+		display: inline-flex;
+		align-items: center; /* spelling-ignore */
+		gap: 0.4em;
+	}
+
+	/* Wide enough for all three: one chrome row, which is what keeps the 11.8
+	   budget where it was before the scope bar grew. */
+	@media (min-width: 60rem) {
+		.chrome {
+			grid-template-columns: auto 1fr auto;
+			grid-template-areas: 'title picker regions';
+		}
 	}
 
 	.content {

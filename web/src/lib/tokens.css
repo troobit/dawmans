@@ -9,6 +9,11 @@
  * to maximal white — the recorded 11.3-versus-11.5 resolution.
  */
 :root {
+	/* 11.5: the interface is dark, so the browser's own controls — checkbox
+	 * fills, text-input interiors, scrollbars — must be told as much, or they
+	 * paint light chrome on a dark surface. */
+	color-scheme: dark; /* spelling-ignore */
+
 	/* Surfaces */
 	--colour-bg: #3c3c40;
 	--colour-surface: #46464b;
@@ -43,4 +48,28 @@
 	--font-size-heading: 22px;
 	--font-size-control: 16px;
 	--font-size-secondary: 14px;
+
+	/* Spacing. Declared here rather than left to each component's fallback, so
+	 * the tile surfaces below share one rhythm. */
+	--space-xs: 0.25rem;
+	--space-s: 0.5rem;
+	--space-m: 1rem;
+	--space-l: 1.5rem;
+
+	/* Tiles (2.14, 11.7): a source or a symptom is a target you hit without
+	 * reading, so the pictogram is set at a size that survives 1.5 m and the
+	 * tile itself clears the 44 px pointer target with room to spare. */
+	--tile-min-width: 10.5rem;
+	--tile-pictogram: 2.75rem;
+	--tile-pictogram-inline: 2.25rem;
+	--tile-pictogram-small: 1.25rem;
+	--radius: 6px;
+	--radius-tile: 10px;
+
+	/* Depth. Black at low alpha only — a shadow is not a text or indicator
+	 * colour, so it carries no §11 floor, but it is declared here rather than
+	 * in a component so Decision 6's "no colour outside this file" still holds
+	 * literally. */
+	--shadow-tile: 0 1px 2px rgb(0 0 0 / 0.35);
+	--shadow-tile-raised: 0 2px 6px rgb(0 0 0 / 0.45);
 }
