@@ -49,7 +49,7 @@ function triage(): AuthoredTriageSourceRecord {
 }
 
 function payload(sources: SourceRecord[], over: Partial<SourcesResponse> = {}): SourcesResponse {
-	return { sources, owned_undocumented: [], documented_unconfirmed: [], ...over };
+	return { sources, owned_but_undocumented: [], documented_but_unconfirmed: [], ...over };
 }
 
 function stubSources(body: SourcesResponse): void {
@@ -303,7 +303,7 @@ describe('marked selectable sources (2.10, CONTRACTS §1 low_text)', () => {
 		});
 		await mount(
 			payload([manual('ableton/live-12'), assumed], {
-				documented_unconfirmed: [{ source_id: assumed.source_id, display_name: assumed.display_name }]
+				documented_but_unconfirmed: [{ source_id: assumed.source_id, display_name: assumed.display_name }]
 			})
 		);
 		await expand();
@@ -326,7 +326,7 @@ describe('known gaps (2.9)', () => {
 	it('lists owned-but-undocumented hardware apart and never selectable', async () => {
 		const { container } = await mount(
 			payload(THREE, {
-				owned_undocumented: [
+				owned_but_undocumented: [
 					{ device: 'focusrite/scarlett-2i2', display_name: 'Focusrite Scarlett 2i2' }
 				]
 			})

@@ -71,8 +71,8 @@ export class SourcesStore {
 		try {
 			const response = await listSources();
 			this.#sources = response.sources;
-			this.#ownedUndocumented = response.owned_undocumented;
-			this.#documentedUnconfirmed = response.documented_unconfirmed;
+			this.#ownedUndocumented = response.owned_but_undocumented;
+			this.#documentedUnconfirmed = response.documented_but_unconfirmed;
 			this.#state = response.sources.length === 0 ? 'corpus-empty' : 'ready';
 		} catch {
 			this.#state = 'engine-unreachable';

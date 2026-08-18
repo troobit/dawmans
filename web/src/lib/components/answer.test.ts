@@ -303,7 +303,10 @@ describe('dropped scope reported with the turn (3.11)', () => {
 		const { container, channel } = await mountThread();
 		channel.emit('scope_dropped', [{ source_id: 'old/manual', display_name: 'Old Synth Manual' }]);
 		channel.emit('outcome', { outcome: 'needs-narrowing' });
-		channel.emit('narrowing', { question: 'Which device?', candidates: ['Live', 'the APC'] });
+		channel.emit('narrowing', { question: 'Which device?', candidates: [
+				{ label: 'Live shows no signal', value: 'Live' },
+				{ label: 'The APC shows no signal', value: 'the APC' }
+			] });
 		await vi.waitFor(() => expect(container.querySelector('.scope-dropped')).not.toBeNull());
 		expect(container.querySelector('.scope-dropped')?.textContent).toContain('Old Synth Manual');
 	});

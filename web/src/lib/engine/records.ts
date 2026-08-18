@@ -184,10 +184,23 @@ export type Cause = {
 	fix_cites: string[];
 };
 
+/**
+ * §4. One selectable candidate. The engine builds these from the triage entry's
+ * causes rather than from model output (`api/answer-engine` decision_log
+ * Decision 9): `label` is the cause's `check` — an observable the user can look
+ * at, and so the text of the control — and `value` is the cause `statement`,
+ * which is what a selection submits as the follow-up question. The two are not
+ * interchangeable, and a candidate is not a bare string.
+ */
+export type NarrowingCandidate = {
+	label: string;
+	value: string;
+};
+
 /** §4. A question plus 2–4 candidates, each selectable in one activation. `needs-narrowing` only. */
 export type Narrowing = {
 	question: string;
-	candidates: string[];
+	candidates: NarrowingCandidate[];
 };
 
 /** §4/§4b. An addressable source reference, never a substring of prose. */

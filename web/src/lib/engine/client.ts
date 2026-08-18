@@ -66,11 +66,17 @@ export type TurnRequest = {
  * reports of CONTRACTS §5. Both reports are lists that may be empty — empty is
  * a normal value, never elided (the owned-but-undocumented report is empty
  * today and a consumer that hardcodes that is a defect against §5).
+ *
+ * The two field names are the engine's, relayed from the corpus's own
+ * `gaps.json` keys and unabbreviated: `owned_but_undocumented`, not
+ * `owned_undocumented`. Shortening either here silently yields `undefined`,
+ * because nothing on this side ever meets the real engine (bugfix
+ * `gap-reports-field-names`).
  */
 export type SourcesResponse = {
 	sources: SourceRecord[];
-	owned_undocumented: RequiredDevice[];
-	documented_unconfirmed: SourceRef[];
+	owned_but_undocumented: RequiredDevice[];
+	documented_but_unconfirmed: SourceRef[];
 };
 
 /**

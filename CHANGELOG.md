@@ -46,11 +46,26 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   owner's, cited to the manuals. The `docs/workflows/` directory is new and referenced from
   `AGENTS.md`.
 
-- **`README.md` now introduces the product.** It was a one-line stub. It now carries the product
-  intro, the stack table, mermaid diagrams for the system, a turn and the ingestion run, a
-  three-depth walk through the deployment patterns (the ingest/serve extras split, the loopback
-  binding, the four-step startup order, provider selection as runtime state), and a table of every
-  configuration surface with whether it is tracked.
+- **`README.md` now introduces the product, as developer reference rather than narrative.** It was
+  a one-line stub. It now runs requirements → setup → repository layout → architecture → models →
+  HTTP surface → configuration → commands → contribution constraints → specs, with mermaid diagrams
+  for the system, a turn and the ingestion run.
+
+  The **Models** section is new and is the bulk of it, because "local" meant two unrelated things
+  and the file never separated them. The embedding model (always local, not runtime-configurable)
+  is documented apart from synthesis providers, and the local provider gets the whole path: the
+  server table with real default ports (llama.cpp 8080, LM Studio 1234, Ollama 11434), the rule
+  that `--local-url` is an origin and never ends in `/v1`, the exact request body, the SSE delta
+  parsing, the failure-and-timing table, and the two traps that make a working server look like an
+  engine fault — an unnamed model on a multi-model server, and a reasoning model that thinks past
+  the 10 s first-token watchdog.
+
+  Two facts found while writing it and previously recorded nowhere: `dawmans serve` loads the
+  embedding model through fastembed's default cache (`$TMPDIR/fastembed_cache`) rather than
+  `models/`, because `cli._load_model` passes no `cache_dir` and no offline pin — so
+  `make fetch-model` covers ingestion only and a fresh machine downloads the model again on first
+  serve; and the provider surface's *Endpoint or model* field is transmitted as `model` and cannot
+  set the base URL, which is fixed at process start.
 
 - **`AGENTS.md` and `web/README.md` now describe this repository.** Both were unfilled template
   text. `AGENTS.md` claimed `build`, `test` and `clean` still error and that `make lint` runs only
@@ -62,6 +77,39 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   Origin-rewriting dev proxy, and the browser install the e2e suite needs.
 
 ### Fixed
+
+- **The narrowing renderer was broken end to end.** `needs-narrowing` offers 2–4 candidates, each
+  selectable with one digit (ui 6.1–6.4). The engine sends each candidate as a `{label, value}`
+  record — label from the cause's `check`, an observable to look at, value from its `statement`,
+  what the follow-up turn re-asks with (`api/answer-engine` design §Narrowing step 3, decision_log
+  Decision 9). The browser typed them `string[]`, so every control rendered the literal text
+  `[object Object]`, the screen-reader announcement read the same, and selecting one threw
+  `TypeError: text.trim is not a function` instead of submitting. The control now reads the label
+  and submits the value. Found by auditing the rest of the seam after the gap-reports fix below,
+  and it is the same root cause: all six fixtures that emit a `narrowing` event — including
+  `e2e/stub-engine.mjs`, the only thing in the tree that plays the engine for the real components —
+  supplied strings, because each was written from the browser's own type. Every fixture now gives
+  the label and the value deliberately different text, so a renderer that confuses them fails.
+  `specs/bugfixes/narrowing-candidate-shape/report.md` has the account, including the two further
+  findings it did not fix: a citation's `hardware_applicability` is a bare status string from the
+  engine and an object on this side, which breaches ui 5.3 and needs a CONTRACTS §3 decision rather
+  than a patch; and `manifest_fault`, which is reported and read by nobody.
+
+- **Neither gap report ever reached the picker.** `GET /sources` carries the
+  owned-but-undocumented and documented-but-unconfirmed reports of `CONTRACTS.md` §5 under the
+  engine's own names — `owned_but_undocumented`, `documented_but_unconfirmed`, relayed verbatim
+  from the corpus's `gaps.json`. The browser's `SourcesResponse` declared the abbreviated forms
+  without `but`, so both arrays were `undefined` on every load and the two `.length > 0` guards
+  that render them absorbed that silently: ui 2.9's known-gaps block and 2.10's unconfirmed mark
+  never appeared against a real engine. Original, not a regression — the two halves have disagreed
+  since the client landed. Every one of the 425 unit tests and 11 browser tests passed over it,
+  because every fixture that stubs the route (`fake-server.ts`, `e2e/stub-engine.mjs`, and a
+  `payload()` helper in three test modules) was written from the browser's own type rather than
+  from the engine's payload. The regression test states the wire names itself instead of going
+  through those helpers. `specs/bugfixes/gap-reports-field-names/report.md` has the full account,
+  including the adjacent finding it did not fix: the engine also reports `manifest_fault` on the
+  same route and the browser declares no field for it, so an unreadable new manifest is currently
+  invisible.
 
 - **Every compound term in the corpus was indexed and unreachable from any question.**
   `index/lexical.py::tokenise` keeps a compound whole *and* in parts — `Dry/Wet` indexes as

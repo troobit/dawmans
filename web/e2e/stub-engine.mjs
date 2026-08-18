@@ -53,8 +53,8 @@ const SOURCES = {
 			chunk_count: 4
 		}
 	],
-	owned_undocumented: [],
-	documented_unconfirmed: []
+	owned_but_undocumented: [],
+	documented_but_unconfirmed: []
 };
 
 const VENDOR_CITE = {
@@ -169,7 +169,10 @@ async function narrowing(emit) {
 	emit('outcome', { outcome: 'needs-narrowing' });
 	emit('narrowing', {
 		question: 'No sound from where?',
-		candidates: ['From Live on the laptop', 'From the APC pads']
+		candidates: [
+			{ label: 'Live shows no output', value: 'From Live on the laptop' },
+			{ label: 'The APC pads are unlit', value: 'From the APC pads' }
+		]
 	});
 	emit('done', { complete: true });
 }

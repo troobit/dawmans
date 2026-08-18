@@ -37,8 +37,8 @@ export type FakeEngineOptions = {
 
 const EMPTY_SOURCES: SourcesResponse = {
 	sources: [],
-	owned_undocumented: [],
-	documented_unconfirmed: []
+	owned_but_undocumented: [],
+	documented_but_unconfirmed: []
 };
 
 function json(body: unknown): Response {

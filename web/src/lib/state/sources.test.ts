@@ -46,7 +46,7 @@ function triage(): AuthoredTriageSourceRecord {
 }
 
 function payload(sources: SourceRecord[], over: Partial<SourcesResponse> = {}): SourcesResponse {
-	return { sources, owned_undocumented: [], documented_unconfirmed: [], ...over };
+	return { sources, owned_but_undocumented: [], documented_but_unconfirmed: [], ...over };
 }
 
 function stubSources(...bodies: (SourcesResponse | Response)[]): void {
@@ -117,7 +117,7 @@ describe('gap reports (2.9, 2.10)', () => {
 		// must come from the payload, never be hardcoded empty.
 		stubSources(
 			payload([manual('ableton/live-12')], {
-				owned_undocumented: [{ device: 'focusrite/scarlett-2i2', display_name: 'Scarlett 2i2' }]
+				owned_but_undocumented: [{ device: 'focusrite/scarlett-2i2', display_name: 'Scarlett 2i2' }]
 			})
 		);
 		const store = new SourcesStore();
@@ -137,11 +137,41 @@ describe('gap reports (2.9, 2.10)', () => {
 	it('carries the documented-but-unconfirmed report', async () => {
 		stubSources(
 			payload([manual('akai/apc-key-25')], {
-				documented_unconfirmed: [{ source_id: 'akai/apc-key-25', display_name: 'akai apc-key-25' }]
+				documented_but_unconfirmed: [{ source_id: 'akai/apc-key-25', display_name: 'akai apc-key-25' }]
 			})
 		);
 		const store = new SourcesStore();
 		await store.load();
+		expect(store.documentedUnconfirmed).toEqual([
+			{ source_id: 'akai/apc-key-25', display_name: 'akai apc-key-25' }
+		]);
+	});
+
+	it('reads both reports under the field names the engine actually emits', async () => {
+		// Regression, bugfix `gap-reports-field-names`. The engine emits
+		// `owned_but_undocumented` and `documented_but_unconfirmed`
+		// (`answer/http/app.py`, pinned by `tests/answer/test_http_sources.py`),
+		// while this side read the abbreviated forms without `but`.
+		// Expected: both reports reach the store. Actual before the fix: both
+		// arrive `undefined`, so 2.9's known-gaps block and 2.10's mark never
+		// render against a real engine.
+		//
+		// Written as an engine-shaped literal on purpose, not through
+		// `payload()`: the helper is the fixture that hid the drift, so the pin
+		// has to state the wire names itself. The engine also emits
+		// `manifest_fault`, which no consumer reads yet.
+		stubSources({
+			sources: [manual('ableton/live-12')],
+			owned_but_undocumented: [{ device: 'roland/tr-8s', display_name: 'Roland TR-8S' }],
+			documented_but_unconfirmed: [
+				{ source_id: 'akai/apc-key-25', display_name: 'akai apc-key-25' }
+			]
+		});
+		const store = new SourcesStore();
+		await store.load();
+		expect(store.ownedUndocumented).toEqual([
+			{ device: 'roland/tr-8s', display_name: 'Roland TR-8S' }
+		]);
 		expect(store.documentedUnconfirmed).toEqual([
 			{ source_id: 'akai/apc-key-25', display_name: 'akai apc-key-25' }
 		]);

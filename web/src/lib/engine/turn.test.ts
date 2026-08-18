@@ -90,7 +90,10 @@ describe('one rendering path per CONTRACTS §4b event', () => {
 			observed: (turn) => turn.envelope.suggested_sources?.[0].source_id === 'akai/apc-key-25'
 		},
 		narrowing: {
-			data: { question: 'Which track?', candidates: ['audio', 'MIDI'] },
+			data: { question: 'Which track?', candidates: [
+					{ label: 'An audio track', value: 'audio' },
+					{ label: 'A MIDI track', value: 'MIDI' }
+				] },
 			observed: (turn) => turn.envelope.narrowing?.candidates.length === 2
 		},
 		required_device: {

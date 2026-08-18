@@ -101,7 +101,7 @@
 				const narrowing = turn.envelope.narrowing;
 				if (narrowing === undefined) return 'The question needs narrowing.';
 				const candidates = narrowing.candidates
-					.map((candidate, index) => `${index + 1}: ${candidate}`)
+					.map((candidate, index) => `${index + 1}: ${candidate.label}`)
 					.join(', ');
 				return `Needs narrowing — ${narrowing.question} Candidates: ${candidates}. Press a number key to select one.`;
 			}

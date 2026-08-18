@@ -62,8 +62,8 @@ function triage(): AuthoredTriageSourceRecord {
 
 const THREE: SourcesResponse = {
 	sources: [manual('ableton/live-12'), manual('akai/apc-key-25'), triage()],
-	owned_undocumented: [],
-	documented_unconfirmed: []
+	owned_but_undocumented: [],
+	documented_but_unconfirmed: []
 };
 
 const LOCAL_PROVIDER: ProviderStatus = { kind: 'local', model: 'ollama/llama', masked: null };
@@ -187,7 +187,7 @@ describe('assembly: one surface, loaded from the engine', () => {
 
 	it('renders corpus-empty as the engine answering nothing is ingested, naming manuals/ (9.13)', async () => {
 		await mountPage({
-			sources: { sources: [], owned_undocumented: [], documented_unconfirmed: [] }
+			sources: { sources: [], owned_but_undocumented: [], documented_but_unconfirmed: [] }
 		});
 		expect(screen.getByText(/manuals\//)).toBeTruthy();
 		expect(screen.queryByRole('textbox', { name: 'Ask a question' })).toBeNull();
@@ -251,7 +251,10 @@ describe('full turns through client → sse → reducer → renderer', () => {
 			{ event: 'outcome', data: { outcome: 'needs-narrowing' } },
 			{
 				event: 'narrowing',
-				data: { question: 'No sound from where?', candidates: ['From Live', 'From the APC'] }
+				data: { question: 'No sound from where?', candidates: [
+						{ label: 'Live shows no output', value: 'From Live' },
+						{ label: 'The APC pads are unlit', value: 'From the APC' }
+					] }
 			},
 			{ event: 'done', data: { complete: true } }
 		]);
@@ -440,7 +443,10 @@ describe('the keyboard-only core loop (1.13)', () => {
 			{ event: 'outcome', data: { outcome: 'needs-narrowing' } },
 			{
 				event: 'narrowing',
-				data: { question: 'No sound from where?', candidates: ['From Live', 'From the APC'] }
+				data: { question: 'No sound from where?', candidates: [
+						{ label: 'Live shows no output', value: 'From Live' },
+						{ label: 'The APC pads are unlit', value: 'From the APC' }
+					] }
 			},
 			{ event: 'done', data: { complete: true } }
 		]);
@@ -603,7 +609,10 @@ describe('CONTRACTS §4b: every governed event discharges into something visible
 			{ event: 'outcome', data: { outcome: 'needs-narrowing' } },
 			{
 				event: 'narrowing',
-				data: { question: 'No sound from where?', candidates: ['From Live', 'From the APC'] }
+				data: { question: 'No sound from where?', candidates: [
+						{ label: 'Live shows no output', value: 'From Live' },
+						{ label: 'The APC pads are unlit', value: 'From the APC' }
+					] }
 			},
 			{ event: 'done', data: { complete: true } }
 		]);

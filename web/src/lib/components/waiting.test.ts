@@ -435,14 +435,19 @@ describe('announcements (13.5)', () => {
 		channel.emit('outcome', { outcome: 'needs-narrowing' });
 		channel.emit('narrowing', {
 			question: 'Which output has no sound?',
-			candidates: ['the master bus', 'a single track']
+			candidates: [
+				{ label: 'The master meter moves', value: 'the master bus' },
+				{ label: 'One track meter moves', value: 'a single track' }
+			]
 		});
 		channel.emit('done', { complete: true });
 		channel.close();
 		await vi.waitFor(() => {
 			const text = container.querySelector('[aria-live="polite"]')?.textContent ?? '';
-			expect(text).toContain('the master bus');
-			expect(text).toContain('a single track');
+			// The labels, which is what the controls read on screen — an
+			// announcement of the `value` would name something not rendered.
+			expect(text).toContain('The master meter moves');
+			expect(text).toContain('One track meter moves');
 			expect(text).toMatch(/number key|digit/i);
 		});
 	});

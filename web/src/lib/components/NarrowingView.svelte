@@ -33,8 +33,10 @@
 
 	$effect(() => {
 		if (!armed) return;
+		// 6.4: the follow-up carries the candidate's `value` — the cause
+		// statement — never its `label`, which is the observable to look at.
 		return router.arm(
-			candidates.map((candidate) => ({ activate: () => thread.submit(candidate) }))
+			candidates.map((candidate) => ({ activate: () => thread.submit(candidate.value) }))
 		);
 	});
 </script>
@@ -46,14 +48,14 @@
 		<ol class="candidates">
 			{#each candidates as candidate, index (index)}
 				<li>
-					<button type="button" onclick={() => thread.submit(candidate)}>
+					<button type="button" onclick={() => thread.submit(candidate.value)}>
 						{#if armed}
 							<!-- 1.11's on-screen arming indication; the digit itself survives greyscale (11.6). -->
 							<kbd>{index + 1}</kbd>
 						{:else}
 							<span class="number">{index + 1}</span>
 						{/if}
-						{candidate}
+						{candidate.label}
 					</button>
 				</li>
 			{/each}

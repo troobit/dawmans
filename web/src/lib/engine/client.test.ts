@@ -97,8 +97,8 @@ describe('route mapping', () => {
 					chunk_count: 12
 				}
 			],
-			owned_undocumented: [{ device: 'focusrite/scarlett-solo', display_name: 'Scarlett Solo' }],
-			documented_unconfirmed: [{ source_id: 'akai/apc-key-25', display_name: 'APC Key 25 guide' }]
+			owned_but_undocumented: [{ device: 'focusrite/scarlett-solo', display_name: 'Scarlett Solo' }],
+			documented_but_unconfirmed: [{ source_id: 'akai/apc-key-25', display_name: 'APC Key 25 guide' }]
 		};
 		const calls = stubFetch(json(body));
 		const parsed = await listSources();
@@ -138,7 +138,7 @@ describe('route mapping', () => {
 	});
 
 	it('hard-codes no host and no port: every route is relative', async () => {
-		const calls = stubFetch(json({ sources: [], owned_undocumented: [], documented_unconfirmed: [] }));
+		const calls = stubFetch(json({ sources: [], owned_but_undocumented: [], documented_but_unconfirmed: [] }));
 		await listSources();
 		expect(calls[0].url.startsWith('/')).toBe(true);
 		expect(calls[0].url).not.toMatch(/^[a-z]+:\/\//);

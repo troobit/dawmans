@@ -51,8 +51,13 @@ test('the core loop needs zero pointer use: ask, narrow, cancel, widen, expand, 
 	await page.keyboard.press('Enter');
 	await expect(page.locator('.narrowing')).toBeVisible();
 
-	// Narrow — one keypress on an armed digit (6.3).
+	// Narrow — one keypress on an armed digit (6.3). A candidate reads its
+	// `label` and submits its `value`; the two differ in the stub on purpose,
+	// so a renderer that showed the submitted text would fail here.
 	await expect(page.locator('.state').last()).toHaveText('finished');
+	await expect(page.locator('.narrowing .candidates button').nth(1)).toContainText(
+		'The APC pads are unlit'
+	);
 	await page.keyboard.press('2');
 	await expect(page.locator('.question').nth(1)).toHaveText('From the APC pads');
 	await settled(page);

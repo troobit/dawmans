@@ -96,6 +96,14 @@ module-level `$state` is not reactive across the module boundary). Persistence k
   `corpus-empty` (the engine answering that nothing is ingested, 9.13). `blocksSubmission` is
   `state !== 'ready'`. The store does **not** call `scope.load()` — the page wires
   `scope.load(sources.ids)` after a successful load (kept separate so each store tests alone).
+  The two gap-report fields are `owned_but_undocumented` and `documented_but_unconfirmed` — the
+  engine's names, relayed verbatim from the corpus's `gaps.json`. This side shipped the abbreviated
+  forms for a while, so both reports arrived `undefined` in the real app while every test passed:
+  every fixture here (`fake-server.ts`, `e2e/stub-engine.mjs`, the per-test `payload()` helpers) was
+  written from this side's own type. See `specs/bugfixes/gap-reports-field-names/report.md`. **Any
+  field name in `client.ts` that no test compares against a payload written in the engine's own
+  terms is unverified** — `answer/http/app.py` is the producer and
+  `tests/answer/test_http_sources.py` pins it.
 - `history.svelte.ts` — persisted exchanges, newest first, trimmed to 50 on `record()`. Lazy-read
   gotcha: the `entries` getter must not assign a `$state` field (a first read from a template would
   throw `state_unsafe_mutation`), so the cache is a **plain field** and a `$state` version counter —
@@ -207,9 +215,15 @@ Components arm/disarm via `$effect` cleanup; AskSurface wires `<svelte:window on
   order; the digits arm through `router.arm()` **only while the turn is the thread's last settled
   turn** (`thread.awaitingNarrowing && turns.at(-1) === turn`) — the counterpart to AskSurface's
   `!awaitingNarrowing` gate, which is what keeps the router's one-armed-set invariant from
-  throwing. Selection is just `thread.submit(candidate)` — a follow-up in the same conversation
-  against the unchanged scope; the free-text-reply path (6.5) is the router's printable capture,
-  nothing here. The question paints from the `narrowing` event, never gated on `done` (6.8).
+  throwing. A candidate is a `{label, value}` record, **not a string**: the control reads
+  `candidate.label` (the cause's `check`, an observable to look at) and selection is
+  `thread.submit(candidate.value)` (the cause `statement`) — a follow-up in the same conversation
+  against the unchanged scope. The two are assigned by `api/answer-engine` design §Narrowing step 3;
+  this side typed them `string[]` for a while, so every control read `[object Object]` and selection
+  threw inside `ThreadStore.submit`, with all six fixtures agreeing because each was written from
+  this side's own type (`specs/bugfixes/narrowing-candidate-shape/report.md`). The free-text-reply
+  path (6.5) is the router's printable capture, nothing here. The question paints from the
+  `narrowing` event, never gated on `done` (6.8).
 - `RankedCausesView.svelte` — the `ranked-causes` renderer. Causes are plain list items (no
   buttons, no `<kbd>` — the affordance split from narrowing is deliberate and tested); each shows
   rank, statement, `Check:` line, and marker superscripts for `cites[]`/`fix_cites[]`; empty
