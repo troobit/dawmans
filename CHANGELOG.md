@@ -10,7 +10,38 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+### Added
+
+- **The `api/ableton-session-assist` spec suite** — requirements (11 sections, EARS), design,
+  decision log (7 decisions) and rune task ledger for live-set mixing assistance through agent
+  chats: the assistant observes the open Live 12 set via the AbletonMCP server, teaches on
+  questions (click-paths, shortcuts, mnemonics), and executes on instructions behind a terse
+  "robot go?" confirmation with a default-deny write scope. Phase one ships corpus MCP tools
+  (`dawmans-corpus-mcp`, the committed index served read-only over MCP with full CONTRACTS §2/§3
+  payloads), a `dawmans assist` launcher with claude/codex/LM Studio adapters derived from the
+  tracked `.mcp.json`, and a harness-neutral workflow document; a web agent-session wrapper is
+  specified as phase two. Design verified against the installed server's source: no mixer write
+  path exists (level moves route through device parameters), and `mcp` SDK v2 is pinned.
+
 ### Changed
+
+- **`.mcp.json` pins `ableton-mcp==1.4.0` and hard-disables its telemetry and dataset
+  recording** (`ABLETON_MCP_DISABLE_DATASET=1`, `ABLETON_MCP_DISABLE_TELEMETRY=1`). The PyPI
+  package is a fork whose dataset recorder is opt-out and on by default, built to upload prompts,
+  MIDI notes, track/clip names and device settings to Supabase; it is inert on this install only
+  because the wheel omits its credentials module. The env kill-switches override all consent
+  state; any version bump requires re-auditing outbound behaviour first (session-assist
+  Decision 2).
+- **The network posture and the citation invariant are re-scoped.** Offline operation becomes a
+  supported degraded mode rather than the product identity, and `CONTRACTS.md` §8's "facts SHALL
+  be cited" is scoped to corpus-grounded answers while the Live-edition constraint stays
+  universal. The turn pipeline and ask-and-source-picker surface are superseded — the agent lane
+  is the new baseline; the legacy lane receives no new capability and may be changed by logged
+  decision (session-assist Decisions 5 and 6).
+- **`CONTRACTS.md` registers a second `Passage`/`Citation` consumer** (the corpus tools), and
+  `api/answer-engine`'s scope statement names the shared index reader.
+- `.agentic.json` declares `decision_mode: overwrite` — decision revisions edit entries in place
+  rather than appending superseding entries.
 
 - **The browser surface is now aimed at rather than read.** Sources are chosen from a grid of
   tiles, each carrying a pictogram of what the source is (a DAW's faders, a keyboard, a drum, an

@@ -17,7 +17,9 @@ context-switched back to the DAW has failed even if it is correct.
 
 This spec owns: retrieval over already-ingested chunks, grounding and refusal behaviour,
 citation assembly, provider abstraction and credential handling, the `StateSource` seam, and the
-local HTTP contract.
+local HTTP contract. The index reader and retrieval internals are also consumed, unchanged, by the
+corpus tools of [`api/ableton-session-assist`](../ableton-session-assist/requirements.md) (its §9);
+that reuse is maintenance-level and does not extend this spec.
 
 It does **not** own:
 

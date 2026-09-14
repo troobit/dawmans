@@ -4,7 +4,17 @@
       "type": "stdio",
       "command": "mcp-devtools",
       "env": {
-        "ENABLE_ADDITIONAL_TOOLS": "sequential_thinking,gemini-agent,codex-agent"
+        "ENABLE_ADDITIONAL_TOOLS": "sequential_thinking,codex-agent"
+      }
+    },
+    "AbletonMCP": {
+      "command": "uvx",
+      "args": [
+        "ableton-mcp==1.4.0"
+      ],
+      "env": {
+        "ABLETON_MCP_DISABLE_DATASET": "1",
+        "ABLETON_MCP_DISABLE_TELEMETRY": "1"
       }
     }
   }

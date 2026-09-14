@@ -6,8 +6,10 @@ the spec is a defect to be reconciled.
 DAWMans is split across four specs — [`data/manual-corpus`](data/manual-corpus/requirements.md),
 [`data/symptom-triage`](data/symptom-triage/requirements.md),
 [`api/answer-engine`](api/answer-engine/requirements.md) and
-[`ui/ask-and-source-picker`](ui/ask-and-source-picker/requirements.md). `PROCESS.md` §10 requires a
-root overview holding the shared assumptions when a capability is split. This is that overview.
+[`ui/ask-and-source-picker`](ui/ask-and-source-picker/requirements.md) — plus
+[`api/ableton-session-assist`](api/ableton-session-assist/requirements.md), whose corpus tools
+consume the shared records from outside the engine (its §9). `PROCESS.md` §10 requires a root
+overview holding the shared assumptions when a capability is split. This is that overview.
 
 It exists because the three specs were drafted in parallel and diverged at every seam: capabilities
 were produced and never consumed, and the same interaction was described two ways. This file defines
@@ -64,11 +66,16 @@ the name is rebuilt as `<vendor>_<product>_<doctype>_v<doc_version>_<lang>.pdf` 
 under the store root it is configured with; a path published to the browser would be a field the
 browser cannot use, and an invitation to send one back (§3a).
 
-## 2. `Passage` — emitted by `data/manual-corpus`, consumed by `api/answer-engine`
+## 2. `Passage` — emitted by `data/manual-corpus`, consumed by `api/answer-engine` and the corpus tools
 
 The unit of retrieval and of citation. `data/manual-corpus` emits the record for **both** source
 kinds; for `authored-triage` the content and its chunking are specified by
 [`data/symptom-triage`](data/symptom-triage/requirements.md), which supplies what the record carries.
+
+The corpus tools of `api/ableton-session-assist` (its §9) are a second consumer: they serve this
+record and the §3 citation fields **in full** over MCP — every member, `unbacked` included, under
+the same no-silent-drop rule — and read the committed view through the same reader as an engine
+turn.
 
 **Pageless sources.** `section_number`, `page_start` and `page_end` are absent on an
 `authored-triage` passage and SHALL NOT be synthesised, exactly as `section_number` is absent on an
@@ -514,7 +521,11 @@ settled.
   Suite-only device or a Max for Live feature is manual-accurate and useless. It must be flagged.
 - **Chunk size is bounded by the embedding window, not by readability alone.** 500 words is ~600
   tokens and overflows a 512-token window, silently truncating the tail of every maximal chunk.
-- **Grounding versus reasoning.** Facts SHALL be cited, without exception. Choosing *which
-  documented control to check* is reasoning over cited facts and is permitted; it is not "general
-  knowledge" and the no-general-knowledge rule SHALL NOT be written so as to forbid it. Without this
-  split, symptom triage is simultaneously required and prohibited.
+- **Grounding versus reasoning.** In a corpus-grounded answer — every turn the engine synthesises —
+  facts SHALL be cited, without exception. Choosing *which documented control to check* is
+  reasoning over cited facts and is permitted; it is not "general knowledge" and the
+  no-general-knowledge rule SHALL NOT be written so as to forbid it. Without this split, symptom
+  triage is simultaneously required and prohibited. The citation obligation is scoped to the corpus
+  product: live-session advice under `api/ableton-session-assist` runs outside the engine and
+  carries that spec's observation and verification rules instead of citations. The Live-edition
+  constraint above is not so scoped — it binds every spec, including session assist.
